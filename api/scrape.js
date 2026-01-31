@@ -76,18 +76,17 @@ function getEventImage(title, category) {
   // Add category-specific aesthetic terms for minimal/abstract look
   const aestheticTerms = {
     art: 'abstract,minimal,colorful',
-    music: 'vibrant,pattern,rhythm',
-    culinary: 'colorful,texture,fresh',
-    social: 'bright,geometric,community'
+    music: 'vibrant,pattern,neon',
+    culinary: 'food,colorful,fresh',
+    social: 'people,community,vibrant'
   };
 
   // Build search query with keywords + aesthetic terms
   const searchTerms = [...words, aestheticTerms[category] || 'minimal,colorful'];
   const query = searchTerms.join(',');
 
-  // Use Unsplash Source API for dynamic, relevant images
-  // This generates a unique image URL based on the search terms
-  return `https://source.unsplash.com/800x600/?${encodeURIComponent(query)}`;
+  // Use Unsplash random API with search query - more reliable than source API
+  return `https://source.unsplash.com/random/800x600?${encodeURIComponent(query)}&t=${Date.now()}`;
 }
 
 // Scrape events from nycforfree.co
