@@ -7,8 +7,7 @@
     "deploy": "vercel --prod"
   },
   "dependencies": {
-    "@vercel/postgres": "^0.10.0",
-    "cheerio": "^1.0.0-rc.12"
+    "pg": "^8.11.3"
   },
   "devDependencies": {
     "vercel": "^33.0.1"

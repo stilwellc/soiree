@@ -1,12 +1,15 @@
-const { sql } = require('@vercel/postgres');
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
 module.exports = async function handler(req, res) {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle OPTIONS request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -16,8 +19,8 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Initialize database
-    await sql`
+    // Initialize table
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS events (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -31,12 +34,10 @@ module.exports = async function handler(req, res) {
         image TEXT,
         description TEXT,
         highlights JSONB,
-        source_url TEXT,
         scraped_at TIMESTAMP DEFAULT NOW(),
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+        created_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Get category filter
     const { category } = req.query;
@@ -44,16 +45,12 @@ module.exports = async function handler(req, res) {
     // Fetch events
     let result;
     if (category && category !== 'all') {
-      result = await sql`
-        SELECT * FROM events
-        WHERE category = ${category}
-        ORDER BY created_at DESC
-      `;
+      result = await pool.query(
+        'SELECT * FROM events WHERE category = $1 ORDER BY created_at DESC',
+        [category]
+      );
     } else {
-      result = await sql`
-        SELECT * FROM events
-        ORDER BY created_at DESC
-      `;
+      result = await pool.query('SELECT * FROM events ORDER BY created_at DESC');
     }
 
     return res.status(200).json({
