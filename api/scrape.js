@@ -139,8 +139,116 @@ function getEventImage(title, category) {
   return images[index];
 }
 
+// Scrape events from The Skint (free events aggregator - includes museum events)
+async function scrapeTheSkint() {
+  try {
+    console.log('Fetching events from The Skint...');
+    const response = await axios.get('https://theskint.com/', {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+
+    const $ = cheerio.load(response.data);
+    const events = [];
+
+    // Parse event listings
+    $('.event-item, .post, article').each((i, elem) => {
+      if (events.length >= 15) return false;
+
+      const $elem = $(elem);
+      const title = $elem.find('h2, h3, .title, .entry-title').first().text().trim();
+      if (!title || title.length < 5) return;
+
+      const description = $elem.find('p, .excerpt, .entry-content').first().text().trim();
+      const location = $elem.find('.venue, .location').first().text().trim() || 'NYC';
+      const link = $elem.find('a').first().attr('href');
+      if (!link) return;
+
+      const category = categorizeEvent(title, description);
+      const eventUrl = link.startsWith('http') ? link : `https://theskint.com${link}`;
+
+      events.push({
+        name: title.substring(0, 255),
+        category,
+        date: 'This Week',
+        time: 'See details',
+        location: location.substring(0, 255) || 'Various NYC',
+        address: location.substring(0, 500),
+        price: 'free',
+        spots: Math.floor(Math.random() * 100) + 50,
+        image: getEventImage(title, category),
+        description: (description || `Join us for ${title.toLowerCase()} in NYC.`).substring(0, 500),
+        highlights: ['Free entry', 'NYC location', 'Curated by The Skint', 'Quality events'],
+        url: eventUrl.substring(0, 500)
+      });
+    });
+
+    console.log(`Scraped ${events.length} events from The Skint`);
+    return events;
+  } catch (error) {
+    console.error('The Skint scraping failed:', error.message);
+    return [];
+  }
+}
+
+// Scrape events from TimeOut NY (includes museum events and exhibitions)
+async function scrapeTimeOut() {
+  try {
+    console.log('Fetching events from TimeOut NY...');
+    const response = await axios.get('https://www.timeout.com/newyork/things-to-do/free-things-to-do-in-new-york', {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+
+    const $ = cheerio.load(response.data);
+    const events = [];
+
+    // Parse event cards
+    $('.card, ._card, .listingCard, [class*="Card"]').each((i, elem) => {
+      if (events.length >= 15) return false;
+
+      const $elem = $(elem);
+      const title = $elem.find('h3, h2, .card-title, [class*="title"]').first().text().trim();
+      if (!title || title.length < 5) return;
+
+      const description = $elem.find('p, .card-description, [class*="description"]').first().text().trim();
+      const location = $elem.find('.venue, .location, .neighborhood').first().text().trim();
+      const link = $elem.find('a').first().attr('href');
+      if (!link) return;
+
+      const category = categorizeEvent(title, description);
+      const eventUrl = link.startsWith('http') ? link : `https://www.timeout.com${link}`;
+
+      events.push({
+        name: title.substring(0, 255),
+        category,
+        date: 'Upcoming',
+        time: 'Various times',
+        location: (location || 'Manhattan').substring(0, 255),
+        address: location.substring(0, 500),
+        price: 'free',
+        spots: Math.floor(Math.random() * 150) + 30,
+        image: getEventImage(title, category),
+        description: (description || `Experience ${title.toLowerCase()} in New York City.`).substring(0, 500),
+        highlights: ['Free admission', 'TimeOut curated', 'NYC cultural event', 'All ages welcome'],
+        url: eventUrl.substring(0, 500)
+      });
+    });
+
+    console.log(`Scraped ${events.length} events from TimeOut NY`);
+    return events;
+  } catch (error) {
+    console.error('TimeOut NY scraping failed:', error.message);
+    return [];
+  }
+}
+
 // Scrape events from nycforfree.co
-async function scrapeEvents() {
+async function scrapeNYCForFree() {
   try {
     console.log('Fetching events from nycforfree.co...');
     const response = await axios.get('https://www.nycforfree.co/events', {
@@ -226,16 +334,568 @@ async function scrapeEvents() {
     });
 
     console.log(`Scraped ${events.length} events from nycforfree.co`);
+    return events;
+  } catch (error) {
+    console.error('NYC For Free scraping failed:', error.message);
+    return [];
+  }
+}
 
+// Scrape exhibitions from The Met Museum (/exhibitions works, /events gets 429)
+async function scrapeMetMuseum() {
+  try {
+    console.log('Fetching exhibitions from The Met Museum...');
+    const response = await axios.get('https://www.metmuseum.org/exhibitions', {
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9'
+      }
+    });
+
+    const $ = cheerio.load(response.data);
+    const events = [];
+    const seenHrefs = new Set();
+
+    // Met uses CSS module classes: exhibition-card_exhibitionCard__*, exhibition-card_title__*, exhibition-card_meta__*
+    $('article[class*="exhibition-card"]').each((i, elem) => {
+      if (events.length >= 15) return false;
+
+      const $elem = $(elem);
+
+      // Title is in a div with class containing "exhibition-card_title" > a > span
+      const $titleDiv = $elem.find('[class*="exhibition-card_title"]');
+      const $titleLink = $titleDiv.find('a');
+      const name = $titleLink.text().trim();
+      if (!name || name.length < 5) return;
+
+      const href = $titleLink.attr('href');
+      if (!href || seenHrefs.has(href)) return;
+      seenHrefs.add(href);
+
+      // Date/meta is in div with class containing "exhibition-card_meta"
+      let date = 'Now on view';
+      const metaText = $elem.find('[class*="exhibition-card_meta"]').text().trim();
+      if (metaText) date = metaText;
+
+      // Image alt text can serve as description
+      const imgAlt = $elem.find('img').attr('alt') || '';
+      const description = imgAlt.length > 20 ? imgAlt.substring(0, 200) : `${name} at The Metropolitan Museum of Art.`;
+
+      const location = 'The Met';
+      const address = '1000 5th Ave, New York, NY 10028';
+      const category = categorizeEvent(name, description);
+      const eventUrl = href.startsWith('http') ? href : `https://www.metmuseum.org${href}`;
+
+      events.push({
+        name: name.substring(0, 255),
+        category,
+        date: date.substring(0, 100),
+        time: 'Museum hours',
+        location: location.substring(0, 255),
+        address: address.substring(0, 500),
+        price: 'free',
+        spots: Math.floor(Math.random() * 150) + 50,
+        image: getEventImage(name, category),
+        description: description.substring(0, 500),
+        highlights: ['The Met Museum', 'World-class art', 'Current exhibition', 'Free admission'],
+        url: eventUrl.substring(0, 500)
+      });
+    });
+
+    console.log(`Scraped ${events.length} exhibitions from The Met`);
+    return events;
+  } catch (error) {
+    console.error('Met Museum scraping failed:', error.message);
+    return [];
+  }
+}
+
+// Scrape events from MoMA (trailing slash required on /calendar/)
+async function scrapeMoMA() {
+  try {
+    console.log('Fetching events from MoMA...');
+    const response = await axios.get('https://www.moma.org/calendar/', {
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9'
+      }
+    });
+
+    const $ = cheerio.load(response.data);
+    const events = [];
+    const seenHrefs = new Set();
+
+    // MoMA calendar page has event links like /calendar/events/{id}
+    // Events are in <li> elements with <a> links containing title and time info
+    $('a[href*="/calendar/events/"]').each((i, elem) => {
+      if (events.length >= 15) return false;
+
+      const $link = $(elem);
+      const href = $link.attr('href');
+      if (!href || seenHrefs.has(href)) return;
+      seenHrefs.add(href);
+
+      // Get event name from balance-text span or first meaningful text
+      let name = $link.find('.balance-text, [class*="balance-text"]').first().text().trim();
+      if (!name) name = $link.find('p').first().text().trim();
+      if (!name || name.length < 5) return;
+
+      // Get the full text content for time extraction
+      const fullText = $link.text().trim();
+
+      // Extract time from the text (patterns like "9:30 a.m." or "7:00 p.m.")
+      let time = 'See details';
+      const timeMatch = fullText.match(/(\d{1,2}:\d{2}\s*(?:a\.m\.|p\.m\.|AM|PM|–|&ndash;)[^A-Z]*)(?=\s*[A-Z]|$)/i);
+      if (timeMatch) {
+        time = timeMatch[1].replace(/&ndash;/g, '–').replace(/&nbsp;/g, ' ').trim();
+      }
+
+      // Look for date from preceding h2 header
+      let date = 'Upcoming';
+      const $li = $link.closest('li');
+      if ($li.length) {
+        // Walk up to find the date heading
+        const $section = $li.closest('ul').prev('h2');
+        if ($section.length) {
+          date = $section.text().replace(/&nbsp;/g, ' ').trim();
+        }
+      }
+
+      const description = `${name} at MoMA.`;
+      const location = 'MoMA';
+      const address = '11 W 53rd St, New York, NY 10019';
+      const category = categorizeEvent(name, description);
+      const eventUrl = href.startsWith('http') ? href : `https://www.moma.org${href}`;
+
+      events.push({
+        name: name.substring(0, 255),
+        category,
+        date: date.substring(0, 100),
+        time: time.substring(0, 100),
+        location: location.substring(0, 255),
+        address: address.substring(0, 500),
+        price: 'free',
+        spots: Math.floor(Math.random() * 150) + 50,
+        image: getEventImage(name, category),
+        description: description.substring(0, 500),
+        highlights: ['MoMA', 'Modern art', 'Contemporary culture', 'Free event'],
+        url: eventUrl.substring(0, 500)
+      });
+    });
+
+    console.log(`Scraped ${events.length} events from MoMA`);
+    return events;
+  } catch (error) {
+    console.error('MoMA scraping failed:', error.message);
+    return [];
+  }
+}
+
+// Scrape events from American Museum of Natural History
+// NOTE: AMNH aggressively blocks scrapers (403 on all endpoints).
+// This scraper uses full browser headers but may still fail.
+async function scrapeAMNH() {
+  try {
+    console.log('Fetching events from AMNH...');
+    const response = await axios.get('https://www.amnh.org/calendar', {
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'identity',
+        'Connection': 'keep-alive',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1'
+      }
+    });
+
+    const $ = cheerio.load(response.data);
+    const events = [];
+
+    $('[class*="event"], article, .card').each((i, elem) => {
+      if (events.length >= 15) return false;
+
+      const $elem = $(elem);
+
+      let name = $elem.find('h1, h2, h3, h4, [class*="title"]').first().text().trim();
+      if (!name || name.length < 5) return;
+
+      let href = $elem.find('a').first().attr('href') || $elem.attr('href');
+      if (!href) return;
+
+      let description = $elem.find('p, [class*="description"]').first().text().trim();
+      if (!description || description.length < 10) description = name;
+
+      let date = 'Upcoming';
+      let time = 'See details';
+      const dateText = $elem.find('time, [class*="date"]').first().text().trim();
+      if (dateText) {
+        const dateMatch = dateText.match(/([A-Za-z]+\s+\d{1,2})/);
+        if (dateMatch) date = dateMatch[1];
+        const timeMatch = dateText.match(/(\d{1,2}:\d{2}\s*[AP]M)/i);
+        if (timeMatch) time = timeMatch[1];
+      }
+
+      const location = 'AMNH';
+      const address = '200 Central Park West, New York, NY 10024';
+      const category = categorizeEvent(name, description);
+      const eventUrl = href.startsWith('http') ? href : `https://www.amnh.org${href}`;
+
+      events.push({
+        name: name.substring(0, 255),
+        category,
+        date: date.substring(0, 100),
+        time: time.substring(0, 100),
+        location: location.substring(0, 255),
+        address: address.substring(0, 500),
+        price: 'free',
+        spots: Math.floor(Math.random() * 150) + 50,
+        image: getEventImage(name, category),
+        description: description.substring(0, 500),
+        highlights: ['Natural History', 'Science talks', 'Family friendly', 'Free admission'],
+        url: eventUrl.substring(0, 500)
+      });
+    });
+
+    console.log(`Scraped ${events.length} events from AMNH`);
+    return events;
+  } catch (error) {
+    console.error('AMNH scraping failed:', error.message);
+    return [];
+  }
+}
+
+// Scrape events from Whitney Museum
+async function scrapeWhitney() {
+  try {
+    console.log('Fetching events from Whitney Museum...');
+    const response = await axios.get('https://whitney.org/events', {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+
+    const $ = cheerio.load(response.data);
+    const events = [];
+
+    // Find event list items
+    $('.events-list li, #today-events-list li').each((i, elem) => {
+      if (events.length >= 15) return false;
+
+      const $elem = $(elem);
+
+      // Find the event link and title
+      const $link = $elem.find('.events-today__events a').first();
+      if (!$link.length) return;
+
+      const href = $link.attr('href');
+      if (!href) return;
+
+      // Get title from h3
+      const name = $link.find('h3').first().text().trim();
+      if (!name || name.length < 5) return;
+
+      // Get description/location from p tag
+      let description = $link.find('p').first().text().trim();
+      if (!description || description.length < 10) description = name;
+
+      // Get time from events-today__time
+      let time = $elem.find('.events-today__time').first().text().trim();
+      if (!time) time = 'See details';
+
+      // Get date - Whitney shows "Today" or actual dates
+      let date = 'Today';
+
+      const location = 'Whitney Museum';
+      const address = '99 Gansevoort St, New York, NY 10014';
+      const category = categorizeEvent(name, description);
+      const eventUrl = href.startsWith('http') ? href : `https://whitney.org${href}`;
+
+      events.push({
+        name: name.substring(0, 255),
+        category,
+        date: date.substring(0, 100),
+        time: time.substring(0, 100),
+        location: location.substring(0, 255),
+        address: address.substring(0, 500),
+        price: 'free',
+        spots: Math.floor(Math.random() * 150) + 50,
+        image: getEventImage(name, category),
+        description: description.substring(0, 500),
+        highlights: ['Whitney Museum', 'American art', 'Contemporary exhibitions', 'Free event'],
+        url: eventUrl.substring(0, 500)
+      });
+    });
+
+    console.log(`Scraped ${events.length} events from Whitney`);
+    return events;
+  } catch (error) {
+    console.error('Whitney Museum scraping failed:', error.message);
+    return [];
+  }
+}
+
+// Scrape events and exhibitions from Guggenheim via WordPress REST API
+async function scrapeGuggenheim() {
+  try {
+    console.log('Fetching events from Guggenheim (WP REST API)...');
+    const events = [];
+
+    // Fetch both events and exhibitions in parallel from the WP REST API
+    const [eventsRes, exhibitionsRes] = await Promise.all([
+      axios.get('https://www.guggenheim.org/wp-json/wp/v2/event', {
+        params: { per_page: 10, orderby: 'date', order: 'desc' },
+        timeout: 15000,
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
+      }).catch(() => ({ data: [] })),
+      axios.get('https://www.guggenheim.org/wp-json/wp/v2/exhibition', {
+        params: { per_page: 10, orderby: 'date', order: 'desc' },
+        timeout: 15000,
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
+      }).catch(() => ({ data: [] }))
+    ]);
+
+    const location = 'Guggenheim';
+    const address = '1071 5th Ave, New York, NY 10128';
+
+    // Process events
+    for (const item of eventsRes.data) {
+      if (events.length >= 15) break;
+
+      const name = (item.title?.rendered || '').replace(/<[^>]+>/g, '').trim();
+      if (!name || name.length < 5) continue;
+
+      const description = (item.excerpt?.rendered || '').replace(/<[^>]+>/g, '').trim();
+      const eventUrl = item.link || `https://www.guggenheim.org/event/${item.slug}`;
+      const category = categorizeEvent(name, description);
+
+      events.push({
+        name: name.substring(0, 255),
+        category,
+        date: 'Upcoming',
+        time: 'See details',
+        location: location.substring(0, 255),
+        address: address.substring(0, 500),
+        price: 'free',
+        spots: Math.floor(Math.random() * 150) + 50,
+        image: getEventImage(name, category),
+        description: (description || `${name} at the Guggenheim Museum.`).substring(0, 500),
+        highlights: ['Guggenheim', 'Modern art', 'Iconic architecture', 'Free event'],
+        url: eventUrl.substring(0, 500)
+      });
+    }
+
+    // Process exhibitions
+    for (const item of exhibitionsRes.data) {
+      if (events.length >= 15) break;
+
+      const name = (item.title?.rendered || '').replace(/<[^>]+>/g, '').trim();
+      if (!name || name.length < 5) continue;
+
+      const description = (item.excerpt?.rendered || '').replace(/<[^>]+>/g, '').trim();
+      const eventUrl = item.link || `https://www.guggenheim.org/exhibition/${item.slug}`;
+      const category = categorizeEvent(name, description);
+
+      events.push({
+        name: name.substring(0, 255),
+        category,
+        date: 'Now on view',
+        time: 'Museum hours',
+        location: location.substring(0, 255),
+        address: address.substring(0, 500),
+        price: 'free',
+        spots: Math.floor(Math.random() * 150) + 50,
+        image: getEventImage(name, category),
+        description: (description || `${name} exhibition at the Guggenheim Museum.`).substring(0, 500),
+        highlights: ['Guggenheim', 'Current exhibition', 'Iconic architecture', 'World-class art'],
+        url: eventUrl.substring(0, 500)
+      });
+    }
+
+    console.log(`Scraped ${events.length} events/exhibitions from Guggenheim`);
+    return events;
+  } catch (error) {
+    console.error('Guggenheim scraping failed:', error.message);
+    return [];
+  }
+}
+
+// Scrape events from New Museum (Next.js site with __NEXT_DATA__)
+// NOTE: Event data may be loaded client-side. This scraper extracts
+// whatever is available from the SSR __NEXT_DATA__ JSON payload.
+async function scrapeNewMuseum() {
+  try {
+    console.log('Fetching events from New Museum...');
+    const response = await axios.get('https://www.newmuseum.org/calendar', {
+      timeout: 15000,
+      maxRedirects: 5,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9'
+      }
+    });
+
+    const $ = cheerio.load(response.data);
+    const events = [];
+
+    // Try to extract event data from __NEXT_DATA__ JSON
+    const nextDataScript = $('#__NEXT_DATA__').html();
+    if (nextDataScript) {
+      try {
+        const nextData = JSON.parse(nextDataScript);
+        const templateData = nextData?.props?.pageProps?.__TEMPLATE_QUERY_DATA__ || {};
+        const eventNodes = templateData?.events?.nodes || [];
+
+        for (const node of eventNodes) {
+          if (events.length >= 15) break;
+
+          const name = (node.title || '').trim();
+          if (!name || name.length < 5) continue;
+
+          const uri = node.uri || node.slug || '';
+          const description = (node.excerpt || node.content || '').replace(/<[^>]+>/g, '').trim();
+          const startDate = node.startDate || 'Upcoming';
+
+          const location = 'New Museum';
+          const address = '235 Bowery, New York, NY 10002';
+          const category = categorizeEvent(name, description);
+          const eventUrl = uri.startsWith('http') ? uri : `https://www.newmuseum.org${uri}`;
+
+          events.push({
+            name: name.substring(0, 255),
+            category,
+            date: startDate.substring(0, 100),
+            time: 'See details',
+            location: location.substring(0, 255),
+            address: address.substring(0, 500),
+            price: 'free',
+            spots: Math.floor(Math.random() * 150) + 50,
+            image: getEventImage(name, category),
+            description: (description || `${name} at the New Museum.`).substring(0, 500),
+            highlights: ['New Museum', 'Contemporary art', 'Cutting-edge exhibitions', 'Free admission'],
+            url: eventUrl.substring(0, 500)
+          });
+        }
+      } catch (parseError) {
+        console.log('Could not parse New Museum __NEXT_DATA__:', parseError.message);
+      }
+    }
+
+    // Fallback: try standard HTML selectors
     if (events.length === 0) {
-      console.log('No events found, using fallback events');
+      $('[class*="event"], article, .card').each((i, elem) => {
+        if (events.length >= 15) return false;
+
+        const $elem = $(elem);
+        let name = $elem.find('h1, h2, h3, h4, [class*="title"]').first().text().trim();
+        if (!name || name.length < 5) return;
+
+        let href = $elem.find('a').first().attr('href') || $elem.attr('href');
+        if (!href) return;
+
+        let description = $elem.find('p, [class*="description"]').first().text().trim();
+        if (!description || description.length < 10) description = name;
+
+        const location = 'New Museum';
+        const address = '235 Bowery, New York, NY 10002';
+        const category = categorizeEvent(name, description);
+        const eventUrl = href.startsWith('http') ? href : `https://www.newmuseum.org${href}`;
+
+        events.push({
+          name: name.substring(0, 255),
+          category,
+          date: 'Upcoming',
+          time: 'See details',
+          location: location.substring(0, 255),
+          address: address.substring(0, 500),
+          price: 'free',
+          spots: Math.floor(Math.random() * 150) + 50,
+          image: getEventImage(name, category),
+          description: description.substring(0, 500),
+          highlights: ['New Museum', 'Contemporary art', 'Cutting-edge exhibitions', 'Free admission'],
+          url: eventUrl.substring(0, 500)
+        });
+      });
+    }
+
+    console.log(`Scraped ${events.length} events from New Museum`);
+    return events;
+  } catch (error) {
+    console.error('New Museum scraping failed:', error.message);
+    return [];
+  }
+}
+
+// Main orchestrator - scrapes all sources and merges results
+async function scrapeAllEvents() {
+  try {
+    console.log('Starting multi-source scraping...');
+
+    // Run all scrapers in parallel
+    const [
+      theSkintEvents,
+      timeoutEvents,
+      nycFreeEvents,
+      whitneyEvents,
+      metEvents,
+      momaEvents,
+      guggenheimEvents,
+      amnhEvents,
+      newMuseumEvents
+    ] = await Promise.all([
+      scrapeTheSkint(),
+      scrapeTimeOut(),
+      scrapeNYCForFree(),
+      scrapeWhitney(),
+      scrapeMetMuseum(),
+      scrapeMoMA(),
+      scrapeGuggenheim(),
+      scrapeAMNH(),
+      scrapeNewMuseum()
+    ]);
+
+    // Merge all events
+    const allEvents = [
+      ...theSkintEvents,
+      ...timeoutEvents,
+      ...nycFreeEvents,
+      ...whitneyEvents,
+      ...metEvents,
+      ...momaEvents,
+      ...guggenheimEvents,
+      ...amnhEvents,
+      ...newMuseumEvents
+    ];
+
+    console.log(`Total events scraped: ${allEvents.length}`);
+    console.log(`  - The Skint: ${theSkintEvents.length}`);
+    console.log(`  - TimeOut NY: ${timeoutEvents.length}`);
+    console.log(`  - NYC For Free: ${nycFreeEvents.length}`);
+    console.log(`  - Whitney Museum: ${whitneyEvents.length}`);
+    console.log(`  - The Met: ${metEvents.length}`);
+    console.log(`  - MoMA: ${momaEvents.length}`);
+    console.log(`  - Guggenheim: ${guggenheimEvents.length}`);
+    console.log(`  - AMNH: ${amnhEvents.length}`);
+    console.log(`  - New Museum: ${newMuseumEvents.length}`);
+
+    // If no events found at all, use fallback
+    if (allEvents.length === 0) {
+      console.log('No events found from any source, using fallback events');
       return getFallbackEvents();
     }
 
-    return events;
+    return allEvents;
   } catch (error) {
-    console.error('Scraping failed:', error.message);
-    console.log('Using fallback events');
+    console.error('Multi-source scraping failed:', error.message);
     return getFallbackEvents();
   }
 }
@@ -310,8 +970,8 @@ module.exports = async function handler(req, res) {
     // This guarantees events always have the latest category logic
     await pool.query(`DELETE FROM events`);
 
-    // Get events
-    const events = await scrapeEvents();
+    // Get events from all sources
+    const events = await scrapeAllEvents();
 
     // Remove duplicates from scraped events (same URL)
     const uniqueEvents = [];
