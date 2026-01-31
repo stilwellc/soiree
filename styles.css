@@ -382,8 +382,8 @@ body {
 }
 
 .event-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(10, 10, 10, 0.12);
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 0 20px 48px rgba(10, 10, 10, 0.16);
 }
 
 .event-card::before {
@@ -552,6 +552,18 @@ body {
   letter-spacing: 0.2px;
 }
 
+.tag-urgent {
+  background: rgba(231, 76, 60, 0.1);
+  color: #c0392b;
+  font-weight: 600;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 /* Modal */
 .modal-overlay {
   position: fixed;
@@ -559,18 +571,20 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
   z-index: 200;
   display: none;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  animation: fadeIn 0.3s ease;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .modal-overlay.active {
   display: flex;
+  opacity: 1;
 }
 
 .modal {
@@ -581,15 +595,20 @@ body {
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-  animation: modalSlide 0.4s var(--transition);
+  animation: modalSlide 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes modalSlide {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(50px) scale(0.9);
+    transform: translateY(60px) scale(0.92);
   }
-  to {
+  60% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.01);
+  }
+  100% {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
@@ -701,9 +720,67 @@ body {
   font-weight: bold;
 }
 
+.modal-map {
+  margin: 30px 0;
+}
+
+.modal-map h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: var(--dark);
+}
+
+.map-directions {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--dark);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.map-directions:hover {
+  color: var(--gold);
+}
+
+.modal-calendar {
+  margin: 30px 0;
+}
+
+.modal-calendar h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: var(--dark);
+}
+
+.calendar-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-share {
+  margin: 30px 0;
+}
+
+.modal-share h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: var(--dark);
+}
+
+.share-buttons {
+  display: flex;
+  gap: 10px;
+}
+
 .modal-actions {
   display: flex;
   gap: 12px;
+  margin-top: 30px;
 }
 
 .btn {
@@ -740,27 +817,114 @@ body {
   transform: translateY(-2px);
 }
 
+.btn-outline {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(10, 10, 10, 0.15);
+  background: white;
+  color: var(--dark);
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-outline:hover {
+  background: var(--cream);
+  border-color: var(--gold);
+  transform: translateY(-1px);
+}
+
+.btn-share {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(10, 10, 10, 0.15);
+  background: white;
+  color: var(--dark);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.btn-share:hover {
+  background: var(--dark);
+  color: white;
+  border-color: var(--dark);
+  transform: translateY(-2px);
+}
+
 /* Loading */
 .loading {
   text-align: center;
-  padding: 40px;
+  padding: 60px 40px;
   color: var(--accent);
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--cream);
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--cream);
   border-top-color: var(--gold);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 15px;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  margin: 0 auto 20px;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
 }
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Skeleton Loader */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-card {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 240px;
+  margin-bottom: 15px;
+}
+
+.skeleton-text {
+  height: 16px;
+  margin-bottom: 10px;
+}
+
+.skeleton-text.short {
+  width: 60%;
 }
 
 /* Empty state */

@@ -462,6 +462,10 @@ function createEventCard(event, index) {
   const isFavorited = favorites.includes(event.id);
   const animationDelay = index < 3 ? `style="animation-delay: ${0.4 + index * 0.1}s"` : '';
 
+  // Capacity indicator logic
+  const capacityClass = event.spots < 30 ? 'low' : event.spots < 100 ? 'medium' : 'high';
+  const capacityIcon = event.spots < 30 ? '🔥' : '👥';
+
   return `
     <div class="event-card" data-id="${event.id}" data-category="${event.category}" ${animationDelay} role="article" tabindex="0">
       <div class="event-image" style="background-image: url('${event.image}')">
@@ -471,6 +475,10 @@ function createEventCard(event, index) {
           </svg>
         </button>
         <div class="event-badge">${event.price === 'free' ? 'Free Entry' : event.price}</div>
+        <div class="capacity-indicator ${capacityClass}">
+          <span>${capacityIcon}</span>
+          <span>${event.spots} left</span>
+        </div>
       </div>
       <div class="event-details">
         <div class="event-date">${event.date} • ${event.time}</div>
@@ -478,7 +486,7 @@ function createEventCard(event, index) {
         <div class="event-location">${event.location}</div>
         <div class="event-tags">
           <div class="tag">${getCategoryName(event.category)}</div>
-          <div class="tag">${event.spots} spots left</div>
+          ${event.spots < 50 ? '<div class="tag tag-urgent">Filling Fast</div>' : ''}
         </div>
       </div>
     </div>
@@ -491,6 +499,7 @@ function openModal(eventId) {
   if (!event) return;
 
   const isFavorited = favorites.includes(event.id);
+  const mapsEmbedUrl = getGoogleMapsEmbedUrl(event.address);
 
   const modalContent = `
     <div class="modal-image" style="background-image: url('${event.image}')"></div>
@@ -530,6 +539,70 @@ function openModal(eventId) {
           ${event.highlights.map(h => `<li>${h}</li>`).join('')}
         </ul>
       </div>
+
+      <!-- Google Maps -->
+      <div class="modal-map">
+        <h3>Location</h3>
+        <iframe
+          width="100%"
+          height="250"
+          frameborder="0"
+          style="border:0; border-radius: 12px;"
+          src="${mapsEmbedUrl}"
+          allowfullscreen>
+        </iframe>
+        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address)}" target="_blank" class="map-directions">
+          Get Directions →
+        </a>
+      </div>
+
+      <!-- Add to Calendar -->
+      <div class="modal-calendar">
+        <h3>Add to Calendar</h3>
+        <div class="calendar-buttons">
+          <button class="btn btn-outline" onclick="window.open('${generateGoogleCalendarLink(event)}', '_blank')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            Google Calendar
+          </button>
+          <button class="btn btn-outline" onclick="generateICalFile(${JSON.stringify(event).replace(/"/g, '&quot;')})">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download .ics
+          </button>
+        </div>
+      </div>
+
+      <!-- Social Sharing -->
+      <div class="modal-share">
+        <h3>Share Event</h3>
+        <div class="share-buttons">
+          <button class="btn btn-share" onclick="shareOnTwitter(${JSON.stringify(event).replace(/"/g, '&quot;')})" aria-label="Share on Twitter">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path>
+            </svg>
+          </button>
+          <button class="btn btn-share" onclick="shareOnFacebook(${JSON.stringify(event).replace(/"/g, '&quot;')})" aria-label="Share on Facebook">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path>
+            </svg>
+          </button>
+          <button class="btn btn-share" onclick="copyEventLink()" aria-label="Copy link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <div class="modal-actions">
         ${event.url ? `<a href="${event.url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">View Event Details</a>` : `<button class="btn btn-primary" onclick="handleRSVP(${event.id})">RSVP Now</button>`}
         <button class="btn btn-secondary" onclick="toggleFavorite(${event.id}); updateModalFavoriteBtn(${event.id})">
@@ -600,6 +673,87 @@ function getCategoryName(category) {
     fashion: 'Fashion'
   };
   return names[category] || category;
+}
+
+// Enhanced date formatting
+function formatEventDate(dateString) {
+  // Handle existing string formats
+  const lowerDate = dateString.toLowerCase();
+
+  const dateMap = {
+    'tonight': 'Tonight',
+    'tomorrow': 'Tomorrow',
+    'friday': 'This Friday',
+    'saturday': 'This Saturday',
+    'sunday': 'This Sunday',
+    'monday': 'This Monday',
+    'tuesday': 'This Tuesday',
+    'wednesday': 'This Wednesday',
+    'thursday': 'This Thursday',
+    'next friday': 'Next Friday',
+    'next saturday': 'Next Saturday',
+    'next sunday': 'Next Sunday'
+  };
+
+  return dateMap[lowerDate] || dateString;
+}
+
+function formatEventTime(timeString) {
+  // Already well-formatted, but we can add countdowns later
+  return timeString;
+}
+
+// Calendar link generators
+function generateGoogleCalendarLink(event) {
+  const title = encodeURIComponent(event.name);
+  const details = encodeURIComponent(event.description);
+  const location = encodeURIComponent(event.address);
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}`;
+}
+
+function generateICalFile(event) {
+  const ical = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'BEGIN:VEVENT',
+    `SUMMARY:${event.name}`,
+    `DESCRIPTION:${event.description}`,
+    `LOCATION:${event.address}`,
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\n');
+
+  const blob = new Blob([ical], { type: 'text/calendar' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${event.name}.ics`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+// Social sharing
+function shareOnTwitter(event) {
+  const text = encodeURIComponent(`Check out ${event.name} at ${event.location}!`);
+  const url = encodeURIComponent(window.location.href);
+  window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'width=550,height=420');
+}
+
+function shareOnFacebook(event) {
+  const url = encodeURIComponent(window.location.href);
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=550,height=420');
+}
+
+function copyEventLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    alert('Link copied to clipboard!');
+  });
+}
+
+// Google Maps embed
+function getGoogleMapsEmbedUrl(address) {
+  const encoded = encodeURIComponent(address);
+  return `https://www.google.com/maps/embed/v1/place?key=AIzaSyDummy_ReplaceWithRealKey&q=${encoded}`;
 }
 
 // Initialize when DOM is ready
