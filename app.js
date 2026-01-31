@@ -364,16 +364,19 @@ function handleNavClick(item) {
     currentTimeFilter = 'all';
     discoverView.classList.remove('hidden');
     favoritesView.classList.add('hidden');
+    startRotating();
     renderEvents();
   } else if (view === 'today') {
     currentTimeFilter = 'today';
     discoverView.classList.remove('hidden');
     favoritesView.classList.add('hidden');
+    setFixedTitle("Today's");
     renderEvents();
   } else if (view === 'week') {
     currentTimeFilter = 'week';
     discoverView.classList.remove('hidden');
     favoritesView.classList.add('hidden');
+    setFixedTitle("This Week's");
     renderEvents();
   } else if (view === 'favorites') {
     discoverView.classList.add('hidden');
@@ -724,13 +727,24 @@ function showToast(message) {
 }
 
 // Rotating title text
+let rotatingInterval = null;
+
 function initRotatingTitle() {
+  startRotating();
+}
+
+function startRotating() {
+  stopRotating();
   const words = document.querySelectorAll('.title-word');
   if (words.length === 0) return;
 
   let current = 0;
+  words.forEach((w, i) => {
+    w.classList.remove('active', 'exit');
+    if (i === 0) w.classList.add('active');
+  });
 
-  setInterval(() => {
+  rotatingInterval = setInterval(() => {
     const prev = current;
     current = (current + 1) % words.length;
 
@@ -739,10 +753,32 @@ function initRotatingTitle() {
 
     setTimeout(() => {
       words[prev].classList.remove('exit');
-    }, 600);
+    }, 500);
 
     words[current].classList.add('active');
-  }, 3000);
+  }, 2000);
+}
+
+function stopRotating() {
+  if (rotatingInterval) {
+    clearInterval(rotatingInterval);
+    rotatingInterval = null;
+  }
+}
+
+function setFixedTitle(text) {
+  stopRotating();
+  const words = document.querySelectorAll('.title-word');
+  words.forEach(w => w.classList.remove('active', 'exit'));
+  // Find matching word or use first
+  for (const w of words) {
+    if (w.textContent.trim().toLowerCase() === text.toLowerCase()) {
+      w.classList.add('active');
+      return;
+    }
+  }
+  words[0].textContent = text;
+  words[0].classList.add('active');
 }
 
 // Initialize when DOM is ready
