@@ -274,6 +274,13 @@ module.exports = async function handler(req, res) {
       ADD COLUMN IF NOT EXISTS url VARCHAR(500)
     `);
 
+    // Clean existing duplicates before creating unique index
+    // Keep only the most recent event for each URL
+    await pool.query(`
+      DELETE FROM events a USING events b
+      WHERE a.id < b.id AND a.url = b.url
+    `);
+
     // Add unique constraint on URL to prevent duplicates
     await pool.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS events_url_unique ON events(url)
