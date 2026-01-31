@@ -462,10 +462,6 @@ function createEventCard(event, index) {
   const isFavorited = favorites.includes(event.id);
   const animationDelay = index < 3 ? `style="animation-delay: ${0.4 + index * 0.1}s"` : '';
 
-  // Capacity indicator logic
-  const capacityClass = event.spots < 30 ? 'low' : event.spots < 100 ? 'medium' : 'high';
-  const capacityIcon = event.spots < 30 ? '🔥' : '👥';
-
   return `
     <div class="event-card" data-id="${event.id}" data-category="${event.category}" ${animationDelay} role="article" tabindex="0">
       <div class="event-image" style="background-image: url('${event.image}')">
@@ -475,10 +471,6 @@ function createEventCard(event, index) {
           </svg>
         </button>
         <div class="event-badge">${event.price === 'free' ? 'Free Entry' : event.price}</div>
-        <div class="capacity-indicator ${capacityClass}">
-          <span>${capacityIcon}</span>
-          <span>${event.spots} left</span>
-        </div>
       </div>
       <div class="event-details">
         <div class="event-date">${event.date} • ${event.time}</div>
@@ -486,7 +478,6 @@ function createEventCard(event, index) {
         <div class="event-location">${event.location}</div>
         <div class="event-tags">
           <div class="tag">${getCategoryName(event.category)}</div>
-          ${event.spots < 50 ? '<div class="tag tag-urgent">Filling Fast</div>' : ''}
         </div>
       </div>
     </div>
@@ -531,18 +522,6 @@ function openModal(eventId) {
             <div class="meta-label">Where</div>
             <div class="meta-value">${event.location}</div>
             <div class="meta-sublabel">${event.address}</div>
-          </div>
-        </div>
-        <div class="modal-meta-item">
-          <svg class="modal-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-          <div>
-            <div class="meta-label">Availability</div>
-            <div class="meta-value">${event.spots} spots left</div>
           </div>
         </div>
       </div>
