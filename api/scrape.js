@@ -78,58 +78,63 @@ function categorizeEvent(title, description) {
   return 'social';
 }
 
-// Generate minimal geometric pattern based on event title
+// Generate production-quality gradient images for events
 function getEventImage(title, category) {
   const titleLower = title.toLowerCase();
 
-  // Minimal color palettes and patterns for each event type
+  // Premium color palettes inspired by Notion, Apple, and Airbnb
   const visualThemes = {
-    // Food & Drink - warm, appetizing colors
-    'chicken': { colors: ['#FF8C42', '#FFD166', '#F4A261'], pattern: 'circles' },
-    'pizza': { colors: ['#E63946', '#F77F00', '#FCBF49'], pattern: 'triangles' },
-    'sushi': { colors: ['#06FFA5', '#FF6B9D', '#C9F0FF'], pattern: 'waves' },
-    'ramen': { colors: ['#FFB627', '#FF6B35', '#F7931E'], pattern: 'lines' },
-    'coffee': { colors: ['#6F4E37', '#A67B5B', '#C8AD7F'], pattern: 'circles' },
-    'wine': { colors: ['#722F37', '#C73E1D', '#B91372'], pattern: 'curves' },
-    'beer': { colors: ['#F2A900', '#E67E22', '#D4AC0D'], pattern: 'bubbles' },
-    'cocktail': { colors: ['#E91E63', '#00BCD4', '#FFD700'], pattern: 'diagonal' },
-    'bakery': { colors: ['#FFDAB9', '#FFB6C1', '#FFF4E6'], pattern: 'soft' },
-    'market': { colors: ['#FF6347', '#32CD32', '#FFD700'], pattern: 'grid' },
+    // Food & Drink - warm, appetizing gradients
+    'chicken': { colors: ['#FF8C42', '#FFD166', '#F4A261', '#FF6B35'] },
+    'pizza': { colors: ['#E63946', '#F77F00', '#FCBF49', '#FF4500'] },
+    'sushi': { colors: ['#06FFA5', '#FF6B9D', '#C9F0FF', '#00D9FF'] },
+    'ramen': { colors: ['#FFB627', '#FF6B35', '#F7931E', '#FFA07A'] },
+    'coffee': { colors: ['#6F4E37', '#A67B5B', '#C8AD7F', '#8B4513'] },
+    'wine': { colors: ['#722F37', '#C73E1D', '#B91372', '#8B0000'] },
+    'beer': { colors: ['#F2A900', '#E67E22', '#D4AC0D', '#FFB627'] },
+    'cocktail': { colors: ['#E91E63', '#00BCD4', '#FFD700', '#FF1493'] },
+    'bakery': { colors: ['#FFDAB9', '#FFB6C1', '#FFF4E6', '#FFE4E1'] },
+    'market': { colors: ['#FF6347', '#32CD32', '#FFD700', '#FF8C00'] },
+    'taco': { colors: ['#FF6B35', '#F7B801', '#6A994E', '#FFD166'] },
+    'sandwich': { colors: ['#DDA15E', '#BC6C25', '#FEFAE0', '#C9ADA7'] },
+    'brunch': { colors: ['#FFE5B4', '#FFDAB9', '#FFB347', '#FFA07A'] },
+    'breakfast': { colors: ['#FFE4B5', '#FFDAB9', '#FFB347', '#F4A460'] },
 
-    // Wellness & Fitness - calm, energizing colors
-    'yoga': { colors: ['#9B59B6', '#E8DAEF', '#D7BDE2'], pattern: 'zen' },
-    'wellness': { colors: ['#81C784', '#A5D6A7', '#C8E6C9'], pattern: 'organic' },
-    'fitness': { colors: ['#FF5722', '#FF7043', '#FF8A65'], pattern: 'dynamic' },
-    'meditation': { colors: ['#6A5ACD', '#B0C4DE', '#E6E6FA'], pattern: 'calm' },
+    // Wellness & Fitness - calm, energizing gradients
+    'yoga': { colors: ['#9B59B6', '#E8DAEF', '#D7BDE2', '#C39BD3'] },
+    'wellness': { colors: ['#81C784', '#A5D6A7', '#C8E6C9', '#66BB6A'] },
+    'fitness': { colors: ['#FF5722', '#FF7043', '#FF8A65', '#E64A19'] },
+    'meditation': { colors: ['#6A5ACD', '#B0C4DE', '#E6E6FA', '#9370DB'] },
 
-    // Art & Culture - creative, vibrant colors
-    'gallery': { colors: ['#E91E63', '#9C27B0', '#673AB7'], pattern: 'abstract' },
-    'museum': { colors: ['#5E35B1', '#7E57C2', '#B39DDB'], pattern: 'elegant' },
-    'exhibit': { colors: ['#FF6F00', '#FF8F00', '#FFA000'], pattern: 'frames' },
-    'street art': { colors: ['#FF1744', '#00E5FF', '#FFEA00'], pattern: 'spray' },
-    'photography': { colors: ['#37474F', '#607D8B', '#90A4AE'], pattern: 'aperture' },
-    'painting': { colors: ['#FF4081', '#7C4DFF', '#18FFFF'], pattern: 'brush' },
-    'crayola': { colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'], pattern: 'rainbow' },
+    // Art & Culture - creative, vibrant gradients
+    'gallery': { colors: ['#E91E63', '#9C27B0', '#673AB7', '#D81B60'] },
+    'museum': { colors: ['#5E35B1', '#7E57C2', '#B39DDB', '#9575CD'] },
+    'exhibit': { colors: ['#FF6F00', '#FF8F00', '#FFA000', '#F57C00'] },
+    'street art': { colors: ['#FF1744', '#00E5FF', '#FFEA00', '#FF6E40'] },
+    'photography': { colors: ['#37474F', '#607D8B', '#90A4AE', '#546E7A'] },
+    'painting': { colors: ['#FF4081', '#7C4DFF', '#18FFFF', '#E040FB'] },
+    'crayola': { colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'] },
 
-    // Music & Performance - energetic, rhythmic colors
-    'jazz': { colors: ['#1A237E', '#3F51B5', '#5C6BC0'], pattern: 'notes' },
-    'concert': { colors: ['#C2185B', '#E91E63', '#F06292'], pattern: 'waves' },
-    'music': { colors: ['#6A1B9A', '#8E24AA', '#AB47BC'], pattern: 'sound' },
-    'dj': { colors: ['#00BCD4', '#00ACC1', '#0097A7'], pattern: 'pulse' },
-    'dance': { colors: ['#D32F2F', '#F44336', '#E57373'], pattern: 'movement' },
+    // Music & Performance - energetic, rhythmic gradients
+    'jazz': { colors: ['#1A237E', '#3F51B5', '#5C6BC0', '#283593'] },
+    'concert': { colors: ['#C2185B', '#E91E63', '#F06292', '#AD1457'] },
+    'music': { colors: ['#6A1B9A', '#8E24AA', '#AB47BC', '#7B1FA2'] },
+    'dj': { colors: ['#00BCD4', '#00ACC1', '#0097A7', '#00838F'] },
+    'dance': { colors: ['#D32F2F', '#F44336', '#E57373', '#C62828'] },
 
-    // Fashion & Shopping - stylish, modern colors
-    'fashion': { colors: ['#212121', '#757575', '#BDBDBD'], pattern: 'minimal' },
-    'warby parker': { colors: ['#4A90E2', '#7B68EE', '#00CED1'], pattern: 'circles' },
-    'eyeglasses': { colors: ['#4A90E2', '#7B68EE', '#00CED1'], pattern: 'circles' },
-    'clothing': { colors: ['#FF6B9D', '#C44569', '#F8B500'], pattern: 'fabric' },
+    // Fashion & Shopping - stylish, modern gradients
+    'fashion': { colors: ['#212121', '#757575', '#BDBDBD', '#424242'] },
+    'warby parker': { colors: ['#4A90E2', '#7B68EE', '#00CED1', '#5F9EA0'] },
+    'eyeglasses': { colors: ['#4A90E2', '#7B68EE', '#00CED1', '#4682B4'] },
+    'clothing': { colors: ['#FF6B9D', '#C44569', '#F8B500', '#FF1493'] },
+    'shopping': { colors: ['#FF6B9D', '#9B59B6', '#3498DB', '#E74C3C'] },
 
     // Brands & Events
-    'daily harvest': { colors: ['#27AE60', '#52BE80', '#7DCEA0'], pattern: 'organic' },
-    'corepower': { colors: ['#9B59B6', '#BB8FCE', '#D7BDE2'], pattern: 'zen' },
-    'rockefeller': { colors: ['#1565C0', '#1976D2', '#1E88E5'], pattern: 'urban' },
-    'paris hilton': { colors: ['#FF69B4', '#FFB6C1', '#FFC0CB'], pattern: 'glam' },
-    'celebrity': { colors: ['#FFD700', '#FFA500', '#FF8C00'], pattern: 'star' }
+    'daily harvest': { colors: ['#27AE60', '#52BE80', '#7DCEA0', '#2ECC71'] },
+    'corepower': { colors: ['#9B59B6', '#BB8FCE', '#D7BDE2', '#8E44AD'] },
+    'rockefeller': { colors: ['#1565C0', '#1976D2', '#1E88E5', '#0D47A1'] },
+    'paris hilton': { colors: ['#FF69B4', '#FFB6C1', '#FFC0CB', '#FF1493'] },
+    'celebrity': { colors: ['#FFD700', '#FFA500', '#FF8C00', '#DAA520'] }
   };
 
   // Find matching theme
@@ -144,21 +149,61 @@ function getEventImage(title, category) {
   // Default category themes if no specific match
   if (!theme) {
     const categoryThemes = {
-      'art': { colors: ['#E91E63', '#9C27B0', '#673AB7'], pattern: 'abstract' },
-      'music': { colors: ['#6A1B9A', '#8E24AA', '#AB47BC'], pattern: 'sound' },
-      'culinary': { colors: ['#FF6347', '#FF8C42', '#FFD166'], pattern: 'organic' },
-      'social': { colors: ['#42A5F5', '#66BB6A', '#FFA726'], pattern: 'community' }
+      'art': { colors: ['#E91E63', '#9C27B0', '#673AB7', '#D81B60'] },
+      'music': { colors: ['#6A1B9A', '#8E24AA', '#AB47BC', '#7B1FA2'] },
+      'culinary': { colors: ['#FF6347', '#FF8C42', '#FFD166', '#F4A261'] },
+      'social': { colors: ['#42A5F5', '#66BB6A', '#FFA726', '#5C6BC0'] }
     };
     theme = categoryThemes[category] || categoryThemes.social;
   }
 
-  // Use the event title as seed for DiceBear with theme colors
-  const seed = encodeURIComponent(title.toLowerCase().replace(/\s+/g, '-'));
-  const bgColor = theme.colors[0].replace('#', '');
+  // Use a simple hash of the title to create variation in gradient positions
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) {
+    hash = ((hash << 5) - hash) + title.charCodeAt(i);
+    hash = hash & hash;
+  }
+  const seed = Math.abs(hash % 100);
 
-  // Use DiceBear's abstract patterns with our color scheme
-  // This creates minimal, geometric patterns in the event's theme colors
-  return `https://api.dicebear.com/7.x/shapes/svg?seed=${seed}&backgroundColor=${bgColor}&size=800`;
+  // Create sophisticated mesh gradient SVG (Notion/Apple/Airbnb style)
+  const c = theme.colors;
+
+  // Calculate gradient positions based on seed for variation
+  const cx1 = 20 + (seed % 30);
+  const cy1 = 20 + ((seed * 2) % 30);
+  const cx2 = 50 + (seed % 25);
+  const cy2 = 50 + ((seed * 3) % 25);
+  const cx3 = 70 + (seed % 20);
+  const cy3 = 70 + ((seed * 4) % 20);
+
+  // Premium mesh gradient SVG with blur and opacity for depth
+  const svg = `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="g1" cx="${cx1}%" cy="${cy1}%">
+        <stop offset="0%" style="stop-color:${c[0]};stop-opacity:0.9" />
+        <stop offset="100%" style="stop-color:${c[1]};stop-opacity:0.6" />
+      </radialGradient>
+      <radialGradient id="g2" cx="${cx2}%" cy="${cy2}%">
+        <stop offset="0%" style="stop-color:${c[1]};stop-opacity:0.8" />
+        <stop offset="100%" style="stop-color:${c[2] || c[0]};stop-opacity:0.5" />
+      </radialGradient>
+      <radialGradient id="g3" cx="${cx3}%" cy="${cy3}%">
+        <stop offset="0%" style="stop-color:${c[2] || c[0]};stop-opacity:0.7" />
+        <stop offset="100%" style="stop-color:${c[3] || c[1]};stop-opacity:0.4" />
+      </radialGradient>
+      <filter id="blur">
+        <feGaussianBlur stdDeviation="60" />
+      </filter>
+    </defs>
+    <rect width="1200" height="800" fill="${c[0]}" />
+    <rect width="1200" height="800" fill="url(#g1)" filter="url(#blur)" opacity="0.9" />
+    <rect width="1200" height="800" fill="url(#g2)" filter="url(#blur)" opacity="0.8" />
+    <rect width="1200" height="800" fill="url(#g3)" filter="url(#blur)" opacity="0.7" />
+  </svg>`;
+
+  // Encode SVG as data URL
+  const encoded = Buffer.from(svg).toString('base64');
+  return `data:image/svg+xml;base64,${encoded}`;
 }
 
 // Scrape events from nycforfree.co
