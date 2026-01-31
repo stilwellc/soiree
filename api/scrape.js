@@ -1,8 +1,13 @@
-const { sql } = require('@vercel/postgres');
+const { Pool } = require('pg');
 
-// Simple scraper function with fallback events
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+// Simple scraper with fallback events
 function scrapeEvents() {
-  const events = [
+  return [
     {
       name: "Brooklyn Street Art Walk",
       category: "art",
@@ -43,12 +48,9 @@ function scrapeEvents() {
       highlights: ["50+ vendors", "Cooking demos", "Free samples", "Waterfront"]
     }
   ];
-
-  return events;
 }
 
 module.exports = async function handler(req, res) {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -71,7 +73,7 @@ module.exports = async function handler(req, res) {
 
   try {
     // Initialize table
-    await sql`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS events (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -85,14 +87,13 @@ module.exports = async function handler(req, res) {
         image TEXT,
         description TEXT,
         highlights JSONB,
-        source_url TEXT,
         scraped_at TIMESTAMP DEFAULT NOW(),
         created_at TIMESTAMP DEFAULT NOW()
       )
-    `;
+    `);
 
     // Clear old events
-    await sql`DELETE FROM events WHERE scraped_at < NOW() - INTERVAL '7 days'`;
+    await pool.query(`DELETE FROM events WHERE scraped_at < NOW() - INTERVAL '7 days'`);
 
     // Get events
     const events = scrapeEvents();
@@ -100,23 +101,24 @@ module.exports = async function handler(req, res) {
     // Insert events
     let inserted = 0;
     for (const event of events) {
-      await sql`
-        INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights)
-        VALUES (${event.name}, ${event.category}, ${event.date}, ${event.time}, ${event.location},
-                ${event.address}, ${event.price}, ${event.spots}, ${event.image}, ${event.description},
-                ${JSON.stringify(event.highlights)})
-      `;
+      await pool.query(
+        `INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [event.name, event.category, event.date, event.time, event.location,
+         event.address, event.price, event.spots, event.image, event.description,
+         JSON.stringify(event.highlights)]
+      );
       inserted++;
     }
 
-    const { rows } = await sql`SELECT COUNT(*) as count FROM events`;
+    const result = await pool.query('SELECT COUNT(*) as count FROM events');
 
     return res.status(200).json({
       success: true,
       message: 'Scraping completed',
       scraped: events.length,
       inserted: inserted,
-      totalEvents: parseInt(rows[0].count),
+      totalEvents: parseInt(result.rows[0].count),
       timestamp: new Date().toISOString()
     });
   } catch (error) {
