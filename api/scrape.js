@@ -75,7 +75,7 @@ function categorizeEvent(title, description) {
   }
 
   // Art & Culture - includes museums, creative activities, visual media, light installations, exhibitions
-  if (text.match(/\b(art|gallery|exhibit|museum|paint|sculpture|artist|creative|creativity|design|photo|mural|craft|pottery|drawing|illustration|installation|visual|theater|theatre|cinema|film|movie|photography|graffiti|contemporary|abstract|crayola|coloring|memoir|screening|glow|light|display|illumination)\b/) || text.match(/street art|paris hilton|stranger things/)) {
+  if (text.match(/\b(art|gallery|exhibit|museum|paint|sculpture|artist|creative|creativity|design|photo|mural|craft|pottery|drawing|illustration|installation|visual|theater|theatre|cinema|film|movie|photography|graffiti|contemporary|abstract|crayola|coloring|memoir|screening|glow|glows|light|lights|display|illumination)\b/) || text.match(/street art|paris hilton|stranger things/)) {
     return 'art';
   }
 
