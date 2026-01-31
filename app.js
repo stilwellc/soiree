@@ -678,8 +678,10 @@ function getCategoryName(category) {
   const names = {
     art: 'Art & Culture',
     music: 'Music',
-    culinary: 'Culinary',
-    fashion: 'Fashion'
+    culinary: 'Food & Drink',
+    fashion: 'Fashion',
+    lifestyle: 'Lifestyle',
+    community: 'Community'
   };
   return names[category] || category;
 }

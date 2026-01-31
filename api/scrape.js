@@ -55,42 +55,60 @@ function getFallbackEvents() {
   ];
 }
 
-// Category mapping based on keywords
-function categorizeEvent(title, description) {
-  const text = (title + ' ' + description).toLowerCase();
+// Category mapping based on title, description, and location
+function categorizeEvent(title, description, location) {
+  const text = (title + ' ' + (description || '')).toLowerCase();
+  const loc = (location || '').toLowerCase();
 
-  // Fashion - check first for fashion-specific events
-  if (text.match(/\b(fashion|runway|designer|couture|style|clothing|apparel|boutique|wardrobe|outfit|lookbook|vogue|trend|model|catwalk|textile)\b/)) {
-    return 'fashion';
-  }
-
-  // Music & Entertainment - includes dance, gaming, interactive entertainment
-  if (text.match(/\b(music|concert|jazz|dj|band|singer|performance|show|festival|stage|soundtrack|album|vinyl|orchestra|choir|acoustic|symphony|karaoke|rap|rock|indie|electronic|classical|dance|dancing|ballet|choreograph|arcade|gaming|simulator|interactive|entertainment)\b/) || text.match(/live music|hip hop|pac-man|video game|flight simulator/)) {
-    return 'music';
-  }
-
-  // Food & Culinary - include treats, snacks, and food-related events
-  if (text.match(/\b(food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|bar|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|eating|flavor|recipe|gourmet|pizza|burger|chicken|sushi|ramen|bbq|brewery|pub|tavern|bistro|eatery|slice|taco|sandwich|foodie|cuisine|pastry|dessert|appetizer|treat|snack)\b/) || text.match(/lidl|yoyo chicken/)) {
-    return 'culinary';
-  }
-
-  // Art & Culture - includes museums, creative activities, visual media, light installations, exhibitions
-  if (text.match(/\b(art|gallery|exhibit|museum|paint|sculpture|artist|creative|creativity|design|photo|mural|craft|pottery|drawing|illustration|installation|visual|theater|theatre|cinema|film|movie|photography|graffiti|contemporary|abstract|crayola|coloring|memoir|screening|glow|glows|light|lights|display|illumination)\b/) || text.match(/street art|paris hilton|stranger things/)) {
+  // --- Location-based hints (museums = art) ---
+  const museumLocations = ['moma', 'met', 'metropolitan', 'whitney', 'guggenheim',
+    'new museum', 'museum', 'gallery', 'brooklyn museum', 'amnh'];
+  if (museumLocations.some(m => loc.includes(m))) {
+    // Even at a museum, food events stay food
+    if (text.match(/\b(cook|chef|tasting|dinner|brunch|food)\b/)) return 'culinary';
     return 'art';
   }
 
-  // Social & Community - wellness, fitness, networking, workshops (more restrictive)
-  if (text.match(/\b(yoga|fitness|workout|meditation|wellness|health|community|networking|workshop|seminar|talk|lecture|meetup|class|training|discussion|panel|debate|scavenger)\b/) || text.match(/book club/)) {
-    return 'social';
+  // --- Film / screening detection (directed by, director's cut, year patterns) ---
+  if (text.match(/directed by|director's cut|screening|^\d{4}\.\s|film series|\bfilms?\b.*\b\d{4}\b/)) {
+    return 'art';
   }
 
-  // Default to art for visual experiences, brand pop-ups default to social
-  if (text.match(/\b(pop-up|popup|grand opening|opening|experience)\b/)) {
-    return 'social';
+  // --- Art & Culture ---
+  if (text.match(/\b(art|gallery|exhibit|exhibition|paint|sculpture|artist|mural|craft|pottery|drawing|illustration|installation|visual|theater|theatre|cinema|film|movie|photography|graffiti|contemporary|abstract|coloring|screening|animation|collection|calligraphy|prints|portrait|studio tour|open studio|architecture tour)\b/) || text.match(/street art|ice sculpture/)) {
+    return 'art';
   }
 
-  // Final default
-  return 'social';
+  // --- Music & Nightlife ---
+  if (text.match(/\b(music|concert|jazz|dj|band|singer|live|festival|stage|soundtrack|album|vinyl|orchestra|choir|acoustic|symphony|karaoke|rap|rock|indie|electronic|classical|ballet|choreograph|ep release|nightlife|party|rave)\b/) || text.match(/live music|hip hop|release party/)) {
+    return 'music';
+  }
+
+  // --- Food & Drink ---
+  if (text.match(/\b(food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|eating|flavor|recipe|gourmet|pizza|burger|chicken|sushi|ramen|bbq|brewery|pub|tavern|bistro|eatery|slice|taco|sandwich|foodie|cuisine|pastry|dessert|appetizer|treat|snack|chocolate|muffin|sundae|smoothie|gnocchi|hot chocolate|ice cream|cookie|doughnut|donut)\b/) || text.match(/grand opening.*(express|grill|kitchen|cafe|deli|restaurant|bar|eatery|bistro|bakery)/i)) {
+    return 'culinary';
+  }
+
+  // --- Fashion ---
+  if (text.match(/\b(fashion|runway|designer|couture|clothing|apparel|boutique|wardrobe|outfit|lookbook|vogue|catwalk|textile)\b/)) {
+    return 'fashion';
+  }
+
+  // --- Lifestyle (beauty, wellness, fitness, brand pop-ups, shopping) ---
+  if (text.match(/\b(yoga|fitness|workout|meditation|wellness|beauty|skincare|spa|k-beauty|cosmetic|makeup|fragrance|self-care|pilates|barre|cycling|running|marathon|gym)\b/) || text.match(/pop-up|popup|launch celebration|grand opening|experience|charm bar|scavenger hunt/)) {
+    return 'lifestyle';
+  }
+
+  // --- Community (family, kids, sports, volunteering, parades, celebrations) ---
+  if (text.match(/\b(family|kids|children|volunteer|parade|camp|fair|story time|storytime|tweens|teens|workshop|seminar|lecture|networking|meetup|discussion|panel|book club|reading|world cup|soccer|basketball|baseball|sports bar|fan village)\b/) || text.match(/valentine|galentine|lunar new year|australia day|wikipedia day/)) {
+    return 'community';
+  }
+
+  // --- Default: try to infer from title patterns ---
+  // Brand names with event-like suffixes
+  if (text.match(/\b(celebration|anniversary|birthday|bash|launch)\b/)) return 'community';
+
+  return 'community';
 }
 
 // Generate professional Unsplash images based on category
@@ -166,7 +184,7 @@ async function scrapeTheSkint() {
       const link = $elem.find('a').first().attr('href');
       if (!link) return;
 
-      const category = categorizeEvent(title, description);
+      const category = categorizeEvent(title, description, location);
       const eventUrl = link.startsWith('http') ? link : `https://theskint.com${link}`;
 
       events.push({
@@ -220,7 +238,7 @@ async function scrapeTimeOut() {
       const link = $elem.find('a').first().attr('href');
       if (!link) return;
 
-      const category = categorizeEvent(title, description);
+      const category = categorizeEvent(title, description, location);
       const eventUrl = link.startsWith('http') ? link : `https://www.timeout.com${link}`;
 
       events.push({
@@ -311,7 +329,7 @@ async function scrapeNYCForFree() {
       }
 
       // Categorize event
-      const category = categorizeEvent(name, description);
+      const category = categorizeEvent(name, description, location);
 
       // Build full event URL
       const eventUrl = href.startsWith('http') ? href : `https://www.nycforfree.co${href}`;
@@ -384,7 +402,7 @@ async function scrapeMetMuseum() {
 
       const location = 'The Met';
       const address = '1000 5th Ave, New York, NY 10028';
-      const category = categorizeEvent(name, description);
+      const category = categorizeEvent(name, description, location);
       const eventUrl = href.startsWith('http') ? href : `https://www.metmuseum.org${href}`;
 
       events.push({
@@ -467,7 +485,7 @@ async function scrapeMoMA() {
       const description = `${name} at MoMA.`;
       const location = 'MoMA';
       const address = '11 W 53rd St, New York, NY 10019';
-      const category = categorizeEvent(name, description);
+      const category = categorizeEvent(name, description, location);
       const eventUrl = href.startsWith('http') ? href : `https://www.moma.org${href}`;
 
       events.push({
@@ -544,7 +562,7 @@ async function scrapeAMNH() {
 
       const location = 'AMNH';
       const address = '200 Central Park West, New York, NY 10024';
-      const category = categorizeEvent(name, description);
+      const category = categorizeEvent(name, description, location);
       const eventUrl = href.startsWith('http') ? href : `https://www.amnh.org${href}`;
 
       events.push({
@@ -615,7 +633,7 @@ async function scrapeWhitney() {
 
       const location = 'Whitney Museum';
       const address = '99 Gansevoort St, New York, NY 10014';
-      const category = categorizeEvent(name, description);
+      const category = categorizeEvent(name, description, location);
       const eventUrl = href.startsWith('http') ? href : `https://whitney.org${href}`;
 
       events.push({
@@ -674,7 +692,7 @@ async function scrapeGuggenheim() {
 
       const description = (item.excerpt?.rendered || '').replace(/<[^>]+>/g, '').trim();
       const eventUrl = item.link || `https://www.guggenheim.org/event/${item.slug}`;
-      const category = categorizeEvent(name, description);
+      const category = categorizeEvent(name, description, location);
 
       events.push({
         name: name.substring(0, 255),
@@ -701,7 +719,7 @@ async function scrapeGuggenheim() {
 
       const description = (item.excerpt?.rendered || '').replace(/<[^>]+>/g, '').trim();
       const eventUrl = item.link || `https://www.guggenheim.org/exhibition/${item.slug}`;
-      const category = categorizeEvent(name, description);
+      const category = categorizeEvent(name, description, location);
 
       events.push({
         name: name.substring(0, 255),
@@ -766,7 +784,7 @@ async function scrapeNewMuseum() {
 
           const location = 'New Museum';
           const address = '235 Bowery, New York, NY 10002';
-          const category = categorizeEvent(name, description);
+          const category = categorizeEvent(name, description, location);
           const eventUrl = uri.startsWith('http') ? uri : `https://www.newmuseum.org${uri}`;
 
           events.push({
@@ -806,7 +824,7 @@ async function scrapeNewMuseum() {
 
         const location = 'New Museum';
         const address = '235 Bowery, New York, NY 10002';
-        const category = categorizeEvent(name, description);
+        const category = categorizeEvent(name, description, location);
         const eventUrl = href.startsWith('http') ? href : `https://www.newmuseum.org${href}`;
 
         events.push({
