@@ -60,27 +60,27 @@ function categorizeEvent(title, description) {
   const text = (title + ' ' + description).toLowerCase();
 
   // Fashion - check first for fashion-specific events
-  if (text.match(/fashion|runway|designer|couture|style|clothing|apparel|boutique|wardrobe|outfit|lookbook|vogue|trend|model|catwalk|textile/)) {
+  if (text.match(/\b(fashion|runway|designer|couture|style|clothing|apparel|boutique|wardrobe|outfit|lookbook|vogue|trend|model|catwalk|textile)\b/)) {
     return 'fashion';
   }
 
   // Music & Entertainment - includes dance
-  if (text.match(/music|concert|jazz|dj|band|singer|performance|show|festival|stage|live music|soundtrack|album|vinyl|orchestra|choir|acoustic|symphony|karaoke|rap|hip hop|rock|indie|electronic|classical|dance|dancing|ballet|choreograph/)) {
+  if (text.match(/\b(music|concert|jazz|dj|band|singer|performance|show|festival|stage|soundtrack|album|vinyl|orchestra|choir|acoustic|symphony|karaoke|rap|rock|indie|electronic|classical|dance|dancing|ballet|choreograph)\b/) || text.match(/live music|hip hop/)) {
     return 'music';
   }
 
-  // Food & Culinary - exclude Crayola and non-food brands
-  if (text.match(/food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|bar|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|flavor|recipe|gourmet|pizza|burger|chicken|sushi|ramen|bbq|brewery|pub|tavern|bistro|eatery|slice|taco|sandwich|foodie|cuisine|pastry|dessert|appetizer/) && !text.match(/crayola/)) {
+  // Food & Culinary - use word boundaries to avoid false matches
+  if (text.match(/\b(food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|bar|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|eating|flavor|recipe|gourmet|pizza|burger|chicken|sushi|ramen|bbq|brewery|pub|tavern|bistro|eatery|slice|taco|sandwich|foodie|cuisine|pastry|dessert|appetizer)\b/)) {
     return 'culinary';
   }
 
-  // Art & Culture - includes museums, creative activities, visual media
-  if (text.match(/art|gallery|exhibit|museum|paint|sculpture|street art|artist|creative|design|photo|mural|craft|pottery|drawing|illustration|installation|visual|theater|theatre|cinema|film|movie|photography|graffiti|contemporary|abstract|crayola|coloring|memoir|screening/)) {
+  // Art & Culture - includes museums, creative activities, visual media (check before social for "creative")
+  if (text.match(/\b(art|gallery|exhibit|museum|paint|sculpture|artist|creative|creativity|design|photo|mural|craft|pottery|drawing|illustration|installation|visual|theater|theatre|cinema|film|movie|photography|graffiti|contemporary|abstract|crayola|coloring|memoir|screening)\b/) || text.match(/street art/)) {
     return 'art';
   }
 
   // Social & Community - wellness, fitness, networking, workshops, brand experiences, pop-ups
-  if (text.match(/yoga|fitness|workout|meditation|wellness|health|community|networking|workshop|seminar|talk|lecture|meetup|class|training|discussion|panel|debate|book club|reading|literary|pop-up|popup|experience|grand opening|opening|scavenger|arcade|simulator/)) {
+  if (text.match(/\b(yoga|fitness|workout|meditation|wellness|health|community|networking|workshop|seminar|talk|lecture|meetup|class|training|discussion|panel|debate|experience|scavenger|arcade|simulator)\b/) || text.match(/pop-up|popup|grand opening|book club/)) {
     return 'social';
   }
 
