@@ -263,7 +263,6 @@ async function scrapeNYCForFree() {
 
     // Find event items
     $('.event-item, a[href*="/events/"]').each((i, elem) => {
-      if (events.length >= 20) return false; // Limit to 20 events
 
       const $elem = $(elem);
       const href = $elem.attr('href') || $elem.find('a').attr('href');
