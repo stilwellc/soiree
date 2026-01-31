@@ -177,6 +177,74 @@ function getEventImage(title, category) {
   return images[index];
 }
 
+// Fetch detail page description from an individual event URL
+// Used to enrich listing-page data with full descriptions for better categorization
+async function fetchDetailDescription(url) {
+  try {
+    const response = await axios.get(url, {
+      timeout: 5000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html'
+      }
+    });
+    const $ = cheerio.load(response.data);
+
+    // Collect text from common content selectors (Squarespace, WordPress, generic)
+    const selectors = [
+      '.eventitem-column-content p',
+      '.sqs-block-content p',
+      '.entry-content p',
+      'article p',
+      '.event-description p',
+      '.post-content p'
+    ];
+
+    let text = '';
+    for (const sel of selectors) {
+      $(sel).each((_, el) => {
+        text += ' ' + $(el).text().trim();
+      });
+      if (text.trim().length > 50) break;
+    }
+
+    return text.trim().substring(0, 1000);
+  } catch {
+    return '';
+  }
+}
+
+// Enrich events array by fetching detail pages in parallel batches
+// Re-categorizes each event using the richer description text
+async function enrichWithDetailPages(events, batchSize = 10) {
+  console.log(`Enriching ${events.length} events with detail page descriptions...`);
+  let enriched = 0;
+
+  for (let i = 0; i < events.length; i += batchSize) {
+    const batch = events.slice(i, i + batchSize);
+    await Promise.allSettled(
+      batch.map(async (event) => {
+        const detail = await fetchDetailDescription(event.url);
+        if (detail && detail.length > 30) {
+          // Combine original + detail description for categorization
+          const fullDesc = (event.description + ' ' + detail).substring(0, 1000);
+          event.description = fullDesc.substring(0, 500);
+          // Re-categorize with richer text
+          const newCategory = categorizeEvent(event.name, fullDesc, event.location);
+          if (newCategory !== event.category) {
+            event.category = newCategory;
+            event.image = getEventImage(event.name, newCategory);
+          }
+          enriched++;
+        }
+      })
+    );
+  }
+
+  console.log(`  Enriched ${enriched}/${events.length} events with detail descriptions`);
+  return events;
+}
+
 // Scrape events from The Skint (free events aggregator - includes museum events)
 async function scrapeTheSkint() {
   try {
@@ -371,6 +439,10 @@ async function scrapeNYCForFree() {
     });
 
     console.log(`Scraped ${events.length} events from nycforfree.co`);
+
+    // Enrich with detail page descriptions for better categorization
+    await enrichWithDetailPages(events);
+
     return events;
   } catch (error) {
     console.error('NYC For Free scraping failed:', error.message);
