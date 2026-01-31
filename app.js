@@ -499,12 +499,16 @@ function openModal(eventId) {
   if (!event) return;
 
   const isFavorited = favorites.includes(event.id);
-  const mapsEmbedUrl = getGoogleMapsEmbedUrl(event.address);
+  const capacityPercent = Math.min(100, Math.floor((event.spots / 250) * 100));
 
   const modalContent = `
-    <div class="modal-image" style="background-image: url('${event.image}')"></div>
+    <div class="modal-image" style="background-image: url('${event.image}')">
+      <div class="modal-image-overlay"></div>
+    </div>
     <div class="modal-content">
-      <div class="modal-title">${event.name}</div>
+      <div class="modal-category">${getCategoryName(event.category)}</div>
+      <h2 class="modal-title">${event.name}</h2>
+
       <div class="modal-meta">
         <div class="modal-meta-item">
           <svg class="modal-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -513,14 +517,21 @@ function openModal(eventId) {
             <line x1="8" y1="2" x2="8" y2="6"></line>
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
-          <span>${event.date} • ${event.time}</span>
+          <div>
+            <div class="meta-label">When</div>
+            <div class="meta-value">${event.date} • ${event.time}</div>
+          </div>
         </div>
         <div class="modal-meta-item">
           <svg class="modal-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
             <circle cx="12" cy="10" r="3"></circle>
           </svg>
-          <span>${event.address}</span>
+          <div>
+            <div class="meta-label">Where</div>
+            <div class="meta-value">${event.location}</div>
+            <div class="meta-sublabel">${event.address}</div>
+          </div>
         </div>
         <div class="modal-meta-item">
           <svg class="modal-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -529,84 +540,54 @@ function openModal(eventId) {
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
-          <span>${event.spots} spots remaining</span>
+          <div>
+            <div class="meta-label">Availability</div>
+            <div class="meta-value">${event.spots} spots left</div>
+          </div>
         </div>
       </div>
-      <div class="modal-description">${event.description}</div>
-      <div class="modal-highlights">
-        <h3>Event Highlights</h3>
-        <ul>
+
+      <div class="modal-section">
+        <h3>About This Event</h3>
+        <p class="modal-description">${event.description}</p>
+      </div>
+
+      ${event.highlights && event.highlights.length > 0 ? `
+      <div class="modal-section">
+        <h3>What to Expect</h3>
+        <ul class="modal-highlights">
           ${event.highlights.map(h => `<li>${h}</li>`).join('')}
         </ul>
       </div>
-
-      <!-- Google Maps -->
-      <div class="modal-map">
-        <h3>Location</h3>
-        <iframe
-          width="100%"
-          height="250"
-          frameborder="0"
-          style="border:0; border-radius: 12px;"
-          src="${mapsEmbedUrl}"
-          allowfullscreen>
-        </iframe>
-        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address)}" target="_blank" class="map-directions">
-          Get Directions →
-        </a>
-      </div>
-
-      <!-- Add to Calendar -->
-      <div class="modal-calendar">
-        <h3>Add to Calendar</h3>
-        <div class="calendar-buttons">
-          <button class="btn btn-outline" onclick="window.open('${generateGoogleCalendarLink(event)}', '_blank')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-            Google Calendar
-          </button>
-          <button class="btn btn-outline" onclick="generateICalFile(${JSON.stringify(event).replace(/"/g, '&quot;')})">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            Download .ics
-          </button>
-        </div>
-      </div>
-
-      <!-- Social Sharing -->
-      <div class="modal-share">
-        <h3>Share Event</h3>
-        <div class="share-buttons">
-          <button class="btn btn-share" onclick="shareOnTwitter(${JSON.stringify(event).replace(/"/g, '&quot;')})" aria-label="Share on Twitter">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path>
-            </svg>
-          </button>
-          <button class="btn btn-share" onclick="shareOnFacebook(${JSON.stringify(event).replace(/"/g, '&quot;')})" aria-label="Share on Facebook">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path>
-            </svg>
-          </button>
-          <button class="btn btn-share" onclick="copyEventLink()" aria-label="Copy link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
+      ` : ''}
 
       <div class="modal-actions">
-        ${event.url ? `<a href="${event.url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">View Event Details</a>` : `<button class="btn btn-primary" onclick="handleRSVP(${event.id})">RSVP Now</button>`}
-        <button class="btn btn-secondary" onclick="toggleFavorite(${event.id}); updateModalFavoriteBtn(${event.id})">
-          ${isFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
+        ${event.url ? `
+          <a href="${event.url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-block">
+            View Event Details
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="7" y1="17" x2="17" y2="7"></line>
+              <polyline points="7 7 17 7 17 17"></polyline>
+            </svg>
+          </a>
+        ` : `
+          <button class="btn btn-primary btn-block" onclick="handleRSVP(${event.id})">
+            Reserve Your Spot
+          </button>
+        `}
+        <button class="btn btn-secondary btn-icon" onclick="toggleFavorite(${event.id}); updateModalFavoriteBtn(${event.id})" aria-label="${isFavorited ? 'Remove from favorites' : 'Add to favorites'}">
+          <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+        </button>
+        <button class="btn btn-secondary btn-icon" onclick="shareEvent(${event.id})" aria-label="Share event">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
         </button>
       </div>
     </div>
@@ -675,85 +656,46 @@ function getCategoryName(category) {
   return names[category] || category;
 }
 
-// Enhanced date formatting
-function formatEventDate(dateString) {
-  // Handle existing string formats
-  const lowerDate = dateString.toLowerCase();
+// Share event
+function shareEvent(eventId) {
+  const event = events.find(e => e.id === eventId);
+  if (!event) return;
 
-  const dateMap = {
-    'tonight': 'Tonight',
-    'tomorrow': 'Tomorrow',
-    'friday': 'This Friday',
-    'saturday': 'This Saturday',
-    'sunday': 'This Sunday',
-    'monday': 'This Monday',
-    'tuesday': 'This Tuesday',
-    'wednesday': 'This Wednesday',
-    'thursday': 'This Thursday',
-    'next friday': 'Next Friday',
-    'next saturday': 'Next Saturday',
-    'next sunday': 'Next Sunday'
-  };
-
-  return dateMap[lowerDate] || dateString;
+  // Use Web Share API if available
+  if (navigator.share) {
+    navigator.share({
+      title: event.name,
+      text: `Check out ${event.name} at ${event.location}`,
+      url: event.url || window.location.href
+    }).catch(() => {
+      // Fallback to copy
+      fallbackShare(event);
+    });
+  } else {
+    fallbackShare(event);
+  }
 }
 
-function formatEventTime(timeString) {
-  // Already well-formatted, but we can add countdowns later
-  return timeString;
-}
-
-// Calendar link generators
-function generateGoogleCalendarLink(event) {
-  const title = encodeURIComponent(event.name);
-  const details = encodeURIComponent(event.description);
-  const location = encodeURIComponent(event.address);
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}`;
-}
-
-function generateICalFile(event) {
-  const ical = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'BEGIN:VEVENT',
-    `SUMMARY:${event.name}`,
-    `DESCRIPTION:${event.description}`,
-    `LOCATION:${event.address}`,
-    'END:VEVENT',
-    'END:VCALENDAR'
-  ].join('\n');
-
-  const blob = new Blob([ical], { type: 'text/calendar' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${event.name}.ics`;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-// Social sharing
-function shareOnTwitter(event) {
-  const text = encodeURIComponent(`Check out ${event.name} at ${event.location}!`);
-  const url = encodeURIComponent(window.location.href);
-  window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'width=550,height=420');
-}
-
-function shareOnFacebook(event) {
-  const url = encodeURIComponent(window.location.href);
-  window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=550,height=420');
-}
-
-function copyEventLink() {
-  navigator.clipboard.writeText(window.location.href).then(() => {
-    alert('Link copied to clipboard!');
+function fallbackShare(event) {
+  const url = event.url || window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('Link copied to clipboard!');
+  }).catch(() => {
+    showToast('Share: ' + url);
   });
 }
 
-// Google Maps embed
-function getGoogleMapsEmbedUrl(address) {
-  const encoded = encodeURIComponent(address);
-  return `https://www.google.com/maps/embed/v1/place?key=AIzaSyDummy_ReplaceWithRealKey&q=${encoded}`;
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.classList.add('show'), 100);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
 }
 
 // Initialize when DOM is ready
