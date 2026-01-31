@@ -78,118 +78,87 @@ function categorizeEvent(title, description) {
   return 'social';
 }
 
-// Generate production-quality gradient images for events
+// Generate images with app color palette but category-specific patterns
 function getEventImage(title, category) {
-  const titleLower = title.toLowerCase();
+  // Consistent color palette: brown, cream, white, wine/gold tones
+  const cream = '#FAF8F3';
+  const gold = '#D4AF37';
+  const brown = '#8B7355';
+  const darkBrown = '#6B5642';
+  const wine = '#722F37';
+  const lightCream = '#FFFAF5';
 
-  // Premium color palettes inspired by Notion, Apple, and Airbnb
-  const visualThemes = {
-    // Food & Drink - warm, appetizing gradients
-    'chicken': { colors: ['#FF8C42', '#FFD166', '#F4A261', '#FF6B35'] },
-    'pizza': { colors: ['#E63946', '#F77F00', '#FCBF49', '#FF4500'] },
-    'sushi': { colors: ['#06FFA5', '#FF6B9D', '#C9F0FF', '#00D9FF'] },
-    'ramen': { colors: ['#FFB627', '#FF6B35', '#F7931E', '#FFA07A'] },
-    'coffee': { colors: ['#6F4E37', '#A67B5B', '#C8AD7F', '#8B4513'] },
-    'wine': { colors: ['#722F37', '#C73E1D', '#B91372', '#8B0000'] },
-    'beer': { colors: ['#F2A900', '#E67E22', '#D4AC0D', '#FFB627'] },
-    'cocktail': { colors: ['#E91E63', '#00BCD4', '#FFD700', '#FF1493'] },
-    'bakery': { colors: ['#FFDAB9', '#FFB6C1', '#FFF4E6', '#FFE4E1'] },
-    'market': { colors: ['#FF6347', '#32CD32', '#FFD700', '#FF8C00'] },
-    'taco': { colors: ['#FF6B35', '#F7B801', '#6A994E', '#FFD166'] },
-    'sandwich': { colors: ['#DDA15E', '#BC6C25', '#FEFAE0', '#C9ADA7'] },
-    'brunch': { colors: ['#FFE5B4', '#FFDAB9', '#FFB347', '#FFA07A'] },
-    'breakfast': { colors: ['#FFE4B5', '#FFDAB9', '#FFB347', '#F4A460'] },
+  // Create different patterns for each category
+  let svg;
 
-    // Wellness & Fitness - calm, energizing gradients
-    'yoga': { colors: ['#9B59B6', '#E8DAEF', '#D7BDE2', '#C39BD3'] },
-    'wellness': { colors: ['#81C784', '#A5D6A7', '#C8E6C9', '#66BB6A'] },
-    'fitness': { colors: ['#FF5722', '#FF7043', '#FF8A65', '#E64A19'] },
-    'meditation': { colors: ['#6A5ACD', '#B0C4DE', '#E6E6FA', '#9370DB'] },
-
-    // Art & Culture - creative, vibrant gradients
-    'gallery': { colors: ['#E91E63', '#9C27B0', '#673AB7', '#D81B60'] },
-    'museum': { colors: ['#5E35B1', '#7E57C2', '#B39DDB', '#9575CD'] },
-    'exhibit': { colors: ['#FF6F00', '#FF8F00', '#FFA000', '#F57C00'] },
-    'street art': { colors: ['#FF1744', '#00E5FF', '#FFEA00', '#FF6E40'] },
-    'photography': { colors: ['#37474F', '#607D8B', '#90A4AE', '#546E7A'] },
-    'painting': { colors: ['#FF4081', '#7C4DFF', '#18FFFF', '#E040FB'] },
-    'crayola': { colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'] },
-
-    // Music & Performance - energetic, rhythmic gradients
-    'jazz': { colors: ['#1A237E', '#3F51B5', '#5C6BC0', '#283593'] },
-    'concert': { colors: ['#C2185B', '#E91E63', '#F06292', '#AD1457'] },
-    'music': { colors: ['#6A1B9A', '#8E24AA', '#AB47BC', '#7B1FA2'] },
-    'dj': { colors: ['#00BCD4', '#00ACC1', '#0097A7', '#00838F'] },
-    'dance': { colors: ['#D32F2F', '#F44336', '#E57373', '#C62828'] },
-
-    // Fashion & Shopping - stylish, modern gradients
-    'fashion': { colors: ['#212121', '#757575', '#BDBDBD', '#424242'] },
-    'warby parker': { colors: ['#4A90E2', '#7B68EE', '#00CED1', '#5F9EA0'] },
-    'eyeglasses': { colors: ['#4A90E2', '#7B68EE', '#00CED1', '#4682B4'] },
-    'clothing': { colors: ['#FF6B9D', '#C44569', '#F8B500', '#FF1493'] },
-    'shopping': { colors: ['#FF6B9D', '#9B59B6', '#3498DB', '#E74C3C'] },
-
-    // Brands & Events
-    'daily harvest': { colors: ['#27AE60', '#52BE80', '#7DCEA0', '#2ECC71'] },
-    'corepower': { colors: ['#9B59B6', '#BB8FCE', '#D7BDE2', '#8E44AD'] },
-    'rockefeller': { colors: ['#1565C0', '#1976D2', '#1E88E5', '#0D47A1'] },
-    'paris hilton': { colors: ['#FF69B4', '#FFB6C1', '#FFC0CB', '#FF1493'] },
-    'celebrity': { colors: ['#FFD700', '#FFA500', '#FF8C00', '#DAA520'] }
-  };
-
-  // Find matching theme
-  let theme = null;
-  for (const [keyword, themeData] of Object.entries(visualThemes)) {
-    if (titleLower.includes(keyword)) {
-      theme = themeData;
-      break;
-    }
+  if (category === 'music') {
+    // Music: Sound waves and rhythmic patterns
+    svg = `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:${cream}" />
+          <stop offset="100%" style="stop-color:${lightCream}" />
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="800" fill="url(#bg)" />
+      <path d="M 0,400 Q 150,300 300,400 T 600,400 T 900,400 T 1200,400" stroke="${gold}" stroke-width="3" fill="none" opacity="0.6"/>
+      <path d="M 0,450 Q 150,350 300,450 T 600,450 T 900,450 T 1200,450" stroke="${brown}" stroke-width="2" fill="none" opacity="0.4"/>
+      <circle cx="300" cy="400" r="8" fill="${gold}" opacity="0.7"/>
+      <circle cx="600" cy="400" r="8" fill="${brown}" opacity="0.7"/>
+      <circle cx="900" cy="400" r="8" fill="${wine}" opacity="0.6"/>
+    </svg>`;
+  } else if (category === 'culinary') {
+    // Food: Organic circular shapes, plates, flowing forms
+    svg = `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg">
+          <stop offset="0%" style="stop-color:${lightCream}" />
+          <stop offset="100%" style="stop-color:${cream}" />
+        </radialGradient>
+      </defs>
+      <rect width="1200" height="800" fill="url(#bg)" />
+      <circle cx="600" cy="400" r="200" fill="none" stroke="${gold}" stroke-width="2" opacity="0.4"/>
+      <circle cx="600" cy="400" r="150" fill="none" stroke="${brown}" stroke-width="2" opacity="0.3"/>
+      <circle cx="450" cy="300" r="60" fill="${gold}" opacity="0.2"/>
+      <circle cx="750" cy="500" r="80" fill="${brown}" opacity="0.15"/>
+      <circle cx="700" cy="280" r="50" fill="${wine}" opacity="0.2"/>
+      <path d="M 400,400 Q 500,300 600,400 T 800,400" stroke="${darkBrown}" stroke-width="2" fill="none" opacity="0.3"/>
+    </svg>`;
+  } else if (category === 'art') {
+    // Art: Abstract geometric shapes, creative composition
+    svg = `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:${cream}" />
+          <stop offset="100%" style="stop-color:${lightCream}" />
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="800" fill="url(#bg)" />
+      <rect x="200" y="200" width="250" height="250" fill="${gold}" opacity="0.2" transform="rotate(15 325 325)"/>
+      <rect x="600" y="300" width="200" height="200" fill="${brown}" opacity="0.25" transform="rotate(-10 700 400)"/>
+      <circle cx="400" cy="550" r="100" fill="${wine}" opacity="0.2"/>
+      <polygon points="850,250 950,350 800,400" fill="${darkBrown}" opacity="0.2"/>
+      <line x1="300" y1="150" x2="500" y2="200" stroke="${gold}" stroke-width="3" opacity="0.5"/>
+    </svg>`;
+  } else {
+    // Social: Connected circles, community, flowing connections
+    svg = `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg" cx="50%" cy="50%">
+          <stop offset="0%" style="stop-color:${lightCream}" />
+          <stop offset="100%" style="stop-color:${cream}" />
+        </radialGradient>
+      </defs>
+      <rect width="1200" height="800" fill="url(#bg)" />
+      <circle cx="400" cy="400" r="80" fill="${gold}" opacity="0.25"/>
+      <circle cx="600" cy="300" r="90" fill="${brown}" opacity="0.2"/>
+      <circle cx="700" cy="500" r="70" fill="${wine}" opacity="0.25"/>
+      <circle cx="500" cy="550" r="60" fill="${darkBrown}" opacity="0.2"/>
+      <line x1="400" y1="400" x2="600" y2="300" stroke="${gold}" stroke-width="2" opacity="0.3"/>
+      <line x1="600" y1="300" x2="700" y2="500" stroke="${brown}" stroke-width="2" opacity="0.3"/>
+      <line x1="400" y1="400" x2="500" y2="550" stroke="${wine}" stroke-width="2" opacity="0.3"/>
+    </svg>`;
   }
-
-  // Default category themes if no specific match
-  if (!theme) {
-    const categoryThemes = {
-      'art': { colors: ['#E91E63', '#9C27B0', '#673AB7', '#D81B60'] },
-      'music': { colors: ['#6A1B9A', '#8E24AA', '#AB47BC', '#7B1FA2'] },
-      'culinary': { colors: ['#FF6347', '#FF8C42', '#FFD166', '#F4A261'] },
-      'social': { colors: ['#42A5F5', '#66BB6A', '#FFA726', '#5C6BC0'] }
-    };
-    theme = categoryThemes[category] || categoryThemes.social;
-  }
-
-  // Use a simple hash of the title to create variation
-  let hash = 0;
-  for (let i = 0; i < title.length; i++) {
-    hash = ((hash << 5) - hash) + title.charCodeAt(i);
-    hash = hash & hash;
-  }
-  const seed = Math.abs(hash % 4);
-
-  // Select 2 harmonious colors for clean gradient
-  const c = theme.colors;
-  const color1 = c[seed % c.length];
-  const color2 = c[(seed + 1) % c.length];
-
-  // Create clean, modern gradient (alternating between diagonal and radial)
-  const svg = seed % 2 === 0
-    ? `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:${color1};stop-opacity:1" />
-            <stop offset="100%" style="stop-color:${color2};stop-opacity:1" />
-          </linearGradient>
-        </defs>
-        <rect width="1200" height="800" fill="url(#grad)" />
-      </svg>`
-    : `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <radialGradient id="grad" cx="30%" cy="30%">
-            <stop offset="0%" style="stop-color:${color1};stop-opacity:1" />
-            <stop offset="100%" style="stop-color:${color2};stop-opacity:1" />
-          </radialGradient>
-        </defs>
-        <rect width="1200" height="800" fill="url(#grad)" />
-      </svg>`;
 
   // Encode SVG as data URL
   const encoded = Buffer.from(svg).toString('base64');
