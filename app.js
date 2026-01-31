@@ -237,6 +237,7 @@ let events = [
 // App State
 let currentFilter = 'all';
 let searchQuery = '';
+let currentTimeFilter = 'all'; // 'all', 'today', 'week'
 let favorites = JSON.parse(localStorage.getItem('soireeFavorites') || '[]');
 
 // DOM Elements
@@ -360,6 +361,17 @@ function handleNavClick(item) {
   item.classList.add('active');
 
   if (view === 'discover') {
+    currentTimeFilter = 'all';
+    discoverView.classList.remove('hidden');
+    favoritesView.classList.add('hidden');
+    renderEvents();
+  } else if (view === 'today') {
+    currentTimeFilter = 'today';
+    discoverView.classList.remove('hidden');
+    favoritesView.classList.add('hidden');
+    renderEvents();
+  } else if (view === 'week') {
+    currentTimeFilter = 'week';
     discoverView.classList.remove('hidden');
     favoritesView.classList.add('hidden');
     renderEvents();
@@ -370,6 +382,39 @@ function handleNavClick(item) {
   }
 }
 
+// Helper function to check if event matches time filter
+function matchesTimeFilter(event) {
+  if (currentTimeFilter === 'all') return true;
+
+  const dateText = event.date.toLowerCase();
+
+  if (currentTimeFilter === 'today') {
+    // Match events with "today", "tonight", or similar indicators
+    return dateText.includes('today') ||
+           dateText.includes('tonight') ||
+           dateText === 'upcoming';
+  }
+
+  if (currentTimeFilter === 'week') {
+    // Match events within this week
+    return dateText.includes('today') ||
+           dateText.includes('tonight') ||
+           dateText.includes('tomorrow') ||
+           dateText.includes('this week') ||
+           dateText.includes('weekend') ||
+           dateText.includes('friday') ||
+           dateText.includes('saturday') ||
+           dateText.includes('sunday') ||
+           dateText.includes('monday') ||
+           dateText.includes('tuesday') ||
+           dateText.includes('wednesday') ||
+           dateText.includes('thursday') ||
+           dateText === 'upcoming';
+  }
+
+  return true;
+}
+
 // Render Events
 function renderEvents() {
   const filteredEvents = events.filter(event => {
@@ -378,8 +423,9 @@ function renderEvents() {
       event.name.toLowerCase().includes(searchQuery) ||
       event.location.toLowerCase().includes(searchQuery) ||
       event.description.toLowerCase().includes(searchQuery);
+    const matchesTime = matchesTimeFilter(event);
 
-    return matchesFilter && matchesSearch;
+    return matchesFilter && matchesSearch && matchesTime;
   });
 
   if (filteredEvents.length === 0) {
