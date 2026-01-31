@@ -32,7 +32,8 @@ overflow-x: hidden;
 
 .app-container {
 min-height: 100vh;
-padding-bottom: 100px;
+padding-top: 70px;
+padding-bottom: 40px;
 overflow-y: auto;
 overflow-x: hidden;
 max-width: 100%;
@@ -43,7 +44,6 @@ max-width: 100%;
 .app-container {
 max-width: 600px;
 margin: 0 auto;
-padding-bottom: 40px;
 }
 }
 
@@ -143,7 +143,7 @@ box-shadow: 0 4px 12px rgba(10, 10, 10, 0.1);
 }
 
 .events {
-padding: 10px 25px 100px;
+padding: 10px 25px 40px;
 }
 
 .event-card {
@@ -187,6 +187,10 @@ pointer-events: none;
 
 .event-card:hover::before {
 opacity: 1;
+}
+
+.event-card.hidden {
+display: none;
 }
 
 .event-image {
@@ -270,19 +274,18 @@ letter-spacing: 0.2px;
 
 .nav-bar {
 position: fixed;
-bottom: 0;
+top: 0;
 left: 0;
 right: 0;
-height: calc(85px + env(safe-area-inset-bottom));
+height: calc(60px + env(safe-area-inset-top));
 background: rgba(255, 255, 255, 0.95);
 backdrop-filter: blur(20px);
 display: flex;
 justify-content: space-around;
 align-items: center;
-padding: 0 max(20px, env(safe-area-inset-left)) env(safe-area-inset-bottom) max(20px, env(safe-area-inset-right));
-box-shadow: 0 -2px 30px rgba(0, 0, 0, 0.08);
-border-top: 1px solid rgba(0, 0, 0, 0.05);
-animation: navSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both;
+padding: env(safe-area-inset-top) max(20px, env(safe-area-inset-left)) 0 max(20px, env(safe-area-inset-right));
+box-shadow: 0 2px 30px rgba(0, 0, 0, 0.08);
+border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 z-index: 100;
 }
 
@@ -292,49 +295,58 @@ z-index: 100;
 left: 50%;
 transform: translateX(-50%);
 max-width: 600px;
-border-radius: 35px 35px 0 0;
 }
-}
-
-@keyframes navSlide {
-from { opacity: 0; transform: translateY(100px); }
-to { opacity: 1; transform: translateY(0); }
 }
 
 .nav-item {
 display: flex;
-flex-direction: column;
+flex-direction: row;
 align-items: center;
-gap: 6px;
+gap: 8px;
 cursor: pointer;
 transition: all 0.3s ease;
-padding: 8px 12px;
-border-radius: 18px;
+padding: 12px 16px;
+border-radius: 20px;
 }
 
 .nav-item.active {
-background: rgba(10, 10, 10, 0.05);
+background: var(--dark);
 }
 
 .nav-icon {
-width: 24px;
-height: 24px;
+width: 20px;
+height: 20px;
 transition: all 0.3s ease;
 }
 
 .nav-item.active .nav-icon {
-transform: scale(1.1);
+stroke: var(--gold);
 }
 
 .nav-label {
-font-size: 10px;
+font-size: 14px;
 font-weight: 500;
 color: var(--dark);
 letter-spacing: 0.3px;
 }
 
 .nav-item.active .nav-label {
-color: var(--gold);
+color: var(--cream);
+}
+
+@media (max-width: 767px) {
+.nav-item {
+flex-direction: column;
+gap: 4px;
+padding: 8px 12px;
+}
+.nav-label {
+font-size: 10px;
+}
+.nav-icon {
+width: 22px;
+height: 22px;
+}
 }
 
 /* Scroll behavior */
@@ -375,15 +387,15 @@ to { width: 40px; opacity: 0.4; }
 </div>
 
 <div class="filters">
-<div class="filter-chip active">All Events</div>
-<div class="filter-chip">Art & Culture</div>
-<div class="filter-chip">Culinary</div>
-<div class="filter-chip">Music</div>
-<div class="filter-chip">Fashion</div>
+<div class="filter-chip active" data-filter="all">All Events</div>
+<div class="filter-chip" data-filter="art">Art & Culture</div>
+<div class="filter-chip" data-filter="culinary">Culinary</div>
+<div class="filter-chip" data-filter="music">Music</div>
+<div class="filter-chip" data-filter="fashion">Fashion</div>
 </div>
 
 <div class="events">
-<div class="event-card">
+<div class="event-card" data-category="art">
 <div class="event-image" style="background-image: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.2)), url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 300%22><rect fill=%22%23c9a961%22 width=%22400%22 height=%22300%22/><circle cx=%22100%22 cy=%22100%22 r=%2260%22 fill=%22%23d4af37%22 opacity=%220.3%22/><circle cx=%22300%22 cy=%22200%22 r=%2280%22 fill=%22%238b7355%22 opacity=%220.2%22/><rect x=%2250%22 y=%22200%22 width=%22300%22 height=%222%22 fill=%22white%22 opacity=%220.4%22/></svg>');">
 <div class="event-badge">Free Entry</div>
 </div>
@@ -399,7 +411,7 @@ to { width: 40px; opacity: 0.4; }
 </div>
 </div>
 
-<div class="event-card">
+<div class="event-card" data-category="music">
 <div class="event-image" style="background-image: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.2)), url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 300%22><rect fill=%22%238b7355%22 width=%22400%22 height=%22300%22/><path d=%22M0,150 Q100,100 200,150 T400,150 L400,300 L0,300 Z%22 fill=%22%23d4af37%22 opacity=%220.2%22/><circle cx=%22200%22 cy=%2280%22 r=%2240%22 fill=%22%23faf8f3%22 opacity=%220.6%22/></svg>');">
 <div class="event-badge">Free Entry</div>
 </div>
@@ -415,7 +427,7 @@ to { width: 40px; opacity: 0.4; }
 </div>
 </div>
 
-<div class="event-card">
+<div class="event-card" data-category="culinary">
 <div class="event-image" style="background-image: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.2)), url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 300%22><rect fill=%22%23a67c52%22 width=%22400%22 height=%22300%22/><rect x=%2280%22 y=%2280%22 width=%22240%22 height=%22140%22 fill=%22%23d4af37%22 opacity=%220.25%22/><circle cx=%22320%22 cy=%22220%22 r=%2250%22 fill=%22%23faf8f3%22 opacity=%220.3%22/></svg>');">
 <div class="event-badge">Free Entry</div>
 </div>
@@ -459,6 +471,44 @@ to { width: 40px; opacity: 0.4; }
 </div>
 </div>
 </div>
+
+<script>
+// Filter functionality
+const filterChips = document.querySelectorAll('.filter-chip');
+const eventCards = document.querySelectorAll('.event-card');
+
+filterChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    // Remove active class from all chips
+    filterChips.forEach(c => c.classList.remove('active'));
+
+    // Add active class to clicked chip
+    chip.classList.add('active');
+
+    // Get the filter value
+    const filter = chip.dataset.filter;
+
+    // Show/hide events based on filter
+    eventCards.forEach(card => {
+      if (filter === 'all' || card.dataset.category === filter) {
+        card.classList.remove('hidden');
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+  });
+});
+
+// Navigation functionality
+const navItems = document.querySelectorAll('.nav-item');
+
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    navItems.forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+  });
+});
+</script>
 
 </body>
 </html>
