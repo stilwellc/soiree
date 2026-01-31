@@ -723,9 +723,32 @@ function showToast(message) {
   }, 2500);
 }
 
+// Rotating title text
+function initRotatingTitle() {
+  const words = document.querySelectorAll('.title-word');
+  if (words.length === 0) return;
+
+  let current = 0;
+
+  setInterval(() => {
+    const prev = current;
+    current = (current + 1) % words.length;
+
+    words[prev].classList.add('exit');
+    words[prev].classList.remove('active');
+
+    setTimeout(() => {
+      words[prev].classList.remove('exit');
+    }, 600);
+
+    words[current].classList.add('active');
+  }, 3000);
+}
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => { init(); initRotatingTitle(); });
 } else {
   init();
+  initRotatingTitle();
 }
