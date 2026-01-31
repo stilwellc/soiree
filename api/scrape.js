@@ -64,28 +64,28 @@ function categorizeEvent(title, description) {
     return 'fashion';
   }
 
-  // Music & Entertainment
-  if (text.match(/music|concert|jazz|dj|band|singer|performance|show|festival|stage|live music|soundtrack|album|vinyl|orchestra|choir|acoustic|symphony|karaoke|rap|hip hop|rock|indie|electronic|classical/)) {
+  // Music & Entertainment - includes dance
+  if (text.match(/music|concert|jazz|dj|band|singer|performance|show|festival|stage|live music|soundtrack|album|vinyl|orchestra|choir|acoustic|symphony|karaoke|rap|hip hop|rock|indie|electronic|classical|dance|dancing|ballet|choreograph/)) {
     return 'music';
   }
 
-  // Food & Culinary
-  if (text.match(/food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|bar|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|flavor|recipe|gourmet|pizza|burger|chicken|sushi|ramen|bbq|brewery|pub|tavern|bistro|eatery|slice|taco|sandwich|foodie|cuisine|pastry|dessert|appetizer/)) {
+  // Food & Culinary - exclude Crayola and non-food brands
+  if (text.match(/food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|bar|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|flavor|recipe|gourmet|pizza|burger|chicken|sushi|ramen|bbq|brewery|pub|tavern|bistro|eatery|slice|taco|sandwich|foodie|cuisine|pastry|dessert|appetizer/) && !text.match(/crayola/)) {
     return 'culinary';
   }
 
-  // Art & Culture
-  if (text.match(/art|gallery|exhibit|museum|paint|sculpture|street art|artist|creative|design|photo|mural|craft|pottery|drawing|illustration|installation|visual|theater|theatre|cinema|film|movie|photography|graffiti|contemporary|abstract/)) {
+  // Art & Culture - includes museums, creative activities, visual media
+  if (text.match(/art|gallery|exhibit|museum|paint|sculpture|street art|artist|creative|design|photo|mural|craft|pottery|drawing|illustration|installation|visual|theater|theatre|cinema|film|movie|photography|graffiti|contemporary|abstract|crayola|coloring|memoir|screening/)) {
     return 'art';
   }
 
-  // Social & Community - wellness, fitness, networking, workshops, talks
-  if (text.match(/yoga|fitness|workout|meditation|wellness|health|community|networking|workshop|seminar|talk|lecture|meetup|class|training|discussion|panel|debate|book club|reading|literary/)) {
+  // Social & Community - wellness, fitness, networking, workshops, brand experiences, pop-ups
+  if (text.match(/yoga|fitness|workout|meditation|wellness|health|community|networking|workshop|seminar|talk|lecture|meetup|class|training|discussion|panel|debate|book club|reading|literary|pop-up|popup|experience|grand opening|opening|scavenger|arcade|simulator/)) {
     return 'social';
   }
 
-  // Default to art for cultural events
-  return 'art';
+  // Default to social for general events and brand activations
+  return 'social';
 }
 
 // Generate professional Unsplash images based on category
