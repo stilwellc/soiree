@@ -531,7 +531,7 @@ function openModal(eventId) {
         </ul>
       </div>
       <div class="modal-actions">
-        <button class="btn btn-primary" onclick="handleRSVP(${event.id})">RSVP Now</button>
+        ${event.url ? `<a href="${event.url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">View Event Details</a>` : `<button class="btn btn-primary" onclick="handleRSVP(${event.id})">RSVP Now</button>`}
         <button class="btn btn-secondary" onclick="toggleFavorite(${event.id}); updateModalFavoriteBtn(${event.id})">
           ${isFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
         </button>
