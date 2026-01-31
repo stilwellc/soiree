@@ -8,47 +8,49 @@ const pool = new Pool({
 });
 
 // Fallback events if scraping fails
-const FALLBACK_EVENTS = [
-  {
-    name: "Brooklyn Street Art Walk",
-    category: "art",
-    date: "This Weekend",
-    time: "2:00 PM - 5:00 PM",
-    location: "Bushwick, Brooklyn",
-    address: "Troutman St & Wyckoff Ave, Brooklyn, NY",
-    price: "free",
-    spots: 75,
-    image: "https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?w=800&q=80",
-    description: "Explore Bushwick's vibrant street art scene with a local guide.",
-    highlights: ["Guided tour", "Instagram spots", "Meet artists", "2-hour experience"]
-  },
-  {
-    name: "Free Jazz in Central Park",
-    category: "music",
-    date: "Friday Evening",
-    time: "7:00 PM - 9:00 PM",
-    location: "Central Park",
-    address: "Rumsey Playfield, Central Park",
-    price: "free",
-    spots: 200,
-    image: "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=800&q=80",
-    description: "Evening of smooth jazz under the stars.",
-    highlights: ["Live quartet", "Outdoor setting", "Bring picnic", "Family friendly"]
-  },
-  {
-    name: "DUMBO Food Market",
-    category: "culinary",
-    date: "Sunday",
-    time: "11:00 AM - 6:00 PM",
-    location: "DUMBO, Brooklyn",
-    address: "Pearl Plaza, Brooklyn, NY",
-    price: "free",
-    spots: 300,
-    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
-    description: "Sample artisanal foods from local vendors.",
-    highlights: ["50+ vendors", "Cooking demos", "Free samples", "Waterfront"]
-  }
-];
+function getFallbackEvents() {
+  return [
+    {
+      name: "Brooklyn Street Art Walk",
+      category: "art",
+      date: "This Weekend",
+      time: "2:00 PM - 5:00 PM",
+      location: "Bushwick, Brooklyn",
+      address: "Troutman St & Wyckoff Ave, Brooklyn, NY",
+      price: "free",
+      spots: 75,
+      image: getEventImage("Brooklyn Street Art Walk", "art"),
+      description: "Explore Bushwick's vibrant street art scene with a local guide.",
+      highlights: ["Guided tour", "Instagram spots", "Meet artists", "2-hour experience"]
+    },
+    {
+      name: "Free Jazz in Central Park",
+      category: "music",
+      date: "Friday Evening",
+      time: "7:00 PM - 9:00 PM",
+      location: "Central Park",
+      address: "Rumsey Playfield, Central Park",
+      price: "free",
+      spots: 200,
+      image: getEventImage("Free Jazz in Central Park", "music"),
+      description: "Evening of smooth jazz under the stars.",
+      highlights: ["Live quartet", "Outdoor setting", "Bring picnic", "Family friendly"]
+    },
+    {
+      name: "DUMBO Food Market",
+      category: "culinary",
+      date: "Sunday",
+      time: "11:00 AM - 6:00 PM",
+      location: "DUMBO, Brooklyn",
+      address: "Pearl Plaza, Brooklyn, NY",
+      price: "free",
+      spots: 300,
+      image: getEventImage("DUMBO Food Market", "culinary"),
+      description: "Sample artisanal foods from local vendors.",
+      highlights: ["50+ vendors", "Cooking demos", "Free samples", "Waterfront"]
+    }
+  ];
+}
 
 // Category mapping based on keywords
 function categorizeEvent(title, description) {
@@ -61,15 +63,31 @@ function categorizeEvent(title, description) {
   return 'social'; // default category
 }
 
-// Extract image from Unsplash based on category
-function getCategoryImage(category) {
-  const images = {
-    art: 'https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?w=800&q=80',
-    music: 'https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=800&q=80',
-    culinary: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80',
-    social: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&q=80'
+// Generate contextual image URL based on event title
+function getEventImage(title, category) {
+  // Extract meaningful keywords from title
+  const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'up', 'free', 'nyc', 'new', 'york'];
+  const words = title.toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 3 && !stopWords.includes(word))
+    .slice(0, 2); // Take up to 2 keywords
+
+  // Add category-specific aesthetic terms for minimal/abstract look
+  const aestheticTerms = {
+    art: 'abstract,minimal,colorful',
+    music: 'vibrant,pattern,rhythm',
+    culinary: 'colorful,texture,fresh',
+    social: 'bright,geometric,community'
   };
-  return images[category] || images.social;
+
+  // Build search query with keywords + aesthetic terms
+  const searchTerms = [...words, aestheticTerms[category] || 'minimal,colorful'];
+  const query = searchTerms.join(',');
+
+  // Use Unsplash Source API for dynamic, relevant images
+  // This generates a unique image URL based on the search terms
+  return `https://source.unsplash.com/800x600/?${encodeURIComponent(query)}`;
 }
 
 // Scrape events from nycforfree.co
@@ -148,7 +166,7 @@ async function scrapeEvents() {
         address: address.substring(0, 500),
         price: 'free',
         spots: Math.floor(Math.random() * 200) + 50, // Random capacity
-        image: getCategoryImage(category),
+        image: getEventImage(name, category),
         description: description.substring(0, 500),
         highlights: ['Free event', 'NYC location', 'Limited spots', 'RSVP recommended']
       });
@@ -158,14 +176,14 @@ async function scrapeEvents() {
 
     if (events.length === 0) {
       console.log('No events found, using fallback events');
-      return FALLBACK_EVENTS;
+      return getFallbackEvents();
     }
 
     return events;
   } catch (error) {
     console.error('Scraping failed:', error.message);
     console.log('Using fallback events');
-    return FALLBACK_EVENTS;
+    return getFallbackEvents();
   }
 }
 
