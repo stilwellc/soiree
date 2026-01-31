@@ -78,76 +78,87 @@ function categorizeEvent(title, description) {
   return 'social';
 }
 
-// Generate contextual image URL based on event title
+// Generate minimal geometric pattern based on event title
 function getEventImage(title, category) {
   const titleLower = title.toLowerCase();
 
-  // Curated Unsplash photo URLs that are guaranteed to work
-  const curatedImages = {
-    // Food & Drink
-    'chicken': 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&q=80', // Fried chicken
-    'pizza': 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80', // Pizza
-    'sushi': 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800&q=80', // Sushi
-    'ramen': 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&q=80', // Ramen
-    'coffee': 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80', // Coffee shop
-    'wine': 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&q=80', // Wine glasses
-    'beer': 'https://images.unsplash.com/photo-1608270586620-248524c67de9?w=800&q=80', // Craft beer
-    'cocktail': 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80', // Cocktails
-    'bakery': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=80', // Bakery
-    'market': 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80', // Food market
+  // Minimal color palettes and patterns for each event type
+  const visualThemes = {
+    // Food & Drink - warm, appetizing colors
+    'chicken': { colors: ['#FF8C42', '#FFD166', '#F4A261'], pattern: 'circles' },
+    'pizza': { colors: ['#E63946', '#F77F00', '#FCBF49'], pattern: 'triangles' },
+    'sushi': { colors: ['#06FFA5', '#FF6B9D', '#C9F0FF'], pattern: 'waves' },
+    'ramen': { colors: ['#FFB627', '#FF6B35', '#F7931E'], pattern: 'lines' },
+    'coffee': { colors: ['#6F4E37', '#A67B5B', '#C8AD7F'], pattern: 'circles' },
+    'wine': { colors: ['#722F37', '#C73E1D', '#B91372'], pattern: 'curves' },
+    'beer': { colors: ['#F2A900', '#E67E22', '#D4AC0D'], pattern: 'bubbles' },
+    'cocktail': { colors: ['#E91E63', '#00BCD4', '#FFD700'], pattern: 'diagonal' },
+    'bakery': { colors: ['#FFDAB9', '#FFB6C1', '#FFF4E6'], pattern: 'soft' },
+    'market': { colors: ['#FF6347', '#32CD32', '#FFD700'], pattern: 'grid' },
 
-    // Wellness & Fitness
-    'yoga': 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80', // Yoga
-    'wellness': 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80', // Wellness
-    'fitness': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80', // Fitness
-    'meditation': 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80', // Meditation
+    // Wellness & Fitness - calm, energizing colors
+    'yoga': { colors: ['#9B59B6', '#E8DAEF', '#D7BDE2'], pattern: 'zen' },
+    'wellness': { colors: ['#81C784', '#A5D6A7', '#C8E6C9'], pattern: 'organic' },
+    'fitness': { colors: ['#FF5722', '#FF7043', '#FF8A65'], pattern: 'dynamic' },
+    'meditation': { colors: ['#6A5ACD', '#B0C4DE', '#E6E6FA'], pattern: 'calm' },
 
-    // Art & Culture
-    'gallery': 'https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=800&q=80', // Art gallery
-    'museum': 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=800&q=80', // Museum
-    'exhibit': 'https://images.unsplash.com/photo-1577083552431-6e5fd01c54ca?w=800&q=80', // Exhibition
-    'photography': 'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=800&q=80', // Photography
-    'painting': 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&q=80', // Painting
-    'street art': 'https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?w=800&q=80', // Street art
+    // Art & Culture - creative, vibrant colors
+    'gallery': { colors: ['#E91E63', '#9C27B0', '#673AB7'], pattern: 'abstract' },
+    'museum': { colors: ['#5E35B1', '#7E57C2', '#B39DDB'], pattern: 'elegant' },
+    'exhibit': { colors: ['#FF6F00', '#FF8F00', '#FFA000'], pattern: 'frames' },
+    'street art': { colors: ['#FF1744', '#00E5FF', '#FFEA00'], pattern: 'spray' },
+    'photography': { colors: ['#37474F', '#607D8B', '#90A4AE'], pattern: 'aperture' },
+    'painting': { colors: ['#FF4081', '#7C4DFF', '#18FFFF'], pattern: 'brush' },
+    'crayola': { colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'], pattern: 'rainbow' },
 
-    // Music & Performance
-    'jazz': 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&q=80', // Jazz
-    'concert': 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80', // Concert
-    'music': 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80', // Live music
-    'dj': 'https://images.unsplash.com/photo-1571266028243-d220c8f11e59?w=800&q=80', // DJ
-    'dance': 'https://images.unsplash.com/photo-1504609813442-a8924e83f76e?w=800&q=80', // Dancing
+    // Music & Performance - energetic, rhythmic colors
+    'jazz': { colors: ['#1A237E', '#3F51B5', '#5C6BC0'], pattern: 'notes' },
+    'concert': { colors: ['#C2185B', '#E91E63', '#F06292'], pattern: 'waves' },
+    'music': { colors: ['#6A1B9A', '#8E24AA', '#AB47BC'], pattern: 'sound' },
+    'dj': { colors: ['#00BCD4', '#00ACC1', '#0097A7'], pattern: 'pulse' },
+    'dance': { colors: ['#D32F2F', '#F44336', '#E57373'], pattern: 'movement' },
 
-    // Fashion & Shopping
-    'fashion': 'https://images.unsplash.com/photo-1558769132-cb1aea592f0b?w=800&q=80', // Fashion
-    'eyeglasses': 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=800&q=80', // Eyeglasses
-    'warby parker': 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=800&q=80', // Eyeglasses
-    'clothing': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80', // Clothing store
+    // Fashion & Shopping - stylish, modern colors
+    'fashion': { colors: ['#212121', '#757575', '#BDBDBD'], pattern: 'minimal' },
+    'warby parker': { colors: ['#4A90E2', '#7B68EE', '#00CED1'], pattern: 'circles' },
+    'eyeglasses': { colors: ['#4A90E2', '#7B68EE', '#00CED1'], pattern: 'circles' },
+    'clothing': { colors: ['#FF6B9D', '#C44569', '#F8B500'], pattern: 'fabric' },
 
-    // Brands & specific events
-    'crayola': 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=800&q=80', // Art supplies
-    'daily harvest': 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=800&q=80', // Smoothie bowl
-    'corepower': 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80', // Yoga studio
-    'rockefeller': 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800&q=80', // NYC landmark
-    'celebrity': 'https://images.unsplash.com/photo-1485628390555-1a7bd503f9fe?w=800&q=80', // Glamour
-    'paris hilton': 'https://images.unsplash.com/photo-1485628390555-1a7bd503f9fe?w=800&q=80' // Glamour
+    // Brands & Events
+    'daily harvest': { colors: ['#27AE60', '#52BE80', '#7DCEA0'], pattern: 'organic' },
+    'corepower': { colors: ['#9B59B6', '#BB8FCE', '#D7BDE2'], pattern: 'zen' },
+    'rockefeller': { colors: ['#1565C0', '#1976D2', '#1E88E5'], pattern: 'urban' },
+    'paris hilton': { colors: ['#FF69B4', '#FFB6C1', '#FFC0CB'], pattern: 'glam' },
+    'celebrity': { colors: ['#FFD700', '#FFA500', '#FF8C00'], pattern: 'star' }
   };
 
-  // Find matching curated image
-  for (const [keyword, imageUrl] of Object.entries(curatedImages)) {
+  // Find matching theme
+  let theme = null;
+  for (const [keyword, themeData] of Object.entries(visualThemes)) {
     if (titleLower.includes(keyword)) {
-      return imageUrl;
+      theme = themeData;
+      break;
     }
   }
 
-  // Default category-based images
-  const categoryImages = {
-    'art': 'https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?w=800&q=80',
-    'music': 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80',
-    'culinary': 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80',
-    'social': 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&q=80'
-  };
+  // Default category themes if no specific match
+  if (!theme) {
+    const categoryThemes = {
+      'art': { colors: ['#E91E63', '#9C27B0', '#673AB7'], pattern: 'abstract' },
+      'music': { colors: ['#6A1B9A', '#8E24AA', '#AB47BC'], pattern: 'sound' },
+      'culinary': { colors: ['#FF6347', '#FF8C42', '#FFD166'], pattern: 'organic' },
+      'social': { colors: ['#42A5F5', '#66BB6A', '#FFA726'], pattern: 'community' }
+    };
+    theme = categoryThemes[category] || categoryThemes.social;
+  }
 
-  return categoryImages[category] || categoryImages.social;
+  // Use the event title as seed for DiceBear with theme colors
+  const seed = encodeURIComponent(title.toLowerCase().replace(/\s+/g, '-'));
+  const bgColor = theme.colors[0].replace('#', '');
+
+  // Use DiceBear's abstract patterns with our color scheme
+  // This creates minimal, geometric patterns in the event's theme colors
+  return `https://api.dicebear.com/7.x/shapes/svg?seed=${seed}&backgroundColor=${bgColor}&size=800`;
 }
 
 // Scrape events from nycforfree.co
