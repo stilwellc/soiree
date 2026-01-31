@@ -301,8 +301,9 @@ module.exports = async function handler(req, res) {
       CREATE UNIQUE INDEX IF NOT EXISTS events_url_unique ON events(url)
     `);
 
-    // Clear old events (older than 7 days)
-    await pool.query(`DELETE FROM events WHERE scraped_at < NOW() - INTERVAL '7 days'`);
+    // Clear ALL events to ensure fresh categorizations
+    // This guarantees events always have the latest category logic
+    await pool.query(`DELETE FROM events`);
 
     // Get events
     const events = await scrapeEvents();
