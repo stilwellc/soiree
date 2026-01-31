@@ -205,7 +205,7 @@ module.exports = async function handler(req, res) {
     await pool.query(`DELETE FROM events WHERE scraped_at < NOW() - INTERVAL '7 days'`);
 
     // Get events
-    const events = scrapeEvents();
+    const events = await scrapeEvents();
 
     // Insert events
     let inserted = 0;
