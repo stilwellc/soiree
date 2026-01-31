@@ -327,19 +327,18 @@ body {
 /* Filters */
 .filters {
   display: flex;
-  gap: 10px;
-  padding: 0 25px 20px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px 20px;
   animation: slideUp 0.8s var(--transition) 0.3s both;
 }
 
-.filters::-webkit-scrollbar {
-  display: none;
-}
-
 .filter-chip {
-  padding: 10px 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
   border-radius: 25px;
   border: 1px solid rgba(10, 10, 10, 0.08);
   background: white;
@@ -362,6 +361,28 @@ body {
 .filter-chip:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(10, 10, 10, 0.1);
+}
+
+.filter-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  opacity: 0.6;
+}
+
+.filter-chip.active .filter-count {
+  color: var(--gold);
+  opacity: 1;
+}
+
+@media (min-width: 768px) {
+  .filters {
+    gap: 10px;
+    padding: 0 25px 20px;
+  }
+  .filter-chip {
+    padding: 10px 20px;
+  }
 }
 
 /* Events */

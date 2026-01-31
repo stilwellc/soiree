@@ -333,8 +333,12 @@ function setupEventListeners() {
 
 // Filter Events
 function handleFilterClick(chip) {
-  filterChips.forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.classList.remove('active');
+    c.setAttribute('aria-checked', 'false');
+  });
   chip.classList.add('active');
+  chip.setAttribute('aria-checked', 'true');
   currentFilter = chip.dataset.filter;
   renderEvents();
 }
@@ -418,8 +422,49 @@ function matchesTimeFilter(event) {
   return true;
 }
 
+// Update filter chip count badges
+function updateFilterCounts() {
+  const counts = {};
+  let total = 0;
+
+  events.forEach(event => {
+    const matchesSearch = !searchQuery ||
+      event.name.toLowerCase().includes(searchQuery) ||
+      event.location.toLowerCase().includes(searchQuery) ||
+      event.description.toLowerCase().includes(searchQuery);
+    const matchesTime = matchesTimeFilter(event);
+
+    if (matchesSearch && matchesTime) {
+      total++;
+      counts[event.category] = (counts[event.category] || 0) + 1;
+    }
+  });
+
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    const filter = chip.dataset.filter;
+    let countEl = chip.querySelector('.filter-count');
+
+    if (!countEl) {
+      countEl = document.createElement('span');
+      countEl.className = 'filter-count';
+      chip.appendChild(countEl);
+    }
+
+    const count = filter === 'all' ? total : (counts[filter] || 0);
+    countEl.textContent = count;
+
+    // Hide zero-count chips (except All)
+    if (filter !== 'all' && count === 0) {
+      chip.style.display = 'none';
+    } else {
+      chip.style.display = '';
+    }
+  });
+}
+
 // Render Events
 function renderEvents() {
+  updateFilterCounts();
   const filteredEvents = events.filter(event => {
     const matchesFilter = currentFilter === 'all' || event.category === currentFilter;
     const matchesSearch = !searchQuery ||
