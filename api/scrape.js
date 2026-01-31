@@ -275,7 +275,12 @@ module.exports = async function handler(req, res) {
     `);
 
     // Clean existing duplicates before creating unique index
-    // Keep only the most recent event for each URL
+    // First, remove events with NULL or empty URLs (old fallback data)
+    await pool.query(`
+      DELETE FROM events WHERE url IS NULL OR url = ''
+    `);
+
+    // Then keep only the most recent event for each URL
     await pool.query(`
       DELETE FROM events a USING events b
       WHERE a.id < b.id AND a.url = b.url
