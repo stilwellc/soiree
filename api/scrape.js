@@ -82,58 +82,93 @@ function categorizeEvent(title, description) {
 function getEventImage(title, category) {
   const titleLower = title.toLowerCase();
 
-  // Map keywords to specific colors and visual themes
-  const themeMapping = {
-    // Food & Drink
-    wine: { bg: 'dc143c', style: 'bottts' },
-    bar: { bg: '8b4513', style: 'bottts' },
-    food: { bg: 'ff6347', style: 'shapes' },
-    coffee: { bg: '6f4e37', style: 'shapes' },
-    restaurant: { bg: 'ff7f50', style: 'bottts' },
-    market: { bg: 'ff8c00', style: 'shapes' },
+  // Extract meaningful keywords from title for image search
+  const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'free', 'nyc', 'new', 'york', 'grand', 'opening', 'experience', 'pop-up', 'popup'];
+
+  // Specific keyword mapping for better visual representation
+  const visualKeywords = {
+    // Food & Drink - specific foods get specific images
+    'chicken': 'fried chicken restaurant',
+    'pizza': 'pizza slice',
+    'sushi': 'sushi platter',
+    'ramen': 'ramen bowl',
+    'coffee': 'coffee shop latte',
+    'wine': 'wine glasses',
+    'beer': 'craft beer',
+    'cocktail': 'cocktails bar',
+    'bakery': 'pastries bakery',
+    'market': 'food market vendors',
 
     // Wellness & Fitness
-    yoga: { bg: '9370db', style: 'shapes' },
-    wellness: { bg: '98fb98', style: 'shapes' },
-    fitness: { bg: '00bfff', style: 'bottts' },
+    'yoga': 'yoga class people',
+    'wellness': 'wellness spa',
+    'fitness': 'fitness gym workout',
+    'meditation': 'meditation peaceful',
 
     // Art & Culture
-    art: { bg: 'ff69b4', style: 'shapes' },
-    gallery: { bg: 'da70d6', style: 'shapes' },
-    museum: { bg: '9370db', style: 'shapes' },
-    exhibit: { bg: 'ba55d3', style: 'shapes' },
+    'gallery': 'art gallery modern',
+    'museum': 'museum exhibition',
+    'exhibit': 'art exhibition',
+    'photography': 'photography camera',
+    'painting': 'painting canvas',
+    'sculpture': 'sculpture art',
+    'street art': 'street art mural',
 
     // Music & Performance
-    music: { bg: 'ff1493', style: 'bottts' },
-    concert: { bg: 'ff4500', style: 'bottts' },
-    jazz: { bg: '4169e1', style: 'shapes' },
-    dance: { bg: 'ff00ff', style: 'bottts' },
+    'jazz': 'jazz band saxophone',
+    'concert': 'concert crowd',
+    'music': 'live music performance',
+    'dj': 'dj turntables',
+    'dance': 'people dancing',
 
-    // Social & Community
-    community: { bg: '32cd32', style: 'shapes' },
-    workshop: { bg: '48d1cc', style: 'shapes' },
-    class: { bg: '87ceeb', style: 'shapes' },
+    // Fashion & Shopping
+    'fashion': 'fashion runway',
+    'warby parker': 'eyeglasses stylish',
+    'primark': 'clothing store',
 
-    // Shopping & Retail
-    shop: { bg: 'ffd700', style: 'bottts' },
-    opening: { bg: 'ff6347', style: 'bottts' },
-    popup: { bg: 'ff69b4', style: 'shapes' }
+    // Brands & Celebrities
+    'paris hilton': 'glamour celebrity',
+    'crayola': 'colorful art supplies',
+    'daily harvest': 'healthy smoothie bowl',
+    'corepower': 'yoga studio',
+    'brooklinen': 'luxury bedding',
+    'rockefeller': 'rockefeller center nyc'
   };
 
-  // Find matching theme based on title keywords
-  let theme = { bg: '74b9ff', style: 'shapes' }; // Default
-  for (const [keyword, config] of Object.entries(themeMapping)) {
+  // Find specific visual keyword match
+  let searchTerms = null;
+  for (const [keyword, visualTerm] of Object.entries(visualKeywords)) {
     if (titleLower.includes(keyword)) {
-      theme = config;
+      searchTerms = visualTerm;
       break;
     }
   }
 
-  // Use event title as seed for consistent but unique patterns
-  const seed = encodeURIComponent(title.toLowerCase().replace(/\s+/g, '-'));
+  // If no specific match, extract general keywords from title
+  if (!searchTerms) {
+    const words = title.toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 4 && !stopWords.includes(word))
+      .slice(0, 2);
 
-  // Generate DiceBear URL with theme-specific style and color
-  return `https://api.dicebear.com/7.x/${theme.style}/svg?seed=${seed}&backgroundColor=${theme.bg}&size=800`;
+    // Add category context
+    const categoryContext = {
+      'art': 'art colorful',
+      'music': 'music concert',
+      'culinary': 'food restaurant',
+      'social': 'people community'
+    };
+
+    searchTerms = words.length > 0
+      ? `${words.join(' ')} ${categoryContext[category] || ''}`
+      : categoryContext[category] || 'nyc event';
+  }
+
+  // Use Unsplash with descriptive search terms
+  // Add timestamp to prevent caching and get variety
+  const query = encodeURIComponent(searchTerms.trim());
+  return `https://source.unsplash.com/800x600/?${query}`;
 }
 
 // Scrape events from nycforfree.co
