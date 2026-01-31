@@ -274,32 +274,56 @@ module.exports = async function handler(req, res) {
       ADD COLUMN IF NOT EXISTS url VARCHAR(500)
     `);
 
-    // Clear old events
+    // Add unique constraint on URL to prevent duplicates
+    await pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS events_url_unique ON events(url)
+    `);
+
+    // Clear old events (older than 7 days)
     await pool.query(`DELETE FROM events WHERE scraped_at < NOW() - INTERVAL '7 days'`);
 
     // Get events
     const events = await scrapeEvents();
 
-    // Insert events
-    let inserted = 0;
+    // Remove duplicates from scraped events (same URL)
+    const uniqueEvents = [];
+    const seenUrls = new Set();
     for (const event of events) {
-      await pool.query(
-        `INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights, url)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-        [event.name, event.category, event.date, event.time, event.location,
-         event.address, event.price, event.spots, event.image, event.description,
-         JSON.stringify(event.highlights), event.url]
-      );
-      inserted++;
+      if (!seenUrls.has(event.url)) {
+        seenUrls.add(event.url);
+        uniqueEvents.push(event);
+      }
+    }
+
+    // Insert events with conflict handling (skip duplicates)
+    let inserted = 0;
+    let skipped = 0;
+    for (const event of uniqueEvents) {
+      try {
+        await pool.query(
+          `INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights, url)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+           ON CONFLICT (url) DO NOTHING`,
+          [event.name, event.category, event.date, event.time, event.location,
+           event.address, event.price, event.spots, event.image, event.description,
+           JSON.stringify(event.highlights), event.url]
+        );
+        inserted++;
+      } catch (error) {
+        console.log(`Skipped duplicate: ${event.name}`);
+        skipped++;
+      }
     }
 
     const result = await pool.query('SELECT COUNT(*) as count FROM events');
 
     return res.status(200).json({
       success: true,
-      message: 'Scraping completed',
+      message: 'Scraping completed - duplicates removed',
       scraped: events.length,
+      unique: uniqueEvents.length,
       inserted: inserted,
+      skipped: skipped,
       totalEvents: parseInt(result.rows[0].count),
       timestamp: new Date().toISOString()
     });
