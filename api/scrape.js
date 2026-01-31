@@ -157,49 +157,39 @@ function getEventImage(title, category) {
     theme = categoryThemes[category] || categoryThemes.social;
   }
 
-  // Use a simple hash of the title to create variation in gradient positions
+  // Use a simple hash of the title to create variation
   let hash = 0;
   for (let i = 0; i < title.length; i++) {
     hash = ((hash << 5) - hash) + title.charCodeAt(i);
     hash = hash & hash;
   }
-  const seed = Math.abs(hash % 100);
+  const seed = Math.abs(hash % 4);
 
-  // Create sophisticated mesh gradient SVG (Notion/Apple/Airbnb style)
+  // Select 2 harmonious colors for clean gradient
   const c = theme.colors;
+  const color1 = c[seed % c.length];
+  const color2 = c[(seed + 1) % c.length];
 
-  // Calculate gradient positions based on seed for variation
-  const cx1 = 20 + (seed % 30);
-  const cy1 = 20 + ((seed * 2) % 30);
-  const cx2 = 50 + (seed % 25);
-  const cy2 = 50 + ((seed * 3) % 25);
-  const cx3 = 70 + (seed % 20);
-  const cy3 = 70 + ((seed * 4) % 20);
-
-  // Premium mesh gradient SVG with blur and opacity for depth
-  const svg = `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="g1" cx="${cx1}%" cy="${cy1}%">
-        <stop offset="0%" style="stop-color:${c[0]};stop-opacity:0.9" />
-        <stop offset="100%" style="stop-color:${c[1]};stop-opacity:0.6" />
-      </radialGradient>
-      <radialGradient id="g2" cx="${cx2}%" cy="${cy2}%">
-        <stop offset="0%" style="stop-color:${c[1]};stop-opacity:0.8" />
-        <stop offset="100%" style="stop-color:${c[2] || c[0]};stop-opacity:0.5" />
-      </radialGradient>
-      <radialGradient id="g3" cx="${cx3}%" cy="${cy3}%">
-        <stop offset="0%" style="stop-color:${c[2] || c[0]};stop-opacity:0.7" />
-        <stop offset="100%" style="stop-color:${c[3] || c[1]};stop-opacity:0.4" />
-      </radialGradient>
-      <filter id="blur">
-        <feGaussianBlur stdDeviation="60" />
-      </filter>
-    </defs>
-    <rect width="1200" height="800" fill="${c[0]}" />
-    <rect width="1200" height="800" fill="url(#g1)" filter="url(#blur)" opacity="0.9" />
-    <rect width="1200" height="800" fill="url(#g2)" filter="url(#blur)" opacity="0.8" />
-    <rect width="1200" height="800" fill="url(#g3)" filter="url(#blur)" opacity="0.7" />
-  </svg>`;
+  // Create clean, modern gradient (alternating between diagonal and radial)
+  const svg = seed % 2 === 0
+    ? `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:${color1};stop-opacity:1" />
+            <stop offset="100%" style="stop-color:${color2};stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="1200" height="800" fill="url(#grad)" />
+      </svg>`
+    : `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="grad" cx="30%" cy="30%">
+            <stop offset="0%" style="stop-color:${color1};stop-opacity:1" />
+            <stop offset="100%" style="stop-color:${color2};stop-opacity:1" />
+          </radialGradient>
+        </defs>
+        <rect width="1200" height="800" fill="url(#grad)" />
+      </svg>`;
 
   // Encode SVG as data URL
   const encoded = Buffer.from(svg).toString('base64');
