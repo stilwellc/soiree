@@ -59,23 +59,33 @@ function getFallbackEvents() {
 function categorizeEvent(title, description) {
   const text = (title + ' ' + description).toLowerCase();
 
-  // Music & Entertainment - check first for performance-related
-  if (text.match(/music|concert|jazz|dj|band|singer|performance|show|festival|stage|live music|soundtrack|album|vinyl/)) {
+  // Fashion - check first for fashion-specific events
+  if (text.match(/fashion|runway|designer|couture|style|clothing|apparel|boutique|wardrobe|outfit|lookbook|vogue|trend|model|catwalk|textile/)) {
+    return 'fashion';
+  }
+
+  // Music & Entertainment
+  if (text.match(/music|concert|jazz|dj|band|singer|performance|show|festival|stage|live music|soundtrack|album|vinyl|orchestra|choir|acoustic|symphony|karaoke|rap|hip hop|rock|indie|electronic|classical/)) {
     return 'music';
   }
 
   // Food & Culinary
-  if (text.match(/food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|bar|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|flavor|recipe|gourmet|pizza|burger|chicken|sushi|ramen|bbq|brewery|pub|tavern|bistro|eatery|slice|taco|sandwich/)) {
+  if (text.match(/food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|bar|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|flavor|recipe|gourmet|pizza|burger|chicken|sushi|ramen|bbq|brewery|pub|tavern|bistro|eatery|slice|taco|sandwich|foodie|cuisine|pastry|dessert|appetizer/)) {
     return 'culinary';
   }
 
   // Art & Culture
-  if (text.match(/art|gallery|exhibit|museum|paint|sculpture|street art|artist|creative|design|photo|mural|craft|pottery|drawing|illustration|installation|visual/)) {
+  if (text.match(/art|gallery|exhibit|museum|paint|sculpture|street art|artist|creative|design|photo|mural|craft|pottery|drawing|illustration|installation|visual|theater|theatre|cinema|film|movie|photography|graffiti|contemporary|abstract/)) {
     return 'art';
   }
 
-  // Social & Community (wellness, fitness, shopping, workshops)
-  return 'social';
+  // Social & Community - wellness, fitness, networking, workshops, talks
+  if (text.match(/yoga|fitness|workout|meditation|wellness|health|community|networking|workshop|seminar|talk|lecture|meetup|class|training|discussion|panel|debate|book club|reading|literary/)) {
+    return 'social';
+  }
+
+  // Default to art for cultural events
+  return 'art';
 }
 
 // Generate professional Unsplash images based on category
