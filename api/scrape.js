@@ -78,91 +78,50 @@ function categorizeEvent(title, description) {
   return 'social';
 }
 
-// Generate images with app color palette but category-specific patterns
+// Generate professional Unsplash images based on category
 function getEventImage(title, category) {
-  // Consistent color palette: brown, cream, white, wine/gold tones
-  const cream = '#FAF8F3';
-  const gold = '#D4AF37';
-  const brown = '#8B7355';
-  const darkBrown = '#6B5642';
-  const wine = '#722F37';
-  const lightCream = '#FFFAF5';
+  // Use Unsplash Source API with category-specific search terms
+  // This provides high-quality, professionally curated images
 
-  // Create different patterns for each category
-  let svg;
+  const categoryImages = {
+    music: [
+      'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1200&h=800&fit=crop'
+    ],
+    culinary: [
+      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1200&h=800&fit=crop'
+    ],
+    art: [
+      'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1536924940846-227afb31e2a5?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1576093430427-778a0e33696e?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200&h=800&fit=crop'
+    ],
+    social: [
+      'https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1200&h=800&fit=crop'
+    ]
+  };
 
-  if (category === 'music') {
-    // Music: Sound waves and rhythmic patterns
-    svg = `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:${cream}" />
-          <stop offset="100%" style="stop-color:${lightCream}" />
-        </linearGradient>
-      </defs>
-      <rect width="1200" height="800" fill="url(#bg)" />
-      <path d="M 0,400 Q 150,300 300,400 T 600,400 T 900,400 T 1200,400" stroke="${gold}" stroke-width="3" fill="none" opacity="0.6"/>
-      <path d="M 0,450 Q 150,350 300,450 T 600,450 T 900,450 T 1200,450" stroke="${brown}" stroke-width="2" fill="none" opacity="0.4"/>
-      <circle cx="300" cy="400" r="8" fill="${gold}" opacity="0.7"/>
-      <circle cx="600" cy="400" r="8" fill="${brown}" opacity="0.7"/>
-      <circle cx="900" cy="400" r="8" fill="${wine}" opacity="0.6"/>
-    </svg>`;
-  } else if (category === 'culinary') {
-    // Food: Organic circular shapes, plates, flowing forms
-    svg = `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="bg">
-          <stop offset="0%" style="stop-color:${lightCream}" />
-          <stop offset="100%" style="stop-color:${cream}" />
-        </radialGradient>
-      </defs>
-      <rect width="1200" height="800" fill="url(#bg)" />
-      <circle cx="600" cy="400" r="200" fill="none" stroke="${gold}" stroke-width="2" opacity="0.4"/>
-      <circle cx="600" cy="400" r="150" fill="none" stroke="${brown}" stroke-width="2" opacity="0.3"/>
-      <circle cx="450" cy="300" r="60" fill="${gold}" opacity="0.2"/>
-      <circle cx="750" cy="500" r="80" fill="${brown}" opacity="0.15"/>
-      <circle cx="700" cy="280" r="50" fill="${wine}" opacity="0.2"/>
-      <path d="M 400,400 Q 500,300 600,400 T 800,400" stroke="${darkBrown}" stroke-width="2" fill="none" opacity="0.3"/>
-    </svg>`;
-  } else if (category === 'art') {
-    // Art: Abstract geometric shapes, creative composition
-    svg = `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:${cream}" />
-          <stop offset="100%" style="stop-color:${lightCream}" />
-        </linearGradient>
-      </defs>
-      <rect width="1200" height="800" fill="url(#bg)" />
-      <rect x="200" y="200" width="250" height="250" fill="${gold}" opacity="0.2" transform="rotate(15 325 325)"/>
-      <rect x="600" y="300" width="200" height="200" fill="${brown}" opacity="0.25" transform="rotate(-10 700 400)"/>
-      <circle cx="400" cy="550" r="100" fill="${wine}" opacity="0.2"/>
-      <polygon points="850,250 950,350 800,400" fill="${darkBrown}" opacity="0.2"/>
-      <line x1="300" y1="150" x2="500" y2="200" stroke="${gold}" stroke-width="3" opacity="0.5"/>
-    </svg>`;
-  } else {
-    // Social: Connected circles, community, flowing connections
-    svg = `<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="bg" cx="50%" cy="50%">
-          <stop offset="0%" style="stop-color:${lightCream}" />
-          <stop offset="100%" style="stop-color:${cream}" />
-        </radialGradient>
-      </defs>
-      <rect width="1200" height="800" fill="url(#bg)" />
-      <circle cx="400" cy="400" r="80" fill="${gold}" opacity="0.25"/>
-      <circle cx="600" cy="300" r="90" fill="${brown}" opacity="0.2"/>
-      <circle cx="700" cy="500" r="70" fill="${wine}" opacity="0.25"/>
-      <circle cx="500" cy="550" r="60" fill="${darkBrown}" opacity="0.2"/>
-      <line x1="400" y1="400" x2="600" y2="300" stroke="${gold}" stroke-width="2" opacity="0.3"/>
-      <line x1="600" y1="300" x2="700" y2="500" stroke="${brown}" stroke-width="2" opacity="0.3"/>
-      <line x1="400" y1="400" x2="500" y2="550" stroke="${wine}" stroke-width="2" opacity="0.3"/>
-    </svg>`;
+  // Get images array for category, fallback to social
+  const images = categoryImages[category] || categoryImages.social;
+
+  // Use title hash to consistently select same image for same event
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) {
+    hash = ((hash << 5) - hash) + title.charCodeAt(i);
+    hash = hash & hash;
   }
+  const index = Math.abs(hash % images.length);
 
-  // Encode SVG as data URL
-  const encoded = Buffer.from(svg).toString('base64');
-  return `data:image/svg+xml;base64,${encoded}`;
+  return images[index];
 }
 
 // Scrape events from nycforfree.co
