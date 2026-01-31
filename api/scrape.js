@@ -65,22 +65,60 @@ function categorizeEvent(title, description) {
 
 // Generate contextual image URL based on event title
 function getEventImage(title, category) {
-  // Use event title as seed for consistent but unique images
-  const seed = encodeURIComponent(title.toLowerCase().replace(/\s+/g, '-'));
+  const titleLower = title.toLowerCase();
 
-  // Category-specific color palettes for geometric patterns
-  const colorSchemes = {
-    art: 'b6e3f4,c0fdff,e0c3fc,f694c1', // Purple-pink-blue
-    music: 'ff6b6b,4ecdc4,45b7d1,fdcb6e', // Vibrant multi-color
-    culinary: 'ffeaa7,fab1a0,ff7675,fd79a8', // Warm oranges-pinks
-    social: '74b9ff,a29bfe,fd79a8,6c5ce7'  // Cool blues-purples
+  // Map keywords to specific colors and visual themes
+  const themeMapping = {
+    // Food & Drink
+    wine: { bg: 'dc143c', style: 'bottts' },
+    bar: { bg: '8b4513', style: 'bottts' },
+    food: { bg: 'ff6347', style: 'shapes' },
+    coffee: { bg: '6f4e37', style: 'shapes' },
+    restaurant: { bg: 'ff7f50', style: 'bottts' },
+    market: { bg: 'ff8c00', style: 'shapes' },
+
+    // Wellness & Fitness
+    yoga: { bg: '9370db', style: 'shapes' },
+    wellness: { bg: '98fb98', style: 'shapes' },
+    fitness: { bg: '00bfff', style: 'bottts' },
+
+    // Art & Culture
+    art: { bg: 'ff69b4', style: 'shapes' },
+    gallery: { bg: 'da70d6', style: 'shapes' },
+    museum: { bg: '9370db', style: 'shapes' },
+    exhibit: { bg: 'ba55d3', style: 'shapes' },
+
+    // Music & Performance
+    music: { bg: 'ff1493', style: 'bottts' },
+    concert: { bg: 'ff4500', style: 'bottts' },
+    jazz: { bg: '4169e1', style: 'shapes' },
+    dance: { bg: 'ff00ff', style: 'bottts' },
+
+    // Social & Community
+    community: { bg: '32cd32', style: 'shapes' },
+    workshop: { bg: '48d1cc', style: 'shapes' },
+    class: { bg: '87ceeb', style: 'shapes' },
+
+    // Shopping & Retail
+    shop: { bg: 'ffd700', style: 'bottts' },
+    opening: { bg: 'ff6347', style: 'bottts' },
+    popup: { bg: 'ff69b4', style: 'shapes' }
   };
 
-  const colors = colorSchemes[category] || colorSchemes.social;
+  // Find matching theme based on title keywords
+  let theme = { bg: '74b9ff', style: 'shapes' }; // Default
+  for (const [keyword, config] of Object.entries(themeMapping)) {
+    if (titleLower.includes(keyword)) {
+      theme = config;
+      break;
+    }
+  }
 
-  // Use DiceBear's shapes API for minimal, colorful, geometric patterns
-  // This generates unique SVG patterns based on the seed (event title)
-  return `https://api.dicebear.com/7.x/shapes/svg?seed=${seed}&backgroundColor=${colors.split(',')[0]}&size=800`;
+  // Use event title as seed for consistent but unique patterns
+  const seed = encodeURIComponent(title.toLowerCase().replace(/\s+/g, '-'));
+
+  // Generate DiceBear URL with theme-specific style and color
+  return `https://api.dicebear.com/7.x/${theme.style}/svg?seed=${seed}&backgroundColor=${theme.bg}&size=800`;
 }
 
 // Scrape events from nycforfree.co
