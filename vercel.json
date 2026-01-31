@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/scrape",
+      "schedule": "0 6 * * *"
+    }
+  ],
+  "env": {
+    "POSTGRES_URL": "@postgres_url",
+    "SCRAPE_SECRET": "@scrape_secret"
+  }
+}

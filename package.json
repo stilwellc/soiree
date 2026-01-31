@@ -1,0 +1,21 @@
+{
+  "name": "soiree",
+  "version": "2.0.0",
+  "description": "Curated pop-up events in NYC with automated scraping",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@vercel/postgres": "^0.5.1",
+    "cheerio": "^1.0.0-rc.12",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

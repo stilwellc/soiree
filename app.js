@@ -1,5 +1,9 @@
-// Event Data
-const events = [
+// Configuration
+const API_BASE_URL = window.location.origin;
+const USE_API = true; // Set to false to use fallback data
+
+// Event Data (fallback if API fails)
+let events = [
   {
     id: 1,
     name: "Immersive Gallery Opening",
@@ -246,8 +250,51 @@ const modalClose = document.getElementById('modal-close');
 const favoritesView = document.getElementById('favorites-view');
 const discoverView = document.getElementById('discover-view');
 
+// Fetch Events from API
+async function fetchEvents() {
+  if (!USE_API) {
+    return events; // Use fallback data
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/events`);
+    const data = await response.json();
+
+    if (data.success && data.events && data.events.length > 0) {
+      // Ensure all events have required fields
+      return data.events.map(event => ({
+        ...event,
+        highlights: typeof event.highlights === 'string'
+          ? JSON.parse(event.highlights)
+          : event.highlights || []
+      }));
+    } else {
+      console.warn('No events from API, using fallback');
+      return events; // Fallback to hardcoded events
+    }
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    return events; // Fallback to hardcoded events
+  }
+}
+
 // Initialize App
-function init() {
+async function init() {
+  // Show loading state
+  eventsList.innerHTML = `
+    <div class="loading">
+      <div class="loading-spinner" aria-hidden="true"></div>
+      <p>Loading amazing events...</p>
+    </div>
+  `;
+
+  // Fetch events from API
+  const fetchedEvents = await fetchEvents();
+  if (fetchedEvents && fetchedEvents.length > 0) {
+    events = fetchedEvents;
+  }
+
+  // Render and setup
   renderEvents();
   setupEventListeners();
   updateFavoriteBadge();
