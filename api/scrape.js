@@ -65,7 +65,7 @@ function categorizeEvent(title, description) {
   }
 
   // Food & Culinary
-  if (text.match(/food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|bar|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|flavor|recipe|gourmet/)) {
+  if (text.match(/food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|bar|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|flavor|recipe|gourmet|pizza|burger|chicken|sushi|ramen|bbq|brewery|pub|tavern|bistro|eatery|slice|taco|sandwich/)) {
     return 'culinary';
   }
 
