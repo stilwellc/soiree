@@ -680,6 +680,7 @@ function getCategoryName(category) {
     music: 'Music',
     culinary: 'Food & Drink',
     fashion: 'Fashion',
+    perks: 'Perks',
     lifestyle: 'Lifestyle',
     community: 'Community'
   };

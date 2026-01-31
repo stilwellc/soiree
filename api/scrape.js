@@ -69,6 +69,14 @@ function categorizeEvent(title, description, location) {
     return 'art';
   }
 
+  // --- Perks (events offering complimentary items: samples, gifts, tastings) ---
+  if (text.match(/free\s+(sample|gift|coffee|latte|drink|treat|tote|shirt|t-shirt|merch|product|item|goodie|makeup|lipstick|skincare|fragrance|ice cream|donut|doughnut|pizza|slice|cookie|cupcake|smoothie|juice|chai|matcha|espresso|bagel|croissant|muffin|chocolate|beer|wine|cocktail|seltzer|swag)/i) ||
+      text.match(/\b(complimentary|giveaway|swag|goodie bag|gift bag|gift with purchase|free gifts?|free tasting)\b/i) ||
+      text.match(/while supplies last/i) ||
+      text.match(/first\s+\d+\s+(guests?|people|visitors?|customers?)/i)) {
+    return 'perks';
+  }
+
   // --- Film / screening detection (directed by, director's cut, year patterns) ---
   if (text.match(/directed by|director's cut|screening|^\d{4}\.\s|film series|\bfilms?\b.*\b\d{4}\b/)) {
     return 'art';
@@ -135,7 +143,19 @@ function getEventImage(title, category) {
       'https://images.unsplash.com/photo-1576093430427-778a0e33696e?w=1200&h=800&fit=crop',
       'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200&h=800&fit=crop'
     ],
-    social: [
+    perks: [
+      'https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1607082349566-187342175e2f?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=1200&h=800&fit=crop'
+    ],
+    lifestyle: [
+      'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1540555700478-4be289fbec6f?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=800&fit=crop'
+    ],
+    community: [
       'https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&h=800&fit=crop',
       'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=1200&h=800&fit=crop',
       'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&h=800&fit=crop',
@@ -143,8 +163,8 @@ function getEventImage(title, category) {
     ]
   };
 
-  // Get images array for category, fallback to social
-  const images = categoryImages[category] || categoryImages.social;
+  // Get images array for category, fallback to community
+  const images = categoryImages[category] || categoryImages.community;
 
   // Use title hash to consistently select same image for same event
   let hash = 0;
