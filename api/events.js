@@ -40,6 +40,12 @@ module.exports = async function handler(req, res) {
       )
     `);
 
+    // Add url column if it doesn't exist (for existing tables)
+    await pool.query(`
+      ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS url VARCHAR(500)
+    `);
+
     // Get category filter
     const { category } = req.query;
 

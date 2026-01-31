@@ -280,6 +280,12 @@ module.exports = async function handler(req, res) {
       )
     `);
 
+    // Add url column if it doesn't exist (for existing tables)
+    await pool.query(`
+      ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS url VARCHAR(500)
+    `);
+
     // Clear old events
     await pool.query(`DELETE FROM events WHERE scraped_at < NOW() - INTERVAL '7 days'`);
 
