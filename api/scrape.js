@@ -82,93 +82,72 @@ function categorizeEvent(title, description) {
 function getEventImage(title, category) {
   const titleLower = title.toLowerCase();
 
-  // Extract meaningful keywords from title for image search
-  const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'free', 'nyc', 'new', 'york', 'grand', 'opening', 'experience', 'pop-up', 'popup'];
-
-  // Specific keyword mapping for better visual representation
-  const visualKeywords = {
-    // Food & Drink - specific foods get specific images
-    'chicken': 'fried chicken restaurant',
-    'pizza': 'pizza slice',
-    'sushi': 'sushi platter',
-    'ramen': 'ramen bowl',
-    'coffee': 'coffee shop latte',
-    'wine': 'wine glasses',
-    'beer': 'craft beer',
-    'cocktail': 'cocktails bar',
-    'bakery': 'pastries bakery',
-    'market': 'food market vendors',
+  // Curated Unsplash photo URLs that are guaranteed to work
+  const curatedImages = {
+    // Food & Drink
+    'chicken': 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&q=80', // Fried chicken
+    'pizza': 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80', // Pizza
+    'sushi': 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800&q=80', // Sushi
+    'ramen': 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&q=80', // Ramen
+    'coffee': 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80', // Coffee shop
+    'wine': 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&q=80', // Wine glasses
+    'beer': 'https://images.unsplash.com/photo-1608270586620-248524c67de9?w=800&q=80', // Craft beer
+    'cocktail': 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80', // Cocktails
+    'bakery': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=80', // Bakery
+    'market': 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80', // Food market
 
     // Wellness & Fitness
-    'yoga': 'yoga class people',
-    'wellness': 'wellness spa',
-    'fitness': 'fitness gym workout',
-    'meditation': 'meditation peaceful',
+    'yoga': 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80', // Yoga
+    'wellness': 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80', // Wellness
+    'fitness': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80', // Fitness
+    'meditation': 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80', // Meditation
 
     // Art & Culture
-    'gallery': 'art gallery modern',
-    'museum': 'museum exhibition',
-    'exhibit': 'art exhibition',
-    'photography': 'photography camera',
-    'painting': 'painting canvas',
-    'sculpture': 'sculpture art',
-    'street art': 'street art mural',
+    'gallery': 'https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=800&q=80', // Art gallery
+    'museum': 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=800&q=80', // Museum
+    'exhibit': 'https://images.unsplash.com/photo-1577083552431-6e5fd01c54ca?w=800&q=80', // Exhibition
+    'photography': 'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=800&q=80', // Photography
+    'painting': 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&q=80', // Painting
+    'street art': 'https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?w=800&q=80', // Street art
 
     // Music & Performance
-    'jazz': 'jazz band saxophone',
-    'concert': 'concert crowd',
-    'music': 'live music performance',
-    'dj': 'dj turntables',
-    'dance': 'people dancing',
+    'jazz': 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&q=80', // Jazz
+    'concert': 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80', // Concert
+    'music': 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80', // Live music
+    'dj': 'https://images.unsplash.com/photo-1571266028243-d220c8f11e59?w=800&q=80', // DJ
+    'dance': 'https://images.unsplash.com/photo-1504609813442-a8924e83f76e?w=800&q=80', // Dancing
 
     // Fashion & Shopping
-    'fashion': 'fashion runway',
-    'warby parker': 'eyeglasses stylish',
-    'primark': 'clothing store',
+    'fashion': 'https://images.unsplash.com/photo-1558769132-cb1aea592f0b?w=800&q=80', // Fashion
+    'eyeglasses': 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=800&q=80', // Eyeglasses
+    'warby parker': 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=800&q=80', // Eyeglasses
+    'clothing': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80', // Clothing store
 
-    // Brands & Celebrities
-    'paris hilton': 'glamour celebrity',
-    'crayola': 'colorful art supplies',
-    'daily harvest': 'healthy smoothie bowl',
-    'corepower': 'yoga studio',
-    'brooklinen': 'luxury bedding',
-    'rockefeller': 'rockefeller center nyc'
+    // Brands & specific events
+    'crayola': 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=800&q=80', // Art supplies
+    'daily harvest': 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=800&q=80', // Smoothie bowl
+    'corepower': 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80', // Yoga studio
+    'rockefeller': 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800&q=80', // NYC landmark
+    'celebrity': 'https://images.unsplash.com/photo-1485628390555-1a7bd503f9fe?w=800&q=80', // Glamour
+    'paris hilton': 'https://images.unsplash.com/photo-1485628390555-1a7bd503f9fe?w=800&q=80' // Glamour
   };
 
-  // Find specific visual keyword match
-  let searchTerms = null;
-  for (const [keyword, visualTerm] of Object.entries(visualKeywords)) {
+  // Find matching curated image
+  for (const [keyword, imageUrl] of Object.entries(curatedImages)) {
     if (titleLower.includes(keyword)) {
-      searchTerms = visualTerm;
-      break;
+      return imageUrl;
     }
   }
 
-  // If no specific match, extract general keywords from title
-  if (!searchTerms) {
-    const words = title.toLowerCase()
-      .replace(/[^\w\s]/g, ' ')
-      .split(/\s+/)
-      .filter(word => word.length > 4 && !stopWords.includes(word))
-      .slice(0, 2);
+  // Default category-based images
+  const categoryImages = {
+    'art': 'https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?w=800&q=80',
+    'music': 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80',
+    'culinary': 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80',
+    'social': 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&q=80'
+  };
 
-    // Add category context
-    const categoryContext = {
-      'art': 'art colorful',
-      'music': 'music concert',
-      'culinary': 'food restaurant',
-      'social': 'people community'
-    };
-
-    searchTerms = words.length > 0
-      ? `${words.join(' ')} ${categoryContext[category] || ''}`
-      : categoryContext[category] || 'nyc event';
-  }
-
-  // Use Unsplash with descriptive search terms
-  // Add timestamp to prevent caching and get variety
-  const query = encodeURIComponent(searchTerms.trim());
-  return `https://source.unsplash.com/800x600/?${query}`;
+  return categoryImages[category] || categoryImages.social;
 }
 
 // Scrape events from nycforfree.co
