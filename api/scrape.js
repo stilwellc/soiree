@@ -450,77 +450,6 @@ async function scrapeNYCForFree() {
   }
 }
 
-// Scrape exhibitions from The Met Museum (/exhibitions works, /events gets 429)
-async function scrapeMetMuseum() {
-  try {
-    console.log('Fetching exhibitions from The Met Museum...');
-    const response = await axios.get('https://www.metmuseum.org/exhibitions', {
-      timeout: 15000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'en-US,en;q=0.9'
-      }
-    });
-
-    const $ = cheerio.load(response.data);
-    const events = [];
-    const seenHrefs = new Set();
-
-    // Met uses CSS module classes: exhibition-card_exhibitionCard__*, exhibition-card_title__*, exhibition-card_meta__*
-    $('article[class*="exhibition-card"]').each((i, elem) => {
-      if (events.length >= 15) return false;
-
-      const $elem = $(elem);
-
-      // Title is in a div with class containing "exhibition-card_title" > a > span
-      const $titleDiv = $elem.find('[class*="exhibition-card_title"]');
-      const $titleLink = $titleDiv.find('a');
-      const name = $titleLink.text().trim();
-      if (!name || name.length < 5) return;
-
-      const href = $titleLink.attr('href');
-      if (!href || seenHrefs.has(href)) return;
-      seenHrefs.add(href);
-
-      // Date/meta is in div with class containing "exhibition-card_meta"
-      let date = 'Now on view';
-      const metaText = $elem.find('[class*="exhibition-card_meta"]').text().trim();
-      if (metaText) date = metaText;
-
-      // Image alt text can serve as description
-      const imgAlt = $elem.find('img').attr('alt') || '';
-      const description = imgAlt.length > 20 ? imgAlt.substring(0, 200) : `${name} at The Metropolitan Museum of Art.`;
-
-      const location = 'The Met';
-      const address = '1000 5th Ave, New York, NY 10028';
-      const category = categorizeEvent(name, description, location);
-      const eventUrl = href.startsWith('http') ? href : `https://www.metmuseum.org${href}`;
-
-      events.push({
-        name: name.substring(0, 255),
-        category,
-        date: date.substring(0, 100),
-        time: 'Museum hours',
-        location: location.substring(0, 255),
-        address: address.substring(0, 500),
-        price: 'free',
-        spots: Math.floor(Math.random() * 150) + 50,
-        image: getEventImage(name, category),
-        description: description.substring(0, 500),
-        highlights: ['The Met Museum', 'World-class art', 'Current exhibition', 'Free admission'],
-        url: eventUrl.substring(0, 500)
-      });
-    });
-
-    console.log(`Scraped ${events.length} exhibitions from The Met`);
-    return events;
-  } catch (error) {
-    console.error('Met Museum scraping failed:', error.message);
-    return [];
-  }
-}
-
 // Scrape events from MoMA (trailing slash required on /calendar/)
 async function scrapeMoMA() {
   try {
@@ -758,19 +687,12 @@ async function scrapeGuggenheim() {
     console.log('Fetching events from Guggenheim (WP REST API)...');
     const events = [];
 
-    // Fetch both events and exhibitions in parallel from the WP REST API
-    const [eventsRes, exhibitionsRes] = await Promise.all([
-      axios.get('https://www.guggenheim.org/wp-json/wp/v2/event', {
-        params: { per_page: 10, orderby: 'date', order: 'desc' },
-        timeout: 15000,
-        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
-      }).catch(() => ({ data: [] })),
-      axios.get('https://www.guggenheim.org/wp-json/wp/v2/exhibition', {
-        params: { per_page: 10, orderby: 'date', order: 'desc' },
-        timeout: 15000,
-        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
-      }).catch(() => ({ data: [] }))
-    ]);
+    // Fetch events only (skip permanent exhibitions)
+    const eventsRes = await axios.get('https://www.guggenheim.org/wp-json/wp/v2/event', {
+      params: { per_page: 15, orderby: 'date', order: 'desc' },
+      timeout: 15000,
+      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
+    }).catch(() => ({ data: [] }));
 
     const location = 'Guggenheim';
     const address = '1071 5th Ave, New York, NY 10128';
@@ -802,34 +724,7 @@ async function scrapeGuggenheim() {
       });
     }
 
-    // Process exhibitions
-    for (const item of exhibitionsRes.data) {
-      if (events.length >= 15) break;
-
-      const name = (item.title?.rendered || '').replace(/<[^>]+>/g, '').trim();
-      if (!name || name.length < 5) continue;
-
-      const description = (item.excerpt?.rendered || '').replace(/<[^>]+>/g, '').trim();
-      const eventUrl = item.link || `https://www.guggenheim.org/exhibition/${item.slug}`;
-      const category = categorizeEvent(name, description, location);
-
-      events.push({
-        name: name.substring(0, 255),
-        category,
-        date: 'Now on view',
-        time: 'Museum hours',
-        location: location.substring(0, 255),
-        address: address.substring(0, 500),
-        price: 'free',
-        spots: Math.floor(Math.random() * 150) + 50,
-        image: getEventImage(name, category),
-        description: (description || `${name} exhibition at the Guggenheim Museum.`).substring(0, 500),
-        highlights: ['Guggenheim', 'Current exhibition', 'Iconic architecture', 'World-class art'],
-        url: eventUrl.substring(0, 500)
-      });
-    }
-
-    console.log(`Scraped ${events.length} events/exhibitions from Guggenheim`);
+    console.log(`Scraped ${events.length} events from Guggenheim`);
     return events;
   } catch (error) {
     console.error('Guggenheim scraping failed:', error.message);
@@ -955,7 +850,6 @@ async function scrapeAllEvents() {
       timeoutEvents,
       nycFreeEvents,
       whitneyEvents,
-      metEvents,
       momaEvents,
       guggenheimEvents,
       amnhEvents,
@@ -965,7 +859,6 @@ async function scrapeAllEvents() {
       scrapeTimeOut(),
       scrapeNYCForFree(),
       scrapeWhitney(),
-      scrapeMetMuseum(),
       scrapeMoMA(),
       scrapeGuggenheim(),
       scrapeAMNH(),
@@ -973,24 +866,35 @@ async function scrapeAllEvents() {
     ]);
 
     // Merge all events
-    const allEvents = [
+    const merged = [
       ...theSkintEvents,
       ...timeoutEvents,
       ...nycFreeEvents,
       ...whitneyEvents,
-      ...metEvents,
       ...momaEvents,
       ...guggenheimEvents,
       ...amnhEvents,
       ...newMuseumEvents
     ];
 
-    console.log(`Total events scraped: ${allEvents.length}`);
+    // Filter out permanent/long-running exhibitions
+    const allEvents = merged.filter(e => {
+      const d = (e.date || '').toLowerCase();
+      const t = (e.time || '').toLowerCase();
+      // Skip "Now on view" + "Museum hours" (permanent exhibitions)
+      if (d.includes('now on view') && t.includes('museum hours')) return false;
+      // Skip "On view through..." or "Through [year 2+ years out]"
+      if (d.match(/^on view/i)) return false;
+      // Skip "Through [date]" with "Museum hours" (long-running exhibition)
+      if (d.match(/^through\s/i) && t.includes('museum hours')) return false;
+      return true;
+    });
+
+    console.log(`Total events scraped: ${merged.length}, after filtering: ${allEvents.length}`);
     console.log(`  - The Skint: ${theSkintEvents.length}`);
     console.log(`  - TimeOut NY: ${timeoutEvents.length}`);
     console.log(`  - NYC For Free: ${nycFreeEvents.length}`);
     console.log(`  - Whitney Museum: ${whitneyEvents.length}`);
-    console.log(`  - The Met: ${metEvents.length}`);
     console.log(`  - MoMA: ${momaEvents.length}`);
     console.log(`  - Guggenheim: ${guggenheimEvents.length}`);
     console.log(`  - AMNH: ${amnhEvents.length}`);
