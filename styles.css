@@ -430,6 +430,34 @@ body {
   text-transform: uppercase;
 }
 
+.capacity-indicator {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  color: var(--dark);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.capacity-indicator.low {
+  background: rgba(231, 76, 60, 0.9);
+  color: white;
+}
+
+.capacity-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
 .favorite-btn {
   position: absolute;
   top: 15px;
