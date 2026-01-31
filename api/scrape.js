@@ -86,44 +86,54 @@ async function scrapeEvents() {
     const $ = cheerio.load(response.data);
     const events = [];
 
-    // Find event links
-    $('a[href*="/events/"]').each((i, elem) => {
+    // Find event items
+    $('.event-item, a[href*="/events/"]').each((i, elem) => {
       if (events.length >= 20) return false; // Limit to 20 events
 
       const $elem = $(elem);
-      const href = $elem.attr('href');
+      const href = $elem.attr('href') || $elem.find('a').attr('href');
 
       // Skip if not a proper event link
-      if (!href || href === '/events' || href === '/events/') return;
+      if (!href || href === '/events' || href === '/events/' || !href.includes('/events/')) return;
 
-      // Get event name from link text
-      const name = $elem.text().trim();
+      // Get event name from .event-title or h2/h3
+      let name = $elem.find('.event-title, h2, h3').first().text().trim();
+      if (!name || name.length < 5) {
+        // Fallback to link text if title not found
+        name = $elem.text().trim().split('\n')[0].trim();
+      }
       if (!name || name.length < 5) return;
 
-      // Try to find associated content
-      const $parent = $elem.closest('.summary-item, .blog-item, .eventitem');
-
       // Extract description
-      let description = $parent.find('.summary-excerpt, .blog-excerpt, p').first().text().trim();
-      if (!description) description = name;
+      let description = $elem.find('.event-description, p').first().text().trim();
+      if (!description || description.length < 10) description = name;
 
-      // Extract date info
+      // Extract date and time from .event-meta
       let date = 'Upcoming';
       let time = 'See details';
-      const dateText = $parent.find('.summary-metadata-item--date, .eventitem-meta-date').text().trim();
-      if (dateText) {
-        date = dateText.split('-')[0].trim() || date;
-        const timeMatch = dateText.match(/\d{1,2}:\d{2}\s*[AP]M/i);
-        if (timeMatch) time = timeMatch[0];
+      const timeElem = $elem.find('.event-meta time, time').first().text().trim();
+      if (timeElem) {
+        // Parse date like "Sat, Oct 11, 2025 11:00 AM - Sat, Jan 31, 2026 8:00 PM"
+        const dateParts = timeElem.split('-');
+        if (dateParts.length > 0) {
+          date = dateParts[0].trim();
+          // Extract time
+          const timeMatch = timeElem.match(/(\d{1,2}:\d{2}\s*[AP]M)/i);
+          if (timeMatch) time = timeMatch[1];
+        }
       }
 
-      // Extract location
+      // Extract location from address
       let location = 'New York City';
       let address = 'NYC';
-      const locationText = $parent.find('.summary-metadata-item--location, .eventitem-meta-address').text().trim();
-      if (locationText) {
-        location = locationText.split(',')[0].trim() || location;
-        address = locationText;
+      const addressElem = $elem.find('.event-meta address, address').first().text().trim();
+      if (addressElem) {
+        address = addressElem;
+        // Extract neighborhood/area
+        const parts = addressElem.split(',');
+        if (parts.length > 1) {
+          location = parts[parts.length - 2].trim();
+        }
       }
 
       // Categorize event
