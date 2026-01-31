@@ -7,7 +7,9 @@
     "deploy": "vercel --prod"
   },
   "dependencies": {
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "cheerio": "^1.0.0-rc.12",
+    "axios": "^1.6.5"
   },
   "devDependencies": {
     "vercel": "^33.0.1"
