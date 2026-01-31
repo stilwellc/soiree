@@ -1,13 +1,8 @@
-import { sql } from '@vercel/postgres';
-import * as cheerio from 'cheerio';
+const { sql } = require('@vercel/postgres');
 
-export const config = {
-  maxDuration: 60,
-};
-
-// Simple scraper function
-async function scrapeEvents() {
-  const fallbackEvents = [
+// Simple scraper function with fallback events
+function scrapeEvents() {
+  const events = [
     {
       name: "Brooklyn Street Art Walk",
       category: "art",
@@ -49,10 +44,10 @@ async function scrapeEvents() {
     }
   ];
 
-  return fallbackEvents;
+  return events;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -99,8 +94,8 @@ export default async function handler(req, res) {
     // Clear old events
     await sql`DELETE FROM events WHERE scraped_at < NOW() - INTERVAL '7 days'`;
 
-    // Scrape events
-    const events = await scrapeEvents();
+    // Get events
+    const events = scrapeEvents();
 
     // Insert events
     let inserted = 0;
@@ -132,4 +127,4 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString()
     });
   }
-}
+};
