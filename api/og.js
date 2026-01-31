@@ -1,11 +1,7 @@
-import { ImageResponse } from '@vercel/og';
+module.exports = async function handler(req, res) {
+  const { ImageResponse } = await import('@vercel/og');
 
-export const config = {
-  runtime: 'edge',
-};
-
-export default function handler() {
-  return new ImageResponse(
+  const image = new ImageResponse(
     {
       type: 'div',
       props: {
@@ -21,7 +17,6 @@ export default function handler() {
           overflow: 'hidden',
         },
         children: [
-          // Subtle gold border frame
           {
             type: 'div',
             props: {
@@ -36,7 +31,6 @@ export default function handler() {
               },
             },
           },
-          // Small decorative line above
           {
             type: 'div',
             props: {
@@ -48,7 +42,6 @@ export default function handler() {
               },
             },
           },
-          // Diamond accent
           {
             type: 'div',
             props: {
@@ -58,10 +51,9 @@ export default function handler() {
                 marginBottom: '20px',
                 letterSpacing: '8px',
               },
-              children: '◆',
+              children: '\u25C6',
             },
           },
-          // Main title
           {
             type: 'div',
             props: {
@@ -74,10 +66,9 @@ export default function handler() {
                 marginBottom: '16px',
                 fontFamily: 'serif',
               },
-              children: 'Soirée',
+              children: 'Soir\u00E9e',
             },
           },
-          // Divider
           {
             type: 'div',
             props: {
@@ -90,7 +81,6 @@ export default function handler() {
               },
             },
           },
-          // Tagline
           {
             type: 'div',
             props: {
@@ -104,7 +94,6 @@ export default function handler() {
               children: 'Curated Events in NYC',
             },
           },
-          // Subtitle
           {
             type: 'div',
             props: {
@@ -116,7 +105,7 @@ export default function handler() {
                 textTransform: 'uppercase',
                 marginTop: '16px',
               },
-              children: 'Art · Music · Culture · Free',
+              children: 'Art \u00B7 Music \u00B7 Culture \u00B7 Free',
             },
           },
         ],
@@ -127,4 +116,9 @@ export default function handler() {
       height: 630,
     }
   );
-}
+
+  const buffer = Buffer.from(await image.arrayBuffer());
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400');
+  res.send(buffer);
+};
