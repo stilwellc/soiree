@@ -21,7 +21,8 @@ function getFallbackEvents() {
       spots: 75,
       image: getEventImage("Brooklyn Street Art Walk", "art"),
       description: "Explore Bushwick's vibrant street art scene with a local guide.",
-      highlights: ["Guided tour", "Instagram spots", "Meet artists", "2-hour experience"]
+      highlights: ["Guided tour", "Instagram spots", "Meet artists", "2-hour experience"],
+      url: "https://www.nycforfree.co/events"
     },
     {
       name: "Free Jazz in Central Park",
@@ -34,7 +35,8 @@ function getFallbackEvents() {
       spots: 200,
       image: getEventImage("Free Jazz in Central Park", "music"),
       description: "Evening of smooth jazz under the stars.",
-      highlights: ["Live quartet", "Outdoor setting", "Bring picnic", "Family friendly"]
+      highlights: ["Live quartet", "Outdoor setting", "Bring picnic", "Family friendly"],
+      url: "https://www.nycforfree.co/events"
     },
     {
       name: "DUMBO Food Market",
@@ -47,7 +49,8 @@ function getFallbackEvents() {
       spots: 300,
       image: getEventImage("DUMBO Food Market", "culinary"),
       description: "Sample artisanal foods from local vendors.",
-      highlights: ["50+ vendors", "Cooking demos", "Free samples", "Waterfront"]
+      highlights: ["50+ vendors", "Cooking demos", "Free samples", "Waterfront"],
+      url: "https://www.nycforfree.co/events"
     }
   ];
 }
@@ -56,11 +59,23 @@ function getFallbackEvents() {
 function categorizeEvent(title, description) {
   const text = (title + ' ' + description).toLowerCase();
 
-  if (text.match(/music|concert|jazz|dj|band|singer|performance|show/)) return 'music';
-  if (text.match(/food|culinary|market|tasting|restaurant|cook|dining/)) return 'culinary';
-  if (text.match(/art|gallery|exhibit|museum|paint|sculpture|street art/)) return 'art';
+  // Music & Entertainment - check first for performance-related
+  if (text.match(/music|concert|jazz|dj|band|singer|performance|show|festival|stage|live music|soundtrack|album|vinyl/)) {
+    return 'music';
+  }
 
-  return 'social'; // default category
+  // Food & Culinary
+  if (text.match(/food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|bar|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|flavor|recipe|gourmet/)) {
+    return 'culinary';
+  }
+
+  // Art & Culture
+  if (text.match(/art|gallery|exhibit|museum|paint|sculpture|street art|artist|creative|design|photo|mural|craft|pottery|drawing|illustration|installation|visual/)) {
+    return 'art';
+  }
+
+  // Social & Community (wellness, fitness, shopping, workshops)
+  return 'social';
 }
 
 // Generate contextual image URL based on event title
@@ -188,6 +203,9 @@ async function scrapeEvents() {
       // Categorize event
       const category = categorizeEvent(name, description);
 
+      // Build full event URL
+      const eventUrl = href.startsWith('http') ? href : `https://www.nycforfree.co${href}`;
+
       events.push({
         name: name.substring(0, 255),
         category,
@@ -199,7 +217,8 @@ async function scrapeEvents() {
         spots: Math.floor(Math.random() * 200) + 50, // Random capacity
         image: getEventImage(name, category),
         description: description.substring(0, 500),
-        highlights: ['Free event', 'NYC location', 'Limited spots', 'RSVP recommended']
+        highlights: ['Free event', 'NYC location', 'Limited spots', 'RSVP recommended'],
+        url: eventUrl.substring(0, 500)
       });
     });
 
@@ -255,6 +274,7 @@ module.exports = async function handler(req, res) {
         image TEXT,
         description TEXT,
         highlights JSONB,
+        url VARCHAR(500),
         scraped_at TIMESTAMP DEFAULT NOW(),
         created_at TIMESTAMP DEFAULT NOW()
       )
@@ -270,11 +290,11 @@ module.exports = async function handler(req, res) {
     let inserted = 0;
     for (const event of events) {
       await pool.query(
-        `INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        `INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights, url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
         [event.name, event.category, event.date, event.time, event.location,
          event.address, event.price, event.spots, event.image, event.description,
-         JSON.stringify(event.highlights)]
+         JSON.stringify(event.highlights), event.url]
       );
       inserted++;
     }

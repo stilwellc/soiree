@@ -34,6 +34,7 @@ module.exports = async function handler(req, res) {
         image TEXT,
         description TEXT,
         highlights JSONB,
+        url VARCHAR(500),
         scraped_at TIMESTAMP DEFAULT NOW(),
         created_at TIMESTAMP DEFAULT NOW()
       )
