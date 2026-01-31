@@ -65,28 +65,22 @@ function categorizeEvent(title, description) {
 
 // Generate contextual image URL based on event title
 function getEventImage(title, category) {
-  // Extract meaningful keywords from title
-  const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'up', 'free', 'nyc', 'new', 'york'];
-  const words = title.toLowerCase()
-    .replace(/[^\w\s]/g, ' ')
-    .split(/\s+/)
-    .filter(word => word.length > 3 && !stopWords.includes(word))
-    .slice(0, 2); // Take up to 2 keywords
+  // Use event title as seed for consistent but unique images
+  const seed = encodeURIComponent(title.toLowerCase().replace(/\s+/g, '-'));
 
-  // Add category-specific aesthetic terms for minimal/abstract look
-  const aestheticTerms = {
-    art: 'abstract,minimal,colorful',
-    music: 'vibrant,pattern,neon',
-    culinary: 'food,colorful,fresh',
-    social: 'people,community,vibrant'
+  // Category-specific color palettes for geometric patterns
+  const colorSchemes = {
+    art: 'b6e3f4,c0fdff,e0c3fc,f694c1', // Purple-pink-blue
+    music: 'ff6b6b,4ecdc4,45b7d1,fdcb6e', // Vibrant multi-color
+    culinary: 'ffeaa7,fab1a0,ff7675,fd79a8', // Warm oranges-pinks
+    social: '74b9ff,a29bfe,fd79a8,6c5ce7'  // Cool blues-purples
   };
 
-  // Build search query with keywords + aesthetic terms
-  const searchTerms = [...words, aestheticTerms[category] || 'minimal,colorful'];
-  const query = searchTerms.join(',');
+  const colors = colorSchemes[category] || colorSchemes.social;
 
-  // Use Unsplash random API with search query - more reliable than source API
-  return `https://source.unsplash.com/random/800x600?${encodeURIComponent(query)}&t=${Date.now()}`;
+  // Use DiceBear's shapes API for minimal, colorful, geometric patterns
+  // This generates unique SVG patterns based on the seed (event title)
+  return `https://api.dicebear.com/7.x/shapes/svg?seed=${seed}&backgroundColor=${colors.split(',')[0]}&size=800`;
 }
 
 // Scrape events from nycforfree.co
