@@ -64,27 +64,32 @@ function categorizeEvent(title, description) {
     return 'fashion';
   }
 
-  // Music & Entertainment - includes dance
-  if (text.match(/\b(music|concert|jazz|dj|band|singer|performance|show|festival|stage|soundtrack|album|vinyl|orchestra|choir|acoustic|symphony|karaoke|rap|rock|indie|electronic|classical|dance|dancing|ballet|choreograph)\b/) || text.match(/live music|hip hop/)) {
+  // Music & Entertainment - includes dance, gaming, interactive entertainment
+  if (text.match(/\b(music|concert|jazz|dj|band|singer|performance|show|festival|stage|soundtrack|album|vinyl|orchestra|choir|acoustic|symphony|karaoke|rap|rock|indie|electronic|classical|dance|dancing|ballet|choreograph|arcade|gaming|simulator|interactive|entertainment)\b/) || text.match(/live music|hip hop|pac-man|video game|flight simulator/)) {
     return 'music';
   }
 
-  // Food & Culinary - use word boundaries to avoid false matches
-  if (text.match(/\b(food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|bar|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|eating|flavor|recipe|gourmet|pizza|burger|chicken|sushi|ramen|bbq|brewery|pub|tavern|bistro|eatery|slice|taco|sandwich|foodie|cuisine|pastry|dessert|appetizer)\b/)) {
+  // Food & Culinary - include treats, snacks, and food-related events
+  if (text.match(/\b(food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|bar|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|eating|flavor|recipe|gourmet|pizza|burger|chicken|sushi|ramen|bbq|brewery|pub|tavern|bistro|eatery|slice|taco|sandwich|foodie|cuisine|pastry|dessert|appetizer|treat|snack)\b/) || text.match(/lidl|yoyo chicken/)) {
     return 'culinary';
   }
 
-  // Art & Culture - includes museums, creative activities, visual media (check before social for "creative")
-  if (text.match(/\b(art|gallery|exhibit|museum|paint|sculpture|artist|creative|creativity|design|photo|mural|craft|pottery|drawing|illustration|installation|visual|theater|theatre|cinema|film|movie|photography|graffiti|contemporary|abstract|crayola|coloring|memoir|screening)\b/) || text.match(/street art/)) {
+  // Art & Culture - includes museums, creative activities, visual media, light installations, exhibitions
+  if (text.match(/\b(art|gallery|exhibit|museum|paint|sculpture|artist|creative|creativity|design|photo|mural|craft|pottery|drawing|illustration|installation|visual|theater|theatre|cinema|film|movie|photography|graffiti|contemporary|abstract|crayola|coloring|memoir|screening|glow|light|display|illumination)\b/) || text.match(/street art|paris hilton|stranger things/)) {
     return 'art';
   }
 
-  // Social & Community - wellness, fitness, networking, workshops, brand experiences, pop-ups
-  if (text.match(/\b(yoga|fitness|workout|meditation|wellness|health|community|networking|workshop|seminar|talk|lecture|meetup|class|training|discussion|panel|debate|experience|scavenger|arcade|simulator)\b/) || text.match(/pop-up|popup|grand opening|book club/)) {
+  // Social & Community - wellness, fitness, networking, workshops (more restrictive)
+  if (text.match(/\b(yoga|fitness|workout|meditation|wellness|health|community|networking|workshop|seminar|talk|lecture|meetup|class|training|discussion|panel|debate|scavenger)\b/) || text.match(/book club/)) {
     return 'social';
   }
 
-  // Default to social for general events and brand activations
+  // Default to art for visual experiences, brand pop-ups default to social
+  if (text.match(/\b(pop-up|popup|grand opening|opening|experience)\b/)) {
+    return 'social';
+  }
+
+  // Final default
   return 'social';
 }
 
