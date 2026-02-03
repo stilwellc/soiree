@@ -1,0 +1,57 @@
+name: Daily Event Scraper
+
+on:
+  schedule:
+    # Run at 6 AM EST every day (11 AM UTC)
+    - cron: '0 11 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clear database
+        run: |
+          echo "🗑️  Clearing database..."
+          curl -X POST https://soiree-one.vercel.app/api/refresh \
+            -H "Content-Type: application/json" \
+            -w "\n%{http_code}\n" \
+            -o response.json
+          cat response.json
+          echo ""
+
+      - name: Run scraper
+        run: |
+          echo "🌐 Starting event scraper..."
+          curl -X POST https://soiree-one.vercel.app/api/scrape \
+            -H "Authorization: Bearer ${{ secrets.SCRAPE_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -w "\n%{http_code}\n" \
+            -o scrape-result.json
+
+          echo "📊 Scrape Results:"
+          cat scrape-result.json | jq '.'
+
+          # Check if scrape was successful
+          SUCCESS=$(cat scrape-result.json | jq -r '.success')
+          if [ "$SUCCESS" != "true" ]; then
+            echo "❌ Scrape failed!"
+            exit 1
+          fi
+
+          TOTAL=$(cat scrape-result.json | jq -r '.totalEvents')
+          echo "✅ Successfully scraped $TOTAL events"
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scrape-results
+          path: |
+            response.json
+            scrape-result.json
+          retention-days: 7
