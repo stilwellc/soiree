@@ -27,24 +27,25 @@ jobs:
       - name: Run scraper
         run: |
           echo "🌐 Starting event scraper..."
-          curl -X POST https://soiree-one.vercel.app/api/scrape \
+          HTTP_CODE=$(curl -X POST https://soiree-one.vercel.app/api/scrape \
             -H "Authorization: Bearer ${{ secrets.SCRAPE_SECRET }}" \
             -H "Content-Type: application/json" \
-            -w "\n%{http_code}\n" \
-            -o scrape-result.json
+            -w "%{http_code}" \
+            -o scrape-result.json \
+            -s)
 
+          echo "HTTP Status: $HTTP_CODE"
           echo "📊 Scrape Results:"
-          cat scrape-result.json | jq '.'
+          cat scrape-result.json
+          echo ""
 
-          # Check if scrape was successful
-          SUCCESS=$(cat scrape-result.json | jq -r '.success')
-          if [ "$SUCCESS" != "true" ]; then
-            echo "❌ Scrape failed!"
+          # Check HTTP status
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Scrape failed with HTTP $HTTP_CODE"
             exit 1
           fi
 
-          TOTAL=$(cat scrape-result.json | jq -r '.totalEvents')
-          echo "✅ Successfully scraped $TOTAL events"
+          echo "✅ Scrape completed successfully"
 
       - name: Upload results
         if: always()
