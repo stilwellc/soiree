@@ -22,25 +22,17 @@ module.exports = async function handler(req, res) {
   try {
     console.log('Starting database refresh...');
 
-    // Step 1: Clear all events
+    // Clear all events
     await pool.query('DELETE FROM events');
     console.log('✅ All events cleared');
 
-    // Step 2: Call the scraper
-    const baseUrl = req.headers.host?.includes('localhost')
-      ? 'http://localhost:3000'
-      : `https://${req.headers.host}`;
-    const scrapeUrl = `${baseUrl}/api/scrape`;
-    console.log(`Triggering scraper at: ${scrapeUrl}`);
-
-    const scrapeResponse = await axios.get(scrapeUrl);
-    const scrapeData = scrapeResponse.data;
+    // Get count to verify
+    const result = await pool.query('SELECT COUNT(*) as count FROM events');
 
     return res.status(200).json({
       success: true,
-      message: 'Database refreshed successfully',
-      cleared: true,
-      scrapeResult: scrapeData,
+      message: 'Database cleared successfully. Call /api/scrape to repopulate.',
+      eventsRemaining: parseInt(result.rows[0].count),
       timestamp: new Date().toISOString()
     });
   } catch (error) {
