@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const { parseDateText } = require('./lib/dateParser.js');
 
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
@@ -9,7 +10,7 @@ const pool = new Pool({
 
 // Fallback events if scraping fails
 function getFallbackEvents() {
-  return [
+  const events = [
     {
       name: "Brooklyn Street Art Walk",
       category: "art",
@@ -53,6 +54,12 @@ function getFallbackEvents() {
       url: "https://www.nycforfree.co/events"
     }
   ];
+
+  // Add parsed dates to each fallback event
+  return events.map(event => {
+    const { start_date, end_date } = parseDateText(event.date, event.time);
+    return { ...event, start_date, end_date };
+  });
 }
 
 // Category mapping based on title, description, and location
@@ -275,11 +282,17 @@ async function scrapeTheSkint() {
       const category = categorizeEvent(title, description, location);
       const eventUrl = link.startsWith('http') ? link : `https://theskint.com${link}`;
 
+      const dateStr = 'This Week';
+      const timeStr = 'See details';
+      const { start_date, end_date } = parseDateText(dateStr, timeStr);
+
       events.push({
         name: title.substring(0, 255),
         category,
-        date: 'This Week',
-        time: 'See details',
+        date: dateStr,
+        time: timeStr,
+        start_date,
+        end_date,
         location: location.substring(0, 255) || 'Various NYC',
         address: location.substring(0, 500),
         price: 'free',
@@ -329,11 +342,17 @@ async function scrapeTimeOut() {
       const category = categorizeEvent(title, description, location);
       const eventUrl = link.startsWith('http') ? link : `https://www.timeout.com${link}`;
 
+      const dateStr = 'Upcoming';
+      const timeStr = 'Various times';
+      const { start_date, end_date } = parseDateText(dateStr, timeStr);
+
       events.push({
         name: title.substring(0, 255),
         category,
-        date: 'Upcoming',
-        time: 'Various times',
+        date: dateStr,
+        time: timeStr,
+        start_date,
+        end_date,
         location: (location || 'Manhattan').substring(0, 255),
         address: location.substring(0, 500),
         price: 'free',
@@ -422,11 +441,16 @@ async function scrapeNYCForFree() {
       // Build full event URL
       const eventUrl = href.startsWith('http') ? href : `https://www.nycforfree.co${href}`;
 
+      // Parse structured dates
+      const { start_date, end_date } = parseDateText(date, time);
+
       events.push({
         name: name.substring(0, 255),
         category,
         date: date.substring(0, 100),
         time: time.substring(0, 100),
+        start_date,
+        end_date,
         location: location.substring(0, 255),
         address: address.substring(0, 500),
         price: 'free',
@@ -509,11 +533,16 @@ async function scrapeMoMA() {
       const category = categorizeEvent(name, description, location);
       const eventUrl = href.startsWith('http') ? href : `https://www.moma.org${href}`;
 
+      // Parse structured dates
+      const { start_date, end_date } = parseDateText(date, time);
+
       events.push({
         name: name.substring(0, 255),
         category,
         date: date.substring(0, 100),
         time: time.substring(0, 100),
+        start_date,
+        end_date,
         location: location.substring(0, 255),
         address: address.substring(0, 500),
         price: 'free',
@@ -586,11 +615,16 @@ async function scrapeAMNH() {
       const category = categorizeEvent(name, description, location);
       const eventUrl = href.startsWith('http') ? href : `https://www.amnh.org${href}`;
 
+      // Parse structured dates
+      const { start_date, end_date } = parseDateText(date, time);
+
       events.push({
         name: name.substring(0, 255),
         category,
         date: date.substring(0, 100),
         time: time.substring(0, 100),
+        start_date,
+        end_date,
         location: location.substring(0, 255),
         address: address.substring(0, 500),
         price: 'free',
@@ -657,11 +691,16 @@ async function scrapeWhitney() {
       const category = categorizeEvent(name, description, location);
       const eventUrl = href.startsWith('http') ? href : `https://whitney.org${href}`;
 
+      // Parse structured dates
+      const { start_date, end_date } = parseDateText(date, time);
+
       events.push({
         name: name.substring(0, 255),
         category,
         date: date.substring(0, 100),
         time: time.substring(0, 100),
+        start_date,
+        end_date,
         location: location.substring(0, 255),
         address: address.substring(0, 500),
         price: 'free',
@@ -708,11 +747,17 @@ async function scrapeGuggenheim() {
       const eventUrl = item.link || `https://www.guggenheim.org/event/${item.slug}`;
       const category = categorizeEvent(name, description, location);
 
+      const dateStr = 'Upcoming';
+      const timeStr = 'See details';
+      const { start_date, end_date } = parseDateText(dateStr, timeStr);
+
       events.push({
         name: name.substring(0, 255),
         category,
-        date: 'Upcoming',
-        time: 'See details',
+        date: dateStr,
+        time: timeStr,
+        start_date,
+        end_date,
         location: location.substring(0, 255),
         address: address.substring(0, 500),
         price: 'free',
@@ -774,11 +819,16 @@ async function scrapeNewMuseum() {
           const category = categorizeEvent(name, description, location);
           const eventUrl = uri.startsWith('http') ? uri : `https://www.newmuseum.org${uri}`;
 
+          // Parse structured dates
+          const { start_date, end_date } = parseDateText(startDate, 'See details');
+
           events.push({
             name: name.substring(0, 255),
             category,
             date: startDate.substring(0, 100),
             time: 'See details',
+            start_date,
+            end_date,
             location: location.substring(0, 255),
             address: address.substring(0, 500),
             price: 'free',
@@ -814,11 +864,17 @@ async function scrapeNewMuseum() {
         const category = categorizeEvent(name, description, location);
         const eventUrl = href.startsWith('http') ? href : `https://www.newmuseum.org${href}`;
 
+        const dateStr = 'Upcoming';
+        const timeStr = 'See details';
+        const { start_date, end_date } = parseDateText(dateStr, timeStr);
+
         events.push({
           name: name.substring(0, 255),
           category,
-          date: 'Upcoming',
-          time: 'See details',
+          date: dateStr,
+          time: timeStr,
+          start_date,
+          end_date,
           location: location.substring(0, 255),
           address: address.substring(0, 500),
           price: 'free',

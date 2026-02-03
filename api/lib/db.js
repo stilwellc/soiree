@@ -18,6 +18,8 @@ export async function initDB() {
         description TEXT,
         highlights JSONB,
         source_url TEXT,
+        start_date DATE,
+        end_date DATE,
         scraped_at TIMESTAMP DEFAULT NOW(),
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
@@ -27,6 +29,7 @@ export async function initDB() {
     // Create indexes
     await sql`CREATE INDEX IF NOT EXISTS idx_events_category ON events(category)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_events_date ON events(date)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_events_start_date ON events(start_date)`;
 
     console.log('Database initialized successfully');
     return { success: true };
@@ -68,13 +71,15 @@ export async function insertEvent(event) {
     const { rows } = await sql`
       INSERT INTO events (
         name, category, date, time, location, address,
-        price, spots, image, description, highlights, source_url
+        price, spots, image, description, highlights, source_url,
+        start_date, end_date
       )
       VALUES (
         ${event.name}, ${event.category}, ${event.date}, ${event.time},
         ${event.location}, ${event.address || null}, ${event.price || 'free'},
         ${event.spots || 0}, ${event.image || null}, ${event.description || null},
-        ${JSON.stringify(event.highlights || [])}, ${event.source_url || null}
+        ${JSON.stringify(event.highlights || [])}, ${event.source_url || null},
+        ${event.start_date || null}, ${event.end_date || event.start_date || null}
       )
       RETURNING *
     `;

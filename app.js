@@ -551,13 +551,37 @@ function renderFavorites() {
   });
 }
 
+// Format Date for Display
+function formatEventDate(event) {
+  // If we have structured dates, format them nicely
+  if (event.start_date) {
+    const startDate = new Date(event.start_date);
+    const endDate = event.end_date ? new Date(event.end_date) : startDate;
+
+    const options = { month: 'short', day: 'numeric' };
+    const startFormatted = startDate.toLocaleDateString('en-US', options);
+
+    // If single day event
+    if (event.start_date === event.end_date) {
+      return `${startFormatted}${event.time ? ' • ' + event.time : ''}`;
+    } else {
+      // Multi-day event
+      const endFormatted = endDate.toLocaleDateString('en-US', options);
+      return `${startFormatted} - ${endFormatted}${event.time ? ' • ' + event.time : ''}`;
+    }
+  }
+
+  // Fallback to original format
+  return `${event.date}${event.time ? ' • ' + event.time : ''}`;
+}
+
 // Create Event Card
 function createEventCard(event, index) {
   const isFavorited = favorites.includes(event.id);
   const animationDelay = index < 3 ? `style="animation-delay: ${0.4 + index * 0.1}s"` : '';
 
   return `
-    <div class="event-card" data-id="${event.id}" data-category="${event.category}" ${animationDelay} role="article" tabindex="0">
+    <div class="event-card" data-id="${event.id}" data-category="${event.category}" data-start-date="${event.start_date || ''}" data-end-date="${event.end_date || ''}" ${animationDelay} role="article" tabindex="0">
       <div class="event-image" style="background-image: url('${event.image}')">
         <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" data-id="${event.id}" aria-label="${isFavorited ? 'Remove from' : 'Add to'} favorites">
           <svg viewBox="0 0 24 24" fill="${isFavorited ? 'white' : 'none'}" stroke="currentColor" stroke-width="2">
@@ -567,7 +591,7 @@ function createEventCard(event, index) {
         <div class="event-badge">${event.price === 'free' ? 'Free Entry' : event.price}</div>
       </div>
       <div class="event-details">
-        <div class="event-date">${event.date} • ${event.time}</div>
+        <div class="event-date">${formatEventDate(event)}</div>
         <div class="event-name">${event.name}</div>
         <div class="event-location">${event.location}</div>
         <div class="event-tags">
@@ -604,7 +628,8 @@ function openModal(eventId) {
           </svg>
           <div>
             <div class="meta-label">When</div>
-            <div class="meta-value">${event.date} • ${event.time}</div>
+            <div class="meta-value">${formatEventDate(event)}</div>
+            ${event.start_date ? `<div class="meta-sublabel">${event.start_date}${event.end_date !== event.start_date ? ' to ' + event.end_date : ''}</div>` : ''}
           </div>
         </div>
         <div class="modal-meta-item">

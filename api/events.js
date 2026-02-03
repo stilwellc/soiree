@@ -35,6 +35,8 @@ module.exports = async function handler(req, res) {
         description TEXT,
         highlights JSONB,
         url VARCHAR(500),
+        start_date DATE,
+        end_date DATE,
         scraped_at TIMESTAMP DEFAULT NOW(),
         created_at TIMESTAMP DEFAULT NOW()
       )
@@ -44,6 +46,13 @@ module.exports = async function handler(req, res) {
     await pool.query(`
       ALTER TABLE events
       ADD COLUMN IF NOT EXISTS url VARCHAR(500)
+    `);
+
+    // Add date columns if they don't exist (for existing tables)
+    await pool.query(`
+      ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS start_date DATE,
+      ADD COLUMN IF NOT EXISTS end_date DATE
     `);
 
     // Get category filter
