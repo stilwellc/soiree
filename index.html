@@ -69,6 +69,14 @@
     <span class="nav-label">Favorites</span>
     <span class="favorite-badge" style="display: none;">0</span>
   </div>
+  <div class="nav-item" data-view="about" role="button" tabindex="0" aria-label="About">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="16" x2="12" y2="12"/>
+      <line x1="12" y1="8" x2="12.01" y2="8"/>
+    </svg>
+    <span class="nav-label">About</span>
+  </div>
 </nav>
 
 <!-- Main Content -->
@@ -133,6 +141,62 @@
       <div class="empty-state-icon">❤️</div>
       <div class="empty-state-title">No favorites yet</div>
       <div class="empty-state-text">Start adding events you love to see them here</div>
+    </div>
+  </div>
+
+  <!-- About View -->
+  <div id="about-view" class="hidden">
+    <header class="header">
+      <div class="decorative-line" aria-hidden="true"></div>
+      <p class="greeting">Our story</p>
+      <h1 class="title">About<br>Soirée</h1>
+      <div class="location">Connecting NYC</div>
+    </header>
+
+    <div class="about-content">
+      <section class="about-section">
+        <h2 class="about-heading">Our Mission</h2>
+        <p class="about-text">
+          Soirée curates the best pop-up events happening across New York City.
+          From intimate art gallery openings to exclusive culinary experiences,
+          we help you discover unique moments that make the city magical.
+        </p>
+      </section>
+
+      <section class="about-section">
+        <h2 class="about-heading">Impact</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number" id="stat-events">-</div>
+            <div class="stat-label">Events Connected</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-views">-</div>
+            <div class="stat-label">Page Views</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-unique">-</div>
+            <div class="stat-label">Unique Experiences</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="about-section">
+        <h2 class="about-heading">How It Works</h2>
+        <p class="about-text">
+          We scan dozens of sources daily to find the most exciting pop-up events
+          in NYC. Our team curates each event to ensure quality and authenticity,
+          so you always discover something worth your time.
+        </p>
+      </section>
+
+      <section class="about-section">
+        <h2 class="about-heading">Stay Connected</h2>
+        <p class="about-text">
+          New events are added daily. Bookmark your favorites and check back often
+          to never miss out on the city's best experiences.
+        </p>
+      </section>
     </div>
   </div>
 </main>

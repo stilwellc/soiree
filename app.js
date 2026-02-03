@@ -250,6 +250,7 @@ const modalOverlay = document.getElementById('modal-overlay');
 const modalClose = document.getElementById('modal-close');
 const favoritesView = document.getElementById('favorites-view');
 const discoverView = document.getElementById('discover-view');
+const aboutView = document.getElementById('about-view');
 
 // Fetch Events from API
 async function fetchEvents() {
@@ -288,6 +289,9 @@ async function init() {
       <p>Loading amazing events...</p>
     </div>
   `;
+
+  // Track page view
+  trackPageView();
 
   // Fetch events from API
   const fetchedEvents = await fetchEvents();
@@ -368,24 +372,33 @@ function handleNavClick(item) {
     currentTimeFilter = 'all';
     discoverView.classList.remove('hidden');
     favoritesView.classList.add('hidden');
+    aboutView.classList.add('hidden');
     startRotating();
     renderEvents();
   } else if (view === 'today') {
     currentTimeFilter = 'today';
     discoverView.classList.remove('hidden');
     favoritesView.classList.add('hidden');
+    aboutView.classList.add('hidden');
     setFixedTitle("Today's");
     renderEvents();
   } else if (view === 'week') {
     currentTimeFilter = 'week';
     discoverView.classList.remove('hidden');
     favoritesView.classList.add('hidden');
+    aboutView.classList.add('hidden');
     setFixedTitle("This Week's");
     renderEvents();
   } else if (view === 'favorites') {
     discoverView.classList.add('hidden');
     favoritesView.classList.remove('hidden');
+    aboutView.classList.add('hidden');
     renderFavorites();
+  } else if (view === 'about') {
+    discoverView.classList.add('hidden');
+    favoritesView.classList.add('hidden');
+    aboutView.classList.remove('hidden');
+    loadStats();
   }
 }
 
@@ -575,6 +588,34 @@ function formatEventDate(event) {
   return `${event.date}${event.time ? ' • ' + event.time : ''}`;
 }
 
+// Format Short Date for Badge
+function formatBadgeDate(event) {
+  if (event.start_date) {
+    const startDate = new Date(event.start_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Check if it's today
+    if (startDate.toDateString() === today.toDateString()) {
+      return 'Today';
+    }
+
+    // Check if it's tomorrow
+    if (startDate.toDateString() === tomorrow.toDateString()) {
+      return 'Tomorrow';
+    }
+
+    // Otherwise show formatted date
+    const options = { month: 'short', day: 'numeric' };
+    return startDate.toLocaleDateString('en-US', options);
+  }
+
+  // Fallback to human-readable date
+  return event.date;
+}
+
 // Create Event Card
 function createEventCard(event, index) {
   const isFavorited = favorites.includes(event.id);
@@ -588,7 +629,7 @@ function createEventCard(event, index) {
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
           </svg>
         </button>
-        <div class="event-badge">${event.price === 'free' ? 'Free Entry' : event.price}</div>
+        <div class="event-badge">${formatBadgeDate(event)}</div>
       </div>
       <div class="event-details">
         <div class="event-date">${formatEventDate(event)}</div>
@@ -740,6 +781,41 @@ function updateFavoriteBadge() {
   if (badge) {
     badge.textContent = favorites.length;
     badge.style.display = favorites.length > 0 ? 'block' : 'none';
+  }
+}
+
+// Stats & Analytics
+async function trackPageView() {
+  if (!USE_API) return;
+
+  try {
+    await fetch(`${API_BASE_URL}/api/stats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Error tracking page view:', error);
+  }
+}
+
+async function loadStats() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/stats`);
+    const data = await response.json();
+
+    if (data.success && data.stats) {
+      // Format numbers with commas
+      const formatNumber = (num) => num.toLocaleString('en-US');
+
+      document.getElementById('stat-events').textContent = formatNumber(data.stats.totalEvents);
+      document.getElementById('stat-views').textContent = formatNumber(data.stats.pageViews);
+      document.getElementById('stat-unique').textContent = formatNumber(data.stats.uniqueEvents);
+    }
+  } catch (error) {
+    console.error('Error loading stats:', error);
+    document.getElementById('stat-events').textContent = '0';
+    document.getElementById('stat-views').textContent = '0';
+    document.getElementById('stat-unique').textContent = '0';
   }
 }
 
