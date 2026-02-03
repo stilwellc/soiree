@@ -445,15 +445,15 @@ body {
 
 .event-card {
   background: white;
-  border-radius: 24px;
+  border-radius: 20px;
   overflow: hidden;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 24px rgba(10, 10, 10, 0.08);
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(10, 10, 10, 0.06);
   cursor: pointer;
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   animation: cardAppear 0.8s var(--transition) both;
-  border: 1px solid rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(10, 10, 10, 0.08);
 }
 
 .event-card:nth-child(1) {
@@ -481,64 +481,75 @@ body {
 }
 
 .event-card:hover {
-  transform: translateY(-12px) scale(1.02);
-  box-shadow: 0 28px 60px rgba(10, 10, 10, 0.20), 0 0 0 1px rgba(212, 175, 55, 0.3);
-  border-color: rgba(212, 175, 55, 0.4);
-}
-
-.event-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, transparent 0%, rgba(212, 175, 55, 0.03) 100%);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
-
-.event-card:hover::before {
-  opacity: 1;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(10, 10, 10, 0.12);
+  border-color: rgba(212, 175, 55, 0.3);
 }
 
 .event-card.hidden {
   display: none;
 }
 
-.event-image {
-  width: 100%;
-  height: 280px;
-  background-size: cover;
-  background-position: center;
+.event-card-header {
+  height: 120px;
+  padding: 24px;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.event-image::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent);
-  pointer-events: none;
+/* Category gradients */
+.event-card[data-category="art"] .event-card-header {
+  background: linear-gradient(135deg, #8B4545 0%, #A0686B 100%);
+}
+
+.event-card[data-category="music"] .event-card-header {
+  background: linear-gradient(135deg, #4A4A4A 0%, #6B6B6B 100%);
+}
+
+.event-card[data-category="culinary"] .event-card-header {
+  background: linear-gradient(135deg, #8B6F47 0%, #A8906E 100%);
+}
+
+.event-card[data-category="fashion"] .event-card-header {
+  background: linear-gradient(135deg, #2C2C2C 0%, #4D4D4D 100%);
+}
+
+.event-card[data-category="perks"] .event-card-header {
+  background: linear-gradient(135deg, #D4AF37 0%, #E5C158 100%);
+}
+
+.event-card[data-category="lifestyle"] .event-card-header {
+  background: linear-gradient(135deg, #B8826B 0%, #C9A18E 100%);
+}
+
+.event-card[data-category="community"] .event-card-header {
+  background: linear-gradient(135deg, #6B8B7B 0%, #8BA89B 100%);
 }
 
 .event-badge {
   position: absolute;
-  top: 15px;
-  right: 15px;
-  padding: 6px 16px;
-  background: rgba(0, 0, 0, 0.75);
+  top: 20px;
+  right: 24px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
-  color: var(--gold);
+  color: white;
   font-size: 11px;
-  font-weight: 500;
-  border-radius: 20px;
-  letter-spacing: 1px;
+  font-weight: 600;
+  border-radius: 12px;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.event-category-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
   text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: auto;
 }
 
 .capacity-indicator {
@@ -585,13 +596,13 @@ body {
 
 .favorite-btn {
   position: absolute;
-  top: 15px;
-  left: 15px;
-  background: rgba(255, 255, 255, 0.9);
+  top: 20px;
+  left: 24px;
+  background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
-  border: none;
-  width: 40px;
-  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -602,79 +613,71 @@ body {
 }
 
 .favorite-btn:hover {
-  transform: scale(1.1);
-  background: white;
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .favorite-btn.favorited {
-  background: var(--gold);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.95);
 }
 
 .favorite-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+  stroke: white;
   transition: all 0.3s ease;
 }
 
 .favorite-btn.favorited svg {
-  fill: white;
-  stroke: white;
+  fill: var(--gold);
+  stroke: var(--gold);
 }
 
 .event-details {
-  padding: 20px;
+  padding: 24px;
 }
 
 .event-date {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   font-size: 12px;
   color: var(--accent);
-  margin-bottom: 10px;
-  font-weight: 400;
+  margin-bottom: 8px;
+  font-weight: 500;
   letter-spacing: 0.3px;
-}
-
-.event-date::before {
-  content: '';
-  width: 3px;
-  height: 3px;
-  background: var(--gold);
-  border-radius: 50%;
 }
 
 .event-name {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--dark);
-  margin-bottom: 10px;
-  letter-spacing: -0.5px;
-  line-height: 1.25;
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .event-location {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--accent);
-  margin-bottom: 12px;
+  margin-bottom: 0;
   font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.event-location::before {
+  content: '◆';
+  font-size: 6px;
+  color: var(--gold);
 }
 
 .event-tags {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.tag {
-  padding: 5px 12px;
-  background: var(--cream);
-  color: var(--dark);
-  font-size: 11px;
-  border-radius: 12px;
-  font-weight: 400;
-  letter-spacing: 0.2px;
+  display: none;
 }
 
 .tag-urgent {

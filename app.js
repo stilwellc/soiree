@@ -645,21 +645,19 @@ function createEventCard(event, index) {
 
   return `
     <div class="event-card" data-id="${event.id}" data-category="${event.category}" data-start-date="${event.start_date || ''}" data-end-date="${event.end_date || ''}" ${animationDelay} role="article" tabindex="0">
-      <div class="event-image" style="background-image: url('${event.image}')">
+      <div class="event-card-header">
         <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" data-id="${event.id}" aria-label="${isFavorited ? 'Remove from' : 'Add to'} favorites">
-          <svg viewBox="0 0 24 24" fill="${isFavorited ? 'white' : 'none'}" stroke="currentColor" stroke-width="2">
+          <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
           </svg>
         </button>
         <div class="event-badge">${formatBadgeDate(event)}</div>
+        <div class="event-category-label">${getCategoryName(event.category)}</div>
       </div>
       <div class="event-details">
-        <div class="event-date">${formatEventDate(event)}</div>
         <div class="event-name">${event.name}</div>
+        <div class="event-date">${formatEventDate(event)}</div>
         <div class="event-location">${event.location}</div>
-        <div class="event-tags">
-          <div class="tag">${getCategoryName(event.category)}</div>
-        </div>
       </div>
     </div>
   `;
