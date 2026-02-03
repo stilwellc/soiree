@@ -1058,12 +1058,12 @@ module.exports = async function handler(req, res) {
     for (const event of uniqueEvents) {
       try {
         await pool.query(
-          `INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights, url)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          `INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights, url, start_date, end_date)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
            ON CONFLICT (url) DO NOTHING`,
           [event.name, event.category, event.date, event.time, event.location,
            event.address, event.price, event.spots, event.image, event.description,
-           JSON.stringify(event.highlights), event.url]
+           JSON.stringify(event.highlights), event.url, event.start_date, event.end_date]
         );
         inserted++;
       } catch (error) {
