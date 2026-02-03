@@ -498,35 +498,91 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  overflow: hidden;
+}
+
+.event-card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 40% 20%, rgba(0, 0, 0, 0.03) 0%, transparent 30%);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.event-card-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.02) 2px,
+      rgba(255, 255, 255, 0.02) 4px
+    );
+  opacity: 0.3;
+  pointer-events: none;
 }
 
 /* Category gradients */
 .event-card[data-category="art"] .event-card-header {
-  background: linear-gradient(135deg, #8B4545 0%, #A0686B 100%);
+  background:
+    linear-gradient(165deg, rgba(139, 69, 69, 0.9) 0%, transparent 70%),
+    linear-gradient(345deg, rgba(160, 104, 107, 0.9) 0%, transparent 70%),
+    linear-gradient(135deg, #8B4545 0%, #A0686B 100%);
 }
 
 .event-card[data-category="music"] .event-card-header {
-  background: linear-gradient(135deg, #4A4A4A 0%, #6B6B6B 100%);
+  background:
+    linear-gradient(165deg, rgba(74, 74, 74, 0.9) 0%, transparent 70%),
+    linear-gradient(345deg, rgba(107, 107, 107, 0.9) 0%, transparent 70%),
+    linear-gradient(135deg, #4A4A4A 0%, #6B6B6B 100%);
 }
 
 .event-card[data-category="culinary"] .event-card-header {
-  background: linear-gradient(135deg, #8B6F47 0%, #A8906E 100%);
+  background:
+    linear-gradient(165deg, rgba(139, 111, 71, 0.9) 0%, transparent 70%),
+    linear-gradient(345deg, rgba(168, 144, 110, 0.9) 0%, transparent 70%),
+    linear-gradient(135deg, #8B6F47 0%, #A8906E 100%);
 }
 
 .event-card[data-category="fashion"] .event-card-header {
-  background: linear-gradient(135deg, #2C2C2C 0%, #4D4D4D 100%);
+  background:
+    linear-gradient(165deg, rgba(44, 44, 44, 0.9) 0%, transparent 70%),
+    linear-gradient(345deg, rgba(77, 77, 77, 0.9) 0%, transparent 70%),
+    linear-gradient(135deg, #2C2C2C 0%, #4D4D4D 100%);
 }
 
 .event-card[data-category="perks"] .event-card-header {
-  background: linear-gradient(135deg, #D4AF37 0%, #E5C158 100%);
+  background:
+    linear-gradient(165deg, rgba(212, 175, 55, 0.9) 0%, transparent 70%),
+    linear-gradient(345deg, rgba(229, 193, 88, 0.9) 0%, transparent 70%),
+    linear-gradient(135deg, #D4AF37 0%, #E5C158 100%);
 }
 
 .event-card[data-category="lifestyle"] .event-card-header {
-  background: linear-gradient(135deg, #B8826B 0%, #C9A18E 100%);
+  background:
+    linear-gradient(165deg, rgba(184, 130, 107, 0.9) 0%, transparent 70%),
+    linear-gradient(345deg, rgba(201, 161, 142, 0.9) 0%, transparent 70%),
+    linear-gradient(135deg, #B8826B 0%, #C9A18E 100%);
 }
 
 .event-card[data-category="community"] .event-card-header {
-  background: linear-gradient(135deg, #6B8B7B 0%, #8BA89B 100%);
+  background:
+    linear-gradient(165deg, rgba(107, 139, 123, 0.9) 0%, transparent 70%),
+    linear-gradient(345deg, rgba(139, 168, 155, 0.9) 0%, transparent 70%),
+    linear-gradient(135deg, #6B8B7B 0%, #8BA89B 100%);
 }
 
 .event-badge {
