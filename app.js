@@ -240,6 +240,19 @@ let searchQuery = '';
 let currentTimeFilter = 'all'; // 'all', 'today', 'week'
 let favorites = JSON.parse(localStorage.getItem('soireeFavorites') || '[]');
 
+// Region State
+let currentRegion = localStorage.getItem('soireeRegion') || null;
+let detectedRegion = null;
+let manualRegionOverride = localStorage.getItem('soireeManualRegion') === 'true';
+
+// Region Definitions
+const REGIONS = {
+  'nyc': { name: 'New York City', shortName: 'NYC', coords: { lat: 40.7128, lng: -74.0060 } },
+  'hoboken-jc': { name: 'Hoboken/Jersey City', shortName: 'Hoboken/JC', coords: { lat: 40.7439, lng: -74.0324 } },
+  'jersey-shore': { name: 'Jersey Shore', shortName: 'Shore', coords: { lat: 40.2206, lng: -74.0076 } },
+  'philly': { name: 'Philadelphia', shortName: 'Philly', coords: { lat: 39.9526, lng: -75.1652 } }
+};
+
 // DOM Elements
 const eventsList = document.getElementById('events-list');
 const filterChips = document.querySelectorAll('.filter-chip');
@@ -251,6 +264,63 @@ const modalClose = document.getElementById('modal-close');
 const favoritesView = document.getElementById('favorites-view');
 const discoverView = document.getElementById('discover-view');
 const aboutView = document.getElementById('about-view');
+
+// Geolocation Functions
+// Haversine distance formula (in km)
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Calculate closest region using Haversine distance
+function getClosestRegion(lat, lng) {
+  let closestRegion = 'nyc';
+  let minDistance = Infinity;
+
+  for (const [regionKey, regionData] of Object.entries(REGIONS)) {
+    const distance = haversineDistance(
+      lat, lng,
+      regionData.coords.lat, regionData.coords.lng
+    );
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestRegion = regionKey;
+    }
+  }
+
+  return closestRegion;
+}
+
+// Detect user region via geolocation
+async function detectUserRegion() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve('nyc'); // Fallback to NYC
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const region = getClosestRegion(latitude, longitude);
+        resolve(region);
+      },
+      (error) => {
+        console.warn('Geolocation denied or failed:', error);
+        resolve('nyc'); // Fallback to NYC
+      },
+      { timeout: 5000, enableHighAccuracy: false }
+    );
+  });
+}
 
 // Fetch Events from API
 async function fetchEvents() {
@@ -280,6 +350,104 @@ async function fetchEvents() {
   }
 }
 
+// Initialize region on app load
+async function initRegion() {
+  const savedRegion = localStorage.getItem('soireeRegion');
+  const manualOverride = localStorage.getItem('soireeManualRegion') === 'true';
+
+  if (manualOverride && savedRegion) {
+    // User has manually selected a region
+    currentRegion = savedRegion;
+    manualRegionOverride = true;
+  } else {
+    // Auto-detect region
+    detectedRegion = await detectUserRegion();
+    currentRegion = detectedRegion;
+    localStorage.setItem('soireeRegion', currentRegion);
+  }
+
+  updateRegionUI();
+}
+
+// Update region UI
+function updateRegionUI() {
+  const regionNameEl = document.getElementById('current-region-name');
+  const regionData = REGIONS[currentRegion];
+
+  if (regionNameEl && regionData) {
+    regionNameEl.textContent = regionData.shortName;
+  }
+
+  // Update header location text
+  const locationDiv = document.querySelector('.location');
+  if (locationDiv && regionData) {
+    locationDiv.textContent = regionData.name;
+  }
+
+  // Mark active option in dropdown
+  document.querySelectorAll('.region-option').forEach(option => {
+    const optionRegion = option.dataset.region;
+    if (optionRegion === 'auto') {
+      option.classList.toggle('active', !manualRegionOverride);
+    } else {
+      option.classList.toggle('active', optionRegion === currentRegion && manualRegionOverride);
+    }
+  });
+}
+
+// Handle region selection
+function handleRegionChange(newRegion) {
+  if (newRegion === 'auto') {
+    // Re-enable auto-detection
+    manualRegionOverride = false;
+    localStorage.setItem('soireeManualRegion', 'false');
+    initRegion(); // Re-detect
+  } else {
+    // Manual selection
+    currentRegion = newRegion;
+    manualRegionOverride = true;
+    localStorage.setItem('soireeRegion', newRegion);
+    localStorage.setItem('soireeManualRegion', 'true');
+    updateRegionUI();
+    renderEvents(); // Refresh events
+  }
+
+  closeRegionDropdown();
+}
+
+// Toggle region dropdown
+function toggleRegionDropdown() {
+  const dropdown = document.getElementById('region-dropdown');
+  const isVisible = dropdown && dropdown.style.display !== 'none';
+  if (dropdown) {
+    dropdown.style.display = isVisible ? 'none' : 'block';
+  }
+}
+
+// Close region dropdown
+function closeRegionDropdown() {
+  const dropdown = document.getElementById('region-dropdown');
+  if (dropdown) {
+    dropdown.style.display = 'none';
+  }
+}
+
+// Render coming soon placeholder for non-NYC regions
+function renderComingSoon(regionName) {
+  eventsList.innerHTML = `
+    <div class="coming-soon-state">
+      <div class="coming-soon-icon">🚀</div>
+      <div class="coming-soon-title">New areas being added soon!</div>
+      <div class="coming-soon-text">
+        Check back in ${regionName} for exciting events coming your way.
+      </div>
+      <button class="btn btn-primary" onclick="handleRegionChange('nyc')">
+        Explore NYC Events
+      </button>
+    </div>
+  `;
+}
+
 // Initialize App
 async function init() {
   // Show loading state
@@ -292,6 +460,9 @@ async function init() {
 
   // Track page view
   trackPageView();
+
+  // Initialize region (detects location)
+  await initRegion();
 
   // Fetch events from API
   const fetchedEvents = await fetchEvents();
@@ -327,10 +498,34 @@ function setupEventListeners() {
   });
   modalClose.addEventListener('click', closeModal);
 
+  // Region selector
+  const regionToggle = document.getElementById('region-toggle');
+  if (regionToggle) {
+    regionToggle.addEventListener('click', toggleRegionDropdown);
+  }
+
+  document.querySelectorAll('.region-option').forEach(option => {
+    option.addEventListener('click', () => {
+      const region = option.dataset.region;
+      handleRegionChange(region);
+    });
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    const selector = document.querySelector('.region-selector');
+    if (selector && !selector.contains(e.target)) {
+      closeRegionDropdown();
+    }
+  });
+
   // Keyboard navigation
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
       closeModal();
+    }
+    if (e.key === 'Escape') {
+      closeRegionDropdown();
     }
   });
 }
@@ -478,6 +673,13 @@ function updateFilterCounts() {
 
 // Render Events
 function renderEvents() {
+  // Check if current region is not NYC - show coming soon placeholder
+  if (currentRegion && currentRegion !== 'nyc') {
+    const regionData = REGIONS[currentRegion];
+    renderComingSoon(regionData ? regionData.name : 'this area');
+    return;
+  }
+
   updateFilterCounts();
   const filteredEvents = events.filter(event => {
     const matchesFilter = currentFilter === 'all' || event.category === currentFilter;
