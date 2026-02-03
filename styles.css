@@ -766,14 +766,14 @@ body {
   top: 20px;
   right: 24px;
   padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
+  background: var(--gold);
   color: white;
   font-size: 11px;
   font-weight: 600;
   border-radius: 12px;
   letter-spacing: 0.5px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: none;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
 }
 
 .event-category-badge {
