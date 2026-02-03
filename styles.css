@@ -501,42 +501,42 @@ body {
   overflow: hidden;
 }
 
-.event-card-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('https://images.unsplash.com/photo-1550859492-d5da9d8e45f3?w=800&q=80');
-  background-size: cover;
-  background-position: center;
-  opacity: 0.15;
-  mix-blend-mode: overlay;
-  pointer-events: none;
-}
-
-.event-card-header::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80');
-  background-size: 300px 300px;
-  background-position: center;
-  opacity: 0.25;
-  mix-blend-mode: multiply;
-  pointer-events: none;
-}
-
-/* Category gradients */
+/* Category gradients with unique textures */
 .event-card[data-category="art"] .event-card-header {
   background:
     linear-gradient(165deg, rgba(139, 69, 69, 0.9) 0%, transparent 70%),
     linear-gradient(345deg, rgba(160, 104, 107, 0.9) 0%, transparent 70%),
     linear-gradient(135deg, #8B4545 0%, #A0686B 100%);
+}
+
+.event-card[data-category="art"] .event-card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800&q=80');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.2;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.event-card[data-category="art"] .event-card-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1547826039-bfc35e0f1ea8?w=800&q=80');
+  background-size: 250px 250px;
+  background-position: center;
+  opacity: 0.18;
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
 
 .event-card[data-category="music"] .event-card-header {
@@ -546,11 +546,71 @@ body {
     linear-gradient(135deg, #4A4A4A 0%, #6B6B6B 100%);
 }
 
+.event-card[data-category="music"] .event-card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=800&q=80');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.event-card[data-category="music"] .event-card-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1550859492-d5da9d8e45f3?w=800&q=80');
+  background-size: 280px 280px;
+  background-position: center;
+  opacity: 0.2;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
 .event-card[data-category="culinary"] .event-card-header {
   background:
     linear-gradient(165deg, rgba(139, 111, 71, 0.9) 0%, transparent 70%),
     linear-gradient(345deg, rgba(168, 144, 110, 0.9) 0%, transparent 70%),
     linear-gradient(135deg, #8B6F47 0%, #A8906E 100%);
+}
+
+.event-card[data-category="culinary"] .event-card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.18;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.event-card[data-category="culinary"] .event-card-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=800&q=80');
+  background-size: 300px 300px;
+  background-position: center;
+  opacity: 0.24;
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
 
 .event-card[data-category="fashion"] .event-card-header {
@@ -560,11 +620,71 @@ body {
     linear-gradient(135deg, #2C2C2C 0%, #4D4D4D 100%);
 }
 
+.event-card[data-category="fashion"] .event-card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1604076913837-52ab5629fba9?w=800&q=80');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.25;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.event-card[data-category="fashion"] .event-card-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1533158326339-7f3cf2404354?w=800&q=80');
+  background-size: 260px 260px;
+  background-position: center;
+  opacity: 0.22;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
 .event-card[data-category="perks"] .event-card-header {
   background:
     linear-gradient(165deg, rgba(107, 68, 35, 0.9) 0%, transparent 70%),
     linear-gradient(345deg, rgba(139, 99, 71, 0.9) 0%, transparent 70%),
     linear-gradient(135deg, #6B4423 0%, #8B6347 100%);
+}
+
+.event-card[data-category="perks"] .event-card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1574096079513-d8259312b785?w=800&q=80');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.19;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.event-card[data-category="perks"] .event-card-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1536924940846-227afb31e2a5?w=800&q=80');
+  background-size: 290px 290px;
+  background-position: center;
+  opacity: 0.21;
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
 
 .event-card[data-category="lifestyle"] .event-card-header {
@@ -574,11 +694,71 @@ body {
     linear-gradient(135deg, #B8826B 0%, #C9A18E 100%);
 }
 
+.event-card[data-category="lifestyle"] .event-card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.17;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.event-card[data-category="lifestyle"] .event-card-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=800&q=80');
+  background-size: 270px 270px;
+  background-position: center;
+  opacity: 0.23;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
 .event-card[data-category="community"] .event-card-header {
   background:
     linear-gradient(165deg, rgba(107, 139, 123, 0.9) 0%, transparent 70%),
     linear-gradient(345deg, rgba(139, 168, 155, 0.9) 0%, transparent 70%),
     linear-gradient(135deg, #6B8B7B 0%, #8BA89B 100%);
+}
+
+.event-card[data-category="community"] .event-card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=800&q=80');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.2;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.event-card[data-category="community"] .event-card-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1549887534-1541e9326642?w=800&q=80');
+  background-size: 310px 310px;
+  background-position: center;
+  opacity: 0.19;
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
 
 .event-badge {
