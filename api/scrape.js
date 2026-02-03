@@ -184,9 +184,9 @@ function getEventImage(title, category) {
   return images[index];
 }
 
-// Fetch detail page description from an individual event URL
-// Used to enrich listing-page data with full descriptions for better categorization
-async function fetchDetailDescription(url) {
+// Fetch detail page data (description and dates) from an individual event URL
+// Used to enrich listing-page data with full descriptions and accurate dates
+async function fetchDetailPageData(url) {
   try {
     const response = await axios.get(url, {
       timeout: 5000,
@@ -197,44 +197,108 @@ async function fetchDetailDescription(url) {
     });
     const $ = cheerio.load(response.data);
 
-    // Collect text from common content selectors (Squarespace, WordPress, generic)
-    const selectors = [
+    // --- Extract Description ---
+    const descSelectors = [
       '.eventitem-column-content p',
       '.sqs-block-content p',
       '.entry-content p',
       'article p',
       '.event-description p',
-      '.post-content p'
+      '.post-content p',
+      '.event-content p'
     ];
 
-    let text = '';
-    for (const sel of selectors) {
+    let description = '';
+    for (const sel of descSelectors) {
       $(sel).each((_, el) => {
-        text += ' ' + $(el).text().trim();
+        description += ' ' + $(el).text().trim();
       });
-      if (text.trim().length > 50) break;
+      if (description.trim().length > 50) break;
+    }
+    description = description.trim().substring(0, 1000);
+
+    // --- Extract Date Information ---
+    let dateText = '';
+    let timeText = '';
+
+    // Try structured data (time elements with datetime attribute)
+    const timeElem = $('time[datetime]').first();
+    if (timeElem.length) {
+      const datetime = timeElem.attr('datetime');
+      if (datetime) {
+        const dateObj = new Date(datetime);
+        if (!isNaN(dateObj.getTime())) {
+          const options = { month: 'short', day: 'numeric', year: 'numeric' };
+          dateText = dateObj.toLocaleDateString('en-US', options);
+          const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+          timeText = dateObj.toLocaleTimeString('en-US', timeOptions);
+        }
+      }
     }
 
-    return text.trim().substring(0, 1000);
+    // Fallback: Try common date selectors
+    if (!dateText) {
+      const dateSelectors = [
+        '.event-date',
+        '.event-time',
+        '.date',
+        'time',
+        '.event-meta',
+        '.eventitem-meta-date',
+        '.eventitem-meta-time',
+        '[class*="date"]',
+        '[class*="time"]'
+      ];
+
+      for (const sel of dateSelectors) {
+        const text = $(sel).first().text().trim();
+        if (text && text.length > 3 && text.length < 200) {
+          // Check if this looks like a date
+          if (text.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|\d{1,2}\/\d{1,2})/i)) {
+            dateText = text;
+            break;
+          }
+        }
+      }
+    }
+
+    return {
+      description,
+      dateText,
+      timeText
+    };
   } catch {
-    return '';
+    return {
+      description: '',
+      dateText: '',
+      timeText: ''
+    };
   }
 }
 
+// Legacy function for backwards compatibility
+async function fetchDetailDescription(url) {
+  const data = await fetchDetailPageData(url);
+  return data.description;
+}
+
 // Enrich events array by fetching detail pages in parallel batches
-// Re-categorizes each event using the richer description text
+// Extracts richer descriptions and accurate dates, then re-categorizes
 async function enrichWithDetailPages(events, batchSize = 10) {
-  console.log(`Enriching ${events.length} events with detail page descriptions...`);
-  let enriched = 0;
+  console.log(`Enriching ${events.length} events with detail page data...`);
+  let enrichedDesc = 0;
+  let enrichedDates = 0;
 
   for (let i = 0; i < events.length; i += batchSize) {
     const batch = events.slice(i, i + batchSize);
     await Promise.allSettled(
       batch.map(async (event) => {
-        const detail = await fetchDetailDescription(event.url);
-        if (detail && detail.length > 30) {
+        const detail = await fetchDetailPageData(event.url);
+
+        // Update description if we got better content
+        if (detail.description && detail.description.length > 30) {
           // Combine original + detail description for categorization
-          const fullDesc = (event.description + ' ' + detail).substring(0, 1000);
+          const fullDesc = (event.description + ' ' + detail.description).substring(0, 1000);
           event.description = fullDesc.substring(0, 500);
           // Re-categorize with richer text
           const newCategory = categorizeEvent(event.name, fullDesc, event.location);
@@ -242,13 +306,39 @@ async function enrichWithDetailPages(events, batchSize = 10) {
             event.category = newCategory;
             event.image = getEventImage(event.name, newCategory);
           }
-          enriched++;
+          enrichedDesc++;
+        }
+
+        // Update dates if we got better date info
+        if (detail.dateText) {
+          // Only update if current dates are generic placeholders
+          const isGenericDate = event.date && (
+            event.date.toLowerCase() === 'upcoming' ||
+            event.date.toLowerCase() === 'today' ||
+            event.date.toLowerCase() === 'this week' ||
+            event.date.toLowerCase() === 'this weekend' ||
+            !event.start_date
+          );
+
+          if (isGenericDate) {
+            event.date = detail.dateText;
+            if (detail.timeText) {
+              event.time = detail.timeText;
+            }
+            // Re-parse dates with better info
+            const { start_date, end_date } = parseDateText(detail.dateText, detail.timeText);
+            if (start_date) {
+              event.start_date = start_date;
+              event.end_date = end_date;
+              enrichedDates++;
+            }
+          }
         }
       })
     );
   }
 
-  console.log(`  Enriched ${enriched}/${events.length} events with detail descriptions`);
+  console.log(`  Enriched ${enrichedDesc}/${events.length} descriptions, ${enrichedDates}/${events.length} dates`);
   return events;
 }
 
@@ -477,10 +567,6 @@ async function scrapeNYCForFree() {
     });
 
     console.log(`Scraped ${events.length} events from nycforfree.co`);
-
-    // Enrich with detail page descriptions for better categorization
-    await enrichWithDetailPages(events);
-
     return events;
   } catch (error) {
     console.error('NYC For Free scraping failed:', error.message);
@@ -975,6 +1061,10 @@ async function scrapeAllEvents() {
       console.log('No events found from any source, using fallback events');
       return getFallbackEvents();
     }
+
+    // Enrich all events with detail page data (descriptions + dates)
+    console.log('Enriching events with detail page data...');
+    await enrichWithDetailPages(allEvents, 15); // Larger batch size for GitHub Actions
 
     return allEvents;
   } catch (error) {

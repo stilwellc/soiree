@@ -38,23 +38,50 @@ export function parseDateText(dateText = '', timeText = '') {
     }
   }
 
-  // Handle specific date formats (e.g., "January 24", "Jan 24", "1/24")
+  // Handle full date formats with year FIRST (e.g., "Sat, Oct 11, 2025", "January 15, 2026")
+  // When year is explicit, use it directly without parseMonthDay's year adjustment logic
   if (!startDate) {
-    const dateMatch = dateText.match(/([A-Za-z]+)\s+(\d{1,2})/);
-    if (dateMatch) {
-      const [, month, day] = dateMatch;
-      startDate = parseMonthDay(month, day, now);
-      endDate = new Date(startDate);
+    const fullDateMatch = combinedText.match(/([A-Za-z]+)[,\s]+([A-Za-z]+)\s+(\d{1,2})[,\s]+(\d{4})/);
+    if (fullDateMatch) {
+      const [, , month, day, year] = fullDateMatch;
+      const monthIndex = getMonthIndex(month);
+      if (monthIndex !== -1) {
+        startDate = new Date(parseInt(year), monthIndex, parseInt(day));
+        endDate = new Date(startDate);
+      }
     }
   }
 
-  // Handle numeric dates (e.g., "1/24", "01/24/2026")
+  // Try another format with year: "Month Day, Year" (e.g., "October 11, 2025")
+  if (!startDate) {
+    const altDateMatch = combinedText.match(/([A-Za-z]+)\s+(\d{1,2})[,\s]+(\d{4})/);
+    if (altDateMatch) {
+      const [, month, day, year] = altDateMatch;
+      const monthIndex = getMonthIndex(month);
+      if (monthIndex !== -1) {
+        startDate = new Date(parseInt(year), monthIndex, parseInt(day));
+        endDate = new Date(startDate);
+      }
+    }
+  }
+
+  // Handle numeric dates with optional year (e.g., "1/24", "01/24/2026")
   if (!startDate) {
     const numericMatch = combinedText.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
     if (numericMatch) {
       const [, month, day, year] = numericMatch;
       const fullYear = year ? (year.length === 2 ? 2000 + parseInt(year) : parseInt(year)) : now.getFullYear();
       startDate = new Date(fullYear, parseInt(month) - 1, parseInt(day));
+      endDate = new Date(startDate);
+    }
+  }
+
+  // Handle specific date formats WITHOUT year (e.g., "January 24", "Jan 24")
+  if (!startDate) {
+    const dateMatch = dateText.match(/([A-Za-z]+)\s+(\d{1,2})(?!\s*,\s*\d{4})/);
+    if (dateMatch) {
+      const [, month, day] = dateMatch;
+      startDate = parseMonthDay(month, day, now);
       endDate = new Date(startDate);
     }
   }
@@ -80,28 +107,6 @@ export function parseDateText(dateText = '', timeText = '') {
     endDate.setDate(endDate.getDate() + 7);
   }
 
-  // Handle full date formats with year (e.g., "Sat, Oct 11, 2025", "January 15, 2026")
-  if (!startDate) {
-    const fullDateMatch = combinedText.match(/([A-Za-z]+)[,\s]+([A-Za-z]+)\s+(\d{1,2})[,\s]+(\d{4})/);
-    if (fullDateMatch) {
-      const [, , month, day, year] = fullDateMatch;
-      startDate = parseMonthDay(month, day, now);
-      startDate.setFullYear(parseInt(year));
-      endDate = new Date(startDate);
-    }
-  }
-
-  // Try another format: "Month Day, Year" (e.g., "October 11, 2025")
-  if (!startDate) {
-    const altDateMatch = combinedText.match(/([A-Za-z]+)\s+(\d{1,2})[,\s]+(\d{4})/);
-    if (altDateMatch) {
-      const [, month, day, year] = altDateMatch;
-      startDate = parseMonthDay(month, day, now);
-      startDate.setFullYear(parseInt(year));
-      endDate = new Date(startDate);
-    }
-  }
-
   // If we still don't have a date, return nulls (don't guess!)
   if (!startDate) {
     return { start_date: null, end_date: null };
@@ -116,6 +121,29 @@ export function parseDateText(dateText = '', timeText = '') {
     start_date: startDate.toISOString().split('T')[0],
     end_date: endDate.toISOString().split('T')[0]
   };
+}
+
+/**
+ * Get month index from month name
+ * @param {string} monthStr - Month name (e.g., "January", "Jan")
+ * @returns {number} Month index (0-11) or -1 if invalid
+ */
+function getMonthIndex(monthStr) {
+  const months = {
+    'january': 0, 'jan': 0,
+    'february': 1, 'feb': 1,
+    'march': 2, 'mar': 2,
+    'april': 3, 'apr': 3,
+    'may': 4,
+    'june': 5, 'jun': 5,
+    'july': 6, 'jul': 6,
+    'august': 7, 'aug': 7,
+    'september': 8, 'sep': 8, 'sept': 8,
+    'october': 9, 'oct': 9,
+    'november': 10, 'nov': 10,
+    'december': 11, 'dec': 11
+  };
+  return months[monthStr.toLowerCase()] !== undefined ? months[monthStr.toLowerCase()] : -1;
 }
 
 /**

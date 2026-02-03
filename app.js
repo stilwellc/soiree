@@ -625,8 +625,16 @@ function formatBadgeDate(event) {
     }
   }
 
-  // Fallback to human-readable date text, or generic message
-  return event.date && event.date !== 'Upcoming' ? event.date : 'See Details';
+  // No structured date - show generic message for clarity
+  // Don't show generic placeholders like "Upcoming", "This Week", "Today" without confirmation
+  const genericTerms = ['upcoming', 'this week', 'this weekend', 'today', 'tonight', 'tomorrow'];
+  const dateText = (event.date || '').toLowerCase();
+  if (genericTerms.some(term => dateText === term)) {
+    return 'See Details';
+  }
+
+  // If there's specific date text (like "Jan 24"), show it
+  return event.date || 'See Details';
 }
 
 // Create Event Card
