@@ -408,42 +408,32 @@ async function scrapeNYCForFree() {
       let description = $elem.find('.event-description, p').first().text().trim();
       if (!description || description.length < 10) description = name;
 
-      // Fetch detail page to get accurate date
+      // Extract date and time from listing page
       let date = 'Upcoming';
       let time = 'See details';
 
-      try {
-        const eventUrl = href.startsWith('http') ? href : `https://www.nycforfree.co${href}`;
-        const detailResponse = await axios.get(eventUrl, {
-          timeout: 5000, // Reduced timeout
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-        });
-
-        const $detail = cheerio.load(detailResponse.data);
-
-        // Look for date in detail page (common patterns)
-        const dateSelectors = [
-          '.eventitem-meta-date time',
-          'time[datetime]',
-          '.event-date',
-          '.sqs-block-content time'
-        ];
-
-        for (const selector of dateSelectors) {
-          const dateElem = $detail(selector).first();
-          if (dateElem.length) {
-            const dateTime = dateElem.attr('datetime') || dateElem.text().trim();
-            if (dateTime && dateTime.length > 3) {
-              date = dateTime;
-              // Extract time if present
-              const timeMatch = date.match(/(\d{1,2}:\d{2}\s*[AP]M)/i);
-              if (timeMatch) time = timeMatch[1];
-              break;
-            }
+      // Try to find datetime attribute in time elements
+      const timeElem = $elem.find('time[datetime]').first();
+      if (timeElem.length) {
+        const datetime = timeElem.attr('datetime');
+        if (datetime) {
+          // Parse ISO datetime (e.g., "2026-01-15T19:00:00")
+          const dateObj = new Date(datetime);
+          if (!isNaN(dateObj.getTime())) {
+            const options = { month: 'short', day: 'numeric', year: 'numeric' };
+            date = dateObj.toLocaleDateString('en-US', options);
+            const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+            time = dateObj.toLocaleTimeString('en-US', timeOptions);
           }
         }
-      } catch (detailError) {
-        console.log(`Could not fetch detail page for ${name}: ${detailError.message}`);
+      } else {
+        // Fallback: try text extraction
+        const timeText = $elem.find('.event-meta time, time, .event-date').first().text().trim();
+        if (timeText) {
+          date = timeText.split('-')[0].trim();
+          const timeMatch = timeText.match(/(\d{1,2}:\d{2}\s*[AP]M)/i);
+          if (timeMatch) time = timeMatch[1];
+        }
       }
 
       // Extract location from address
