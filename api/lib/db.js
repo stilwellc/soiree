@@ -103,6 +103,17 @@ export async function clearOldEvents() {
   }
 }
 
+export async function clearAllEvents() {
+  try {
+    await sql`DELETE FROM events`;
+    console.log('All events cleared');
+    return { success: true };
+  } catch (error) {
+    console.error('Error clearing all events:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function getEventCount() {
   try {
     const { rows } = await sql`SELECT COUNT(*) as count FROM events`;
