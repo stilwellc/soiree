@@ -652,7 +652,7 @@ function createEventCard(event, index) {
           </svg>
         </button>
         <div class="event-badge">${formatBadgeDate(event)}</div>
-        <div class="event-category-label">${getCategoryName(event.category)}</div>
+        <div class="event-category-badge">${getCategoryName(event.category)}</div>
       </div>
       <div class="event-details">
         <div class="event-name">${event.name}</div>
