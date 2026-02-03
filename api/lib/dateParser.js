@@ -46,7 +46,7 @@ export function parseDateText(dateText = '', timeText = '') {
       const [, , month, day, year] = fullDateMatch;
       const monthIndex = getMonthIndex(month);
       if (monthIndex !== -1) {
-        startDate = new Date(parseInt(year), monthIndex, parseInt(day));
+        startDate = new Date(Date.UTC(parseInt(year), monthIndex, parseInt(day)));
         endDate = new Date(startDate);
       }
     }
@@ -59,7 +59,7 @@ export function parseDateText(dateText = '', timeText = '') {
       const [, month, day, year] = altDateMatch;
       const monthIndex = getMonthIndex(month);
       if (monthIndex !== -1) {
-        startDate = new Date(parseInt(year), monthIndex, parseInt(day));
+        startDate = new Date(Date.UTC(parseInt(year), monthIndex, parseInt(day)));
         endDate = new Date(startDate);
       }
     }
@@ -71,7 +71,8 @@ export function parseDateText(dateText = '', timeText = '') {
     const isoMatch = combinedText.match(/(\d{4})-(\d{2})-(\d{2})/);
     if (isoMatch) {
       const [, year, month, day] = isoMatch;
-      startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      // Use Date.UTC to avoid timezone issues
+      startDate = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
       endDate = new Date(startDate);
     }
   }
@@ -81,8 +82,8 @@ export function parseDateText(dateText = '', timeText = '') {
     const numericMatch = combinedText.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
     if (numericMatch) {
       const [, month, day, year] = numericMatch;
-      const fullYear = year ? (year.length === 2 ? 2000 + parseInt(year) : parseInt(year)) : now.getFullYear();
-      startDate = new Date(fullYear, parseInt(month) - 1, parseInt(day));
+      const fullYear = year ? (year.length === 2 ? 2000 + parseInt(year) : parseInt(year)) : now.getUTCFullYear();
+      startDate = new Date(Date.UTC(fullYear, parseInt(month) - 1, parseInt(day)));
       endDate = new Date(startDate);
     }
   }
@@ -98,11 +99,13 @@ export function parseDateText(dateText = '', timeText = '') {
   }
 
   // Handle date ranges (e.g., "Jan 24-26", "Friday - Sunday")
-  const rangeMatch = dateText.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})/);
+  // Skip if dateText looks like an ISO date (YYYY-MM-DD) to avoid false matches
+  const isISODate = dateText.match(/^\d{4}-\d{2}-\d{2}/);
+  const rangeMatch = !isISODate && dateText.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})/);
   if (rangeMatch && startDate) {
     const [, startDay, endDay] = rangeMatch;
     endDate = new Date(startDate);
-    endDate.setDate(parseInt(endDay));
+    endDate.setUTCDate(parseInt(endDay));
   }
 
   // Handle weekend keywords
@@ -124,8 +127,8 @@ export function parseDateText(dateText = '', timeText = '') {
   }
 
   // Normalize dates to midnight UTC for consistency
-  startDate.setHours(0, 0, 0, 0);
-  endDate.setHours(0, 0, 0, 0);
+  startDate.setUTCHours(0, 0, 0, 0);
+  endDate.setUTCHours(0, 0, 0, 0);
 
   // Return ISO date strings
   return {
