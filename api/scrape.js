@@ -388,6 +388,7 @@ async function scrapeNYCForFree() {
 
     // Find event items
     $('.event-item, a[href*="/events/"]').each((i, elem) => {
+      if (events.length >= 10) return false; // Limit to prevent timeout
 
       const $elem = $(elem);
       const href = $elem.attr('href') || $elem.find('a').attr('href');
@@ -414,7 +415,7 @@ async function scrapeNYCForFree() {
       try {
         const eventUrl = href.startsWith('http') ? href : `https://www.nycforfree.co${href}`;
         const detailResponse = await axios.get(eventUrl, {
-          timeout: 10000,
+          timeout: 5000, // Reduced timeout
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
         });
 
