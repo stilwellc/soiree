@@ -493,7 +493,6 @@ body {
 .event-card-header {
   height: 120px;
   padding: 24px;
-  padding-left: 72px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -596,13 +595,12 @@ body {
 
 .favorite-btn {
   position: absolute;
-  top: 20px;
-  left: 24px;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  width: 36px;
-  height: 36px;
+  top: 132px;
+  right: 20px;
+  background: white;
+  border: 1px solid rgba(10, 10, 10, 0.1);
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -610,32 +608,36 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   z-index: 10;
+  box-shadow: 0 2px 8px rgba(10, 10, 10, 0.08);
 }
 
 .favorite-btn:hover {
   transform: scale(1.05);
-  background: rgba(255, 255, 255, 0.35);
+  border-color: var(--gold);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
 }
 
 .favorite-btn.favorited {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(255, 255, 255, 0.95);
+  background: var(--gold);
+  border-color: var(--gold);
 }
 
 .favorite-btn svg {
-  width: 18px;
-  height: 18px;
-  stroke: white;
+  width: 16px;
+  height: 16px;
+  stroke: var(--accent);
   transition: all 0.3s ease;
 }
 
 .favorite-btn.favorited svg {
-  fill: var(--gold);
-  stroke: var(--gold);
+  fill: white;
+  stroke: white;
 }
 
 .event-details {
   padding: 24px;
+  padding-right: 60px;
+  position: relative;
 }
 
 .event-date {
