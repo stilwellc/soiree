@@ -406,30 +406,31 @@ function handleNavClick(item) {
 function matchesTimeFilter(event) {
   if (currentTimeFilter === 'all') return true;
 
-  const dateText = event.date.toLowerCase();
+  // If no structured date, can't filter by time
+  if (!event.start_date) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const startDate = new Date(event.start_date);
+  startDate.setHours(0, 0, 0, 0);
+
+  const endDate = event.end_date ? new Date(event.end_date) : startDate;
+  endDate.setHours(0, 0, 0, 0);
 
   if (currentTimeFilter === 'today') {
-    // Match events with "today", "tonight", or similar indicators
-    return dateText.includes('today') ||
-           dateText.includes('tonight') ||
-           dateText === 'upcoming';
+    // Event is today if today falls between start and end date (inclusive)
+    return today >= startDate && today <= endDate;
   }
 
   if (currentTimeFilter === 'week') {
-    // Match events within this week
-    return dateText.includes('today') ||
-           dateText.includes('tonight') ||
-           dateText.includes('tomorrow') ||
-           dateText.includes('this week') ||
-           dateText.includes('weekend') ||
-           dateText.includes('friday') ||
-           dateText.includes('saturday') ||
-           dateText.includes('sunday') ||
-           dateText.includes('monday') ||
-           dateText.includes('tuesday') ||
-           dateText.includes('wednesday') ||
-           dateText.includes('thursday') ||
-           dateText === 'upcoming';
+    // Calculate end of this week (Sunday)
+    const endOfWeek = new Date(today);
+    endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    // Event is this week if it starts on or before end of week and ends on or after today
+    return startDate <= endOfWeek && endDate >= today;
   }
 
   return true;

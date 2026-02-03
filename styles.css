@@ -153,23 +153,23 @@ body {
 
 @media (max-width: 767px) {
   .nav-brand {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .nav-items {
-    gap: 4px;
+    gap: 2px;
   }
 
   .nav-item {
-    padding: 8px 14px;
-  }
-
-  .nav-item-icon {
     padding: 8px 10px;
   }
 
+  .nav-item-icon {
+    padding: 8px 8px;
+  }
+
   .nav-label {
-    font-size: 13px;
+    font-size: 12px;
   }
 }
 
