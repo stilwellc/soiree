@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const axios = require('axios');
 
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
@@ -26,11 +27,14 @@ module.exports = async function handler(req, res) {
     console.log('✅ All events cleared');
 
     // Step 2: Call the scraper
-    const scrapeUrl = `${req.headers.origin || 'http://localhost:3000'}/api/scrape`;
+    const baseUrl = req.headers.host?.includes('localhost')
+      ? 'http://localhost:3000'
+      : `https://${req.headers.host}`;
+    const scrapeUrl = `${baseUrl}/api/scrape`;
     console.log(`Triggering scraper at: ${scrapeUrl}`);
 
-    const scrapeResponse = await fetch(scrapeUrl);
-    const scrapeData = await scrapeResponse.json();
+    const scrapeResponse = await axios.get(scrapeUrl);
+    const scrapeData = scrapeResponse.data;
 
     return res.status(200).json({
       success: true,
