@@ -65,6 +65,17 @@ export function parseDateText(dateText = '', timeText = '') {
     }
   }
 
+  // Handle ISO date formats (e.g., "2026-02-27", "2026-02-27 17:00:00")
+  // Check this BEFORE numeric dates to avoid matching "26-02-27" instead of "2026-02-27"
+  if (!startDate) {
+    const isoMatch = combinedText.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+      const [, year, month, day] = isoMatch;
+      startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      endDate = new Date(startDate);
+    }
+  }
+
   // Handle numeric dates with optional year (e.g., "1/24", "01/24/2026")
   if (!startDate) {
     const numericMatch = combinedText.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);

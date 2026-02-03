@@ -1062,9 +1062,10 @@ async function scrapeAllEvents() {
       return getFallbackEvents();
     }
 
-    // Enrich all events with detail page data (descriptions + dates)
-    console.log('Enriching events with detail page data...');
-    await enrichWithDetailPages(allEvents, 15); // Larger batch size for GitHub Actions
+    // TODO: Re-enable detail page enrichment when we have better selectors
+    // Most museum sites don't expose dates in easily-scrapable format
+    // console.log('Enriching events with detail page data...');
+    // await enrichWithDetailPages(allEvents, 15);
 
     return allEvents;
   } catch (error) {
