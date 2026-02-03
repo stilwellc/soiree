@@ -476,64 +476,62 @@ async function scrapeNYCForFree() {
     const $ = cheerio.load(response.data);
     const events = [];
 
-    // Find event items
-    $('.event-item, a[href*="/events/"]').each((i, elem) => {
-      if (events.length >= 10) return false; // Limit to prevent timeout
+    // Find event items (Squarespace uses .eventlist-event)
+    $('.eventlist-event').each((i, elem) => {
+      if (events.length >= 15) return false;
 
       const $elem = $(elem);
-      const href = $elem.attr('href') || $elem.find('a').attr('href');
 
-      // Skip if not a proper event link
-      if (!href || href === '/events' || href === '/events/' || !href.includes('/events/')) return;
-
-      // Get event name from .event-title or h2/h3
-      let name = $elem.find('.event-title, h2, h3').first().text().trim();
-      if (!name || name.length < 5) {
-        // Fallback to link text if title not found
-        name = $elem.text().trim().split('\n')[0].trim();
-      }
+      // Get event name from .eventlist-title
+      const name = $elem.find('.eventlist-title').text().trim();
       if (!name || name.length < 5) return;
 
-      // Extract description
-      let description = $elem.find('.event-description, p').first().text().trim();
+      // Get event URL
+      const href = $elem.find('a[href*="/events/"]').first().attr('href');
+      if (!href || href === '/events' || href === '/events/') return;
+
+      // Extract description from excerpt
+      let description = $elem.find('.eventlist-description').text().trim();
       if (!description || description.length < 10) description = name;
 
       // Extract date and time from listing page
       let date = 'Upcoming';
       let time = 'See details';
 
-      // Try to find datetime attribute in time elements
-      const timeElem = $elem.find('time[datetime]').first();
+      // Squarespace has <time class="event-date" datetime="YYYY-MM-DD">
+      const timeElem = $elem.find('time.event-date[datetime]').first();
       if (timeElem.length) {
         const datetime = timeElem.attr('datetime');
         if (datetime) {
-          // Parse ISO datetime (e.g., "2026-01-15T19:00:00")
-          const dateObj = new Date(datetime);
-          if (!isNaN(dateObj.getTime())) {
-            const options = { month: 'short', day: 'numeric', year: 'numeric' };
-            date = dateObj.toLocaleDateString('en-US', options);
-            const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
-            time = dateObj.toLocaleTimeString('en-US', timeOptions);
+          // datetime is just a date like "2025-11-14", not full ISO datetime
+          date = datetime; // Will be parsed by our ISO date parser
+
+          // Get time from .event-time-localized or .eventlist-meta-time
+          const timeText = $elem.find('.event-time-localized, .eventlist-meta-time').first().text().trim();
+          if (timeText && timeText.length < 20) {
+            time = timeText;
           }
-        }
-      } else {
-        // Fallback: try text extraction
-        const timeText = $elem.find('.event-meta time, time, .event-date').first().text().trim();
-        if (timeText) {
-          date = timeText.split('-')[0].trim();
-          const timeMatch = timeText.match(/(\d{1,2}:\d{2}\s*[AP]M)/i);
-          if (timeMatch) time = timeMatch[1];
         }
       }
 
-      // Extract location from address
+      // If no datetime found, try text extraction as fallback
+      if (date === 'Upcoming') {
+        const dateText = $elem.find('.eventlist-meta-date .event-date').first().text().trim();
+        if (dateText) {
+          date = dateText;
+          const timeMatch = $elem.find('.eventlist-meta-time').first().text().trim();
+          if (timeMatch) time = timeMatch;
+        }
+      }
+
+      // Extract location from Squarespace event meta
       let location = 'New York City';
       let address = 'NYC';
-      const addressElem = $elem.find('.event-meta address, address').first().text().trim();
-      if (addressElem) {
-        address = addressElem;
-        // Extract neighborhood/area
-        const parts = addressElem.split(',');
+      const locationElem = $elem.find('.eventlist-meta-address, .event-location').first().text().trim();
+      if (locationElem) {
+        address = locationElem;
+        // Extract neighborhood/area from address
+        const parts = locationElem.split(',');
         if (parts.length > 1) {
           location = parts[parts.length - 2].trim();
         }
@@ -542,7 +540,7 @@ async function scrapeNYCForFree() {
       // Categorize event
       const category = categorizeEvent(name, description, location);
 
-      // Event URL was already built in detail fetch above
+      // Build event URL
       const eventUrl = href.startsWith('http') ? href : `https://www.nycforfree.co${href}`;
 
       // Parse structured dates
