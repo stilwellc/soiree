@@ -80,13 +80,29 @@ export function parseDateText(dateText = '', timeText = '') {
     endDate.setDate(endDate.getDate() + 7);
   }
 
-  // Handle ongoing/upcoming events - default to today
-  if (!startDate && combinedText.match(/\b(upcoming|ongoing|now|current)\b/)) {
-    startDate = new Date(now);
-    endDate = new Date(now);
+  // Handle full date formats with year (e.g., "Sat, Oct 11, 2025", "January 15, 2026")
+  if (!startDate) {
+    const fullDateMatch = combinedText.match(/([A-Za-z]+)[,\s]+([A-Za-z]+)\s+(\d{1,2})[,\s]+(\d{4})/);
+    if (fullDateMatch) {
+      const [, , month, day, year] = fullDateMatch;
+      startDate = parseMonthDay(month, day, now);
+      startDate.setFullYear(parseInt(year));
+      endDate = new Date(startDate);
+    }
   }
 
-  // If we still don't have a date, return nulls
+  // Try another format: "Month Day, Year" (e.g., "October 11, 2025")
+  if (!startDate) {
+    const altDateMatch = combinedText.match(/([A-Za-z]+)\s+(\d{1,2})[,\s]+(\d{4})/);
+    if (altDateMatch) {
+      const [, month, day, year] = altDateMatch;
+      startDate = parseMonthDay(month, day, now);
+      startDate.setFullYear(parseInt(year));
+      endDate = new Date(startDate);
+    }
+  }
+
+  // If we still don't have a date, return nulls (don't guess!)
   if (!startDate) {
     return { start_date: null, end_date: null };
   }
