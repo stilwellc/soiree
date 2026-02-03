@@ -478,7 +478,7 @@ async function scrapeNYCForFree() {
 
     // Find event items (Squarespace uses .eventlist-event)
     $('.eventlist-event').each((i, elem) => {
-      if (events.length >= 15) return false;
+      if (events.length >= 50) return false; // Increased to capture more events
 
       const $elem = $(elem);
 
