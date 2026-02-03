@@ -590,30 +590,43 @@ function formatEventDate(event) {
 
 // Format Short Date for Badge
 function formatBadgeDate(event) {
+  // Only use structured dates if they exist and seem valid
   if (event.start_date) {
-    const startDate = new Date(event.start_date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    try {
+      const startDate = new Date(event.start_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Check if it's today
-    if (startDate.toDateString() === today.toDateString()) {
-      return 'Today';
+      // Sanity check: only use if date is within reasonable range (not in far future/past)
+      const yearsDiff = (startDate.getFullYear() - today.getFullYear());
+      if (yearsDiff < -1 || yearsDiff > 2) {
+        // Invalid date, fall back to text
+        return event.date || 'See Details';
+      }
+
+      // Check if it's today
+      if (startDate.toDateString() === today.toDateString()) {
+        return 'Today';
+      }
+
+      // Check if it's tomorrow
+      if (startDate.toDateString() === tomorrow.toDateString()) {
+        return 'Tomorrow';
+      }
+
+      // Otherwise show formatted date
+      const options = { month: 'short', day: 'numeric' };
+      return startDate.toLocaleDateString('en-US', options);
+    } catch (e) {
+      // If date parsing fails, fall back to text
+      return event.date || 'See Details';
     }
-
-    // Check if it's tomorrow
-    if (startDate.toDateString() === tomorrow.toDateString()) {
-      return 'Tomorrow';
-    }
-
-    // Otherwise show formatted date
-    const options = { month: 'short', day: 'numeric' };
-    return startDate.toLocaleDateString('en-US', options);
   }
 
-  // Fallback to human-readable date
-  return event.date;
+  // Fallback to human-readable date text, or generic message
+  return event.date && event.date !== 'Upcoming' ? event.date : 'See Details';
 }
 
 // Create Event Card
