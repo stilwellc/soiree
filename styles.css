@@ -66,11 +66,14 @@ body {
 }
 
 .nav-brand {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 22px;
-  font-weight: 500;
-  color: var(--dark);
-  letter-spacing: 0.5px;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-brand:hover {
+  transform: scale(1.1) rotate(10deg);
 }
 
 .nav-items {
@@ -153,7 +156,7 @@ body {
 
 @media (max-width: 767px) {
   .nav-brand {
-    font-size: 18px;
+    font-size: 22px;
   }
 
   .nav-items {
