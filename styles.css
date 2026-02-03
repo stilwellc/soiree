@@ -493,10 +493,11 @@ body {
 .event-card-header {
   height: 120px;
   padding: 24px;
+  padding-left: 72px;
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-end;
 }
 
 /* Category gradients */
@@ -549,7 +550,6 @@ body {
   color: rgba(255, 255, 255, 0.85);
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: auto;
 }
 
 .capacity-indicator {
