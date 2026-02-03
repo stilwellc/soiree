@@ -58,15 +58,15 @@ module.exports = async function handler(req, res) {
     // Get category filter
     const { category } = req.query;
 
-    // Fetch events
+    // Fetch events (only show events with dates)
     let result;
     if (category && category !== 'all') {
       result = await pool.query(
-        'SELECT * FROM events WHERE category = $1 ORDER BY created_at DESC',
+        'SELECT * FROM events WHERE category = $1 AND start_date IS NOT NULL ORDER BY start_date ASC, created_at DESC',
         [category]
       );
     } else {
-      result = await pool.query('SELECT * FROM events ORDER BY created_at DESC');
+      result = await pool.query('SELECT * FROM events WHERE start_date IS NOT NULL ORDER BY start_date ASC, created_at DESC');
     }
 
     return res.status(200).json({
