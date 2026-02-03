@@ -407,19 +407,42 @@ async function scrapeNYCForFree() {
       let description = $elem.find('.event-description, p').first().text().trim();
       if (!description || description.length < 10) description = name;
 
-      // Extract date and time from .event-meta
+      // Fetch detail page to get accurate date
       let date = 'Upcoming';
       let time = 'See details';
-      const timeElem = $elem.find('.event-meta time, time').first().text().trim();
-      if (timeElem) {
-        // Parse date like "Sat, Oct 11, 2025 11:00 AM - Sat, Jan 31, 2026 8:00 PM"
-        const dateParts = timeElem.split('-');
-        if (dateParts.length > 0) {
-          date = dateParts[0].trim();
-          // Extract time
-          const timeMatch = timeElem.match(/(\d{1,2}:\d{2}\s*[AP]M)/i);
-          if (timeMatch) time = timeMatch[1];
+
+      try {
+        const eventUrl = href.startsWith('http') ? href : `https://www.nycforfree.co${href}`;
+        const detailResponse = await axios.get(eventUrl, {
+          timeout: 10000,
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+        });
+
+        const $detail = cheerio.load(detailResponse.data);
+
+        // Look for date in detail page (common patterns)
+        const dateSelectors = [
+          '.eventitem-meta-date time',
+          'time[datetime]',
+          '.event-date',
+          '.sqs-block-content time'
+        ];
+
+        for (const selector of dateSelectors) {
+          const dateElem = $detail(selector).first();
+          if (dateElem.length) {
+            const dateTime = dateElem.attr('datetime') || dateElem.text().trim();
+            if (dateTime && dateTime.length > 3) {
+              date = dateTime;
+              // Extract time if present
+              const timeMatch = date.match(/(\d{1,2}:\d{2}\s*[AP]M)/i);
+              if (timeMatch) time = timeMatch[1];
+              break;
+            }
+          }
         }
+      } catch (detailError) {
+        console.log(`Could not fetch detail page for ${name}: ${detailError.message}`);
       }
 
       // Extract location from address
@@ -438,7 +461,7 @@ async function scrapeNYCForFree() {
       // Categorize event
       const category = categorizeEvent(name, description, location);
 
-      // Build full event URL
+      // Event URL was already built in detail fetch above
       const eventUrl = href.startsWith('http') ? href : `https://www.nycforfree.co${href}`;
 
       // Parse structured dates
