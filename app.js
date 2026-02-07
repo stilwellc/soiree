@@ -689,8 +689,6 @@ function renderEvents() {
       event.description.toLowerCase().includes(searchQuery);
     const matchesTime = matchesTimeFilter(event);
 
-    const matchesTime = matchesTimeFilter(event);
-
     // Region Filter
     let matchesRegion = true;
     if (currentRegion === 'hoboken-jc') {
