@@ -45,7 +45,18 @@ jobs:
             exit 1
           fi
 
-          echo "✅ Scrape completed successfully"
+          echo "✅ Main scrape completed successfully"
+
+      - name: Scrape The Local Girl (Direct)
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+        run: |
+          echo "🌐 Scraping The Local Girl (Direct Node Script)..."
+          # Install dependencies if not already (should be cached or fast)
+          npm install axios cheerio pg dotenv
+          
+          # Run the script
+          node scripts/scrape-localgirl-direct.js
 
       - name: Upload results
         if: always()
