@@ -604,28 +604,27 @@ function matchesTimeFilter(event) {
   // If no structured date, can't filter by time
   if (!event.start_date) return false;
 
+  // Get today's date in YYYY-MM-DD format (local timezone)
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split('T')[0];
 
-  const startDate = new Date(event.start_date);
-  startDate.setHours(0, 0, 0, 0);
-
-  const endDate = event.end_date ? new Date(event.end_date) : startDate;
-  endDate.setHours(0, 0, 0, 0);
+  // Extract date portion from ISO strings (ignore timezone)
+  const startDateStr = event.start_date.split('T')[0];
+  const endDateStr = event.end_date ? event.end_date.split('T')[0] : startDateStr;
 
   if (currentTimeFilter === 'today') {
     // Event is today if today falls between start and end date (inclusive)
-    return today >= startDate && today <= endDate;
+    return todayStr >= startDateStr && todayStr <= endDateStr;
   }
 
   if (currentTimeFilter === 'week') {
     // Calculate end of this week (Sunday)
     const endOfWeek = new Date(today);
     endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
-    endOfWeek.setHours(23, 59, 59, 999);
+    const endOfWeekStr = endOfWeek.toISOString().split('T')[0];
 
     // Event is this week if it starts on or before end of week and ends on or after today
-    return startDate <= endOfWeek && endDate >= today;
+    return startDateStr <= endOfWeekStr && endDateStr >= todayStr;
   }
 
   return true;
