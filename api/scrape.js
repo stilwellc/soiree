@@ -276,12 +276,6 @@ async function fetchDetailPageData(url) {
   }
 }
 
-// Legacy function for backwards compatibility
-async function fetchDetailDescription(url) {
-  const data = await fetchDetailPageData(url);
-  return data.description;
-}
-
 // Enrich events array by fetching detail pages in parallel batches
 // Extracts richer descriptions and accurate dates, then re-categorizes
 async function enrichWithDetailPages(events, batchSize = 10) {

@@ -26,9 +26,7 @@ This section is a complete reference for understanding the codebase, database, d
 soiree/
 ├── api/                          # Vercel serverless functions (Node.js)
 │   ├── lib/
-│   │   ├── dateParser.js         # Date parsing: relative, absolute, ranges
-│   │   ├── db.js                 # Legacy DB init (not actively used)
-│   │   └── scraper.js            # Legacy scraper (not actively used)
+│   │   └── dateParser.js         # Date parsing: relative, absolute, ranges
 │   ├── scrape.js                 # POST /api/scrape - Main scraping engine (~1200 lines)
 │   ├── events.js                 # GET /api/events - Fetch events from DB
 │   ├── stats.js                  # GET/POST /api/stats - Page view analytics
@@ -251,52 +249,43 @@ These have drifted apart. For example, `schema.sql` has `updated_at` and `source
 - It is not in `schema.sql` or any other file
 - It uses a single-row pattern (always `WHERE id = 1`)
 
-**3. Dead code exists - do not import or extend it**
-- `api/lib/db.js` - Uses `@vercel/postgres` with ESM `import` syntax. The rest of the codebase uses `pg` with CommonJS `require`. This file is **completely unused** and incompatible.
-- `api/lib/scraper.js` - Legacy scraper, **not imported anywhere**. All scraping logic lives in `api/scrape.js`.
-- `fetchDetailDescription()` in `api/scrape.js` - Legacy wrapper around `fetchDetailPageData()`, kept for backwards compatibility but not called.
-
-**4. The scraper is destructive by design**
+**3. The scraper is destructive by design**
 - Every scrape run does `DELETE FROM events` first, then inserts fresh data
 - If the scrape fails partway through, the database will have fewer events than before (or none)
 - The 3 hardcoded fallback events only activate if **all 8 scrapers return zero results**
 
-**5. Scrapers are fragile - they depend on HTML structure**
+**4. Scrapers are fragile - they depend on HTML structure**
 - Each scraper uses CSS selectors specific to the source site's current DOM
 - If a source site redesigns, that scraper will silently return 0 events (it won't error)
 - Always check Vercel function logs after changes to verify scrapers still return data
 
-**6. Each serverless function creates its own database pool**
+**5. Each serverless function creates its own database pool**
 - There is no shared connection module. Every file (`events.js`, `scrape.js`, `stats.js`, `refresh.js`) creates `new Pool({ connectionString: process.env.POSTGRES_URL })`
 - This is fine for Vercel serverless (each invocation is isolated) but means connection config is duplicated
 
-**7. CORS is wide open**
+**6. CORS is wide open**
 - All API endpoints set `Access-Control-Allow-Origin: *`
 - This is intentional (public read-only API) but be aware if adding write endpoints
 
-**8. `/api/refresh` has no authentication**
+**7. `/api/refresh` has no authentication**
 - Anyone can `POST /api/refresh` and wipe the entire events table
 - Only `/api/scrape` requires a Bearer token
 
-**9. The scraper has a 60-second timeout**
+**8. The scraper has a 60-second timeout**
 - Configured in `vercel.json` for the scrape function
 - If adding more sources or heavier processing, it can time out silently
 - Vercel free tier limits functions to 10 seconds; the 60-second limit requires a paid plan
 
-**10. Date parsing is timezone-sensitive**
+**9. Date parsing is timezone-sensitive**
 - `dateParser.js` creates `Date` objects using the server's timezone (UTC on Vercel)
 - Relative dates like "Today" and "Tomorrow" resolve based on UTC, not Eastern Time
 - The frontend compares `start_date` using the browser's local timezone
 
-### Dead Code Reference
+### Notes on Remaining Legacy Files
 
-| File | Status | Why it exists |
-|------|--------|---------------|
-| `api/lib/db.js` | Dead - do not use | Early prototype using `@vercel/postgres` (ESM). Codebase migrated to `pg` (CommonJS). |
-| `api/lib/scraper.js` | Dead - do not use | Original scraper before everything was consolidated into `api/scrape.js`. |
-| `schema.sql` | Reference only | Not executed by any code. Useful for understanding intent but columns are out of sync. |
-| `test-scrapers.js`, `test-whitney-scraper.js`, `test-whitney.js` | Manual test scripts | One-off scripts in the project root. Not part of any test suite. |
-| `whitney-events.html` | Test fixture | Saved HTML for manual scraper testing. |
+| File | Status | Notes |
+|------|--------|-------|
+| `schema.sql` | Reference only | Not executed by any code. Useful for understanding intent but columns are out of sync with the inline schemas in `events.js` and `scrape.js`. |
 
 ### Testing
 
@@ -319,7 +308,6 @@ There is **no automated test suite**. Verification is manual:
 - Match the event object shape exactly when adding new scrapers (see the schema section above)
 
 **Don't:**
-- Don't import or use `api/lib/db.js` or `api/lib/scraper.js` - they are dead code using incompatible libraries
 - Don't treat `schema.sql` as the source of truth - the real schemas are inline in `events.js` and `scrape.js`
 - Don't add authentication to read endpoints (`/api/events`, `/api/stats`) - the API is intentionally public
 - Don't make the scrape incremental (upsert instead of delete-all) without careful thought - the current delete-and-reinsert pattern ensures stale events are removed
