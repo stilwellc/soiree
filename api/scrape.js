@@ -968,6 +968,9 @@ async function scrapeTheLocalGirl() {
     const $ = cheerio.load(response.data);
     const events = [];
 
+    const h2Count = $('h2').length;
+    console.log(`[TheLocalGirl] Found ${h2Count} H2 elements`);
+
     // The Local Girl uses a standard layout, events are distinct blocks
     // Based on HTML analysis, we look for event items. 
     // Since the structure can be tricky, we'll look for the repeating pattern of headers or article/div classes.
@@ -1033,86 +1036,86 @@ async function scrapeTheLocalGirl() {
         $next = $next.next();
       }
 
-      if (address) {
-        // Try to infer city from address
-        if (address.includes('Jersey City')) location = 'Jersey City';
-        else if (address.includes('Hoboken')) location = 'Hoboken';
-      }
+      if (address.includes('Jersey City')) location = 'Jersey City';
+      else if (address.includes('Hoboken')) location = 'Hoboken';
+    }
 
-      const category = categorizeEvent(name, categories.join(' '), location);
+      console.log(`[TheLocalGirl] Processing potential event: ${name} (${href})`);
 
-      // Since listing page doesn't show dates clearly in the text chunks, we set 'Upcoming'
-      // Ideally we would fetch the detail page, but for now we fallback to generic
-      const dateStr = 'Upcoming';
-      const timeStr = 'See details';
-      const { start_date, end_date } = parseDateText(dateStr, timeStr);
+    const category = categorizeEvent(name, categories.join(' '), location);
 
-      const event = createNormalizedEvent({
-        name,
-        category,
-        date: dateStr,
-        time: timeStr,
-        start_date,
-        end_date,
-        location,
-        address: address || location,
-        price: 'See details', // Price isn't obvious on listing
-        spots: Math.floor(Math.random() * 100) + 20,
-        image: image || getEventImage(name, category),
-        description: description || `Event in ${location}: ${name}`,
-        highlights: categories.length ? categories.slice(0, 4) : ['Local event', 'Community', location],
-        url: href,
-        source: 'The Local Girl'
-      });
+    // Since listing page doesn't show dates clearly in the text chunks, we set 'Upcoming'
+    // Ideally we would fetch the detail page, but for now we fallback to generic
+    const dateStr = 'Upcoming';
+    const timeStr = 'See details';
+    const { start_date, end_date } = parseDateText(dateStr, timeStr);
 
-      if (event) events.push(event);
+    const event = createNormalizedEvent({
+      name,
+      category,
+      date: dateStr,
+      time: timeStr,
+      start_date,
+      end_date,
+      location,
+      address: address || location,
+      price: 'See details', // Price isn't obvious on listing
+      spots: Math.floor(Math.random() * 100) + 20,
+      image: image || getEventImage(name, category),
+      description: description || `Event in ${location}: ${name}`,
+      highlights: categories.length ? categories.slice(0, 4) : ['Local event', 'Community', location],
+      url: href,
+      source: 'The Local Girl'
     });
 
-    console.log(`Scraped ${events.length} events from The Local Girl, fetching dates...`);
+    if (event) events.push(event);
+  });
 
-    // Fetch details for each event to get the real date
-    await Promise.allSettled(events.map(async (event) => {
-      try {
-        const detailRes = await axios.get(event.url, {
-          timeout: 5000,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-          }
-        });
-        const $detail = cheerio.load(detailRes.data);
+  console.log(`Scraped ${events.length} events from The Local Girl, fetching dates...`);
 
-        // Metadata often appears in the first paragraph after the H1 title
-        const dateText = $detail('h1').next('p').text().trim();
-
-        // Also try to find time if possible, but date is priority
-        // Sometimes dateText includes time, e.g. "February 7, 2026 @ 7:00 pm - 10:00 pm"
-
-        if (dateText && dateText.length < 50) {
-          // Check if it looks like a date
-          if (dateText.match(/([A-Z][a-z]+ \d{1,2}, \d{4})/)) {
-            event.date = dateText;
-            if (dateText.includes('@')) {
-              const parts = dateText.split('@');
-              event.date = parts[0].trim();
-              event.time = parts[1].trim();
-            }
-            // Re-parse with new date
-            const { start_date, end_date } = parseDateText(event.date, event.time);
-            event.start_date = start_date;
-            event.end_date = end_date;
-          }
+  // Fetch details for each event to get the real date
+  await Promise.allSettled(events.map(async (event) => {
+    try {
+      const detailRes = await axios.get(event.url, {
+        timeout: 5000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
-      } catch (e) {
-        console.log(`Failed to fetch details for ${event.url} in LocalGirl scraper: ${e.message}`);
+      });
+      const $detail = cheerio.load(detailRes.data);
+
+      // Metadata often appears in the first paragraph after the H1 title
+      const dateText = $detail('h1').next('p').text().trim();
+
+      // Also try to find time if possible, but date is priority
+      // Sometimes dateText includes time, e.g. "February 7, 2026 @ 7:00 pm - 10:00 pm"
+
+      if (dateText && dateText.length < 50) {
+        // Check if it looks like a date
+        if (dateText.match(/([A-Z][a-z]+ \d{1,2}, \d{4})/)) {
+          event.date = dateText;
+          if (dateText.includes('@')) {
+            const parts = dateText.split('@');
+            event.date = parts[0].trim();
+            event.time = parts[1].trim();
+          }
+          // Re-parse with new date
+          const { start_date, end_date } = parseDateText(event.date, event.time);
+          event.start_date = start_date;
+          event.end_date = end_date;
+        }
       }
-    }));
+    } catch (e) {
+      console.log(`Failed to fetch details for ${event.url} in LocalGirl scraper: ${e.message}`);
+    }
+  }));
 
-    return events;
+  return events;
 
-  } catch (error) {
-    console.error('The Local Girl scraping failed:', error.message);
-    return [];
-  }
+} catch (error) {
+  console.error('The Local Girl scraping failed:', error.message);
+  return [];
+}
 }
 
 // Main orchestrator - scrapes all sources and merges results
