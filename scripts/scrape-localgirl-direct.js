@@ -61,7 +61,6 @@ async function scrapeTheLocalGirl() {
         // Collect basic info first
         const basicEvents = [];
         $('h2').each((i, elem) => {
-            if (basicEvents.length >= 15) return false;
 
             const $title = $(elem).find('a').first();
             const name = $title.text().trim();
