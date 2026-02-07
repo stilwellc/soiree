@@ -38,7 +38,8 @@ module.exports = async function handler(req, res) {
         start_date DATE,
         end_date DATE,
         scraped_at TIMESTAMP DEFAULT NOW(),
-        created_at TIMESTAMP DEFAULT NOW()
+        created_at TIMESTAMP DEFAULT NOW(),
+        source VARCHAR(100)
       )
     `);
 
@@ -52,7 +53,8 @@ module.exports = async function handler(req, res) {
     await pool.query(`
       ALTER TABLE events
       ADD COLUMN IF NOT EXISTS start_date DATE,
-      ADD COLUMN IF NOT EXISTS end_date DATE
+      ADD COLUMN IF NOT EXISTS end_date DATE,
+      ADD COLUMN IF NOT EXISTS source VARCHAR(100)
     `);
 
     // Get category filter

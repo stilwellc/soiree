@@ -2,6 +2,7 @@ const { Pool } = require('pg');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const { parseDateText } = require('./lib/dateParser.js');
+const { createNormalizedEvent } = require('./lib/normalize.js');
 
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
@@ -78,9 +79,9 @@ function categorizeEvent(title, description, location) {
 
   // --- Perks (events offering complimentary items: samples, gifts, tastings) ---
   if (text.match(/free\s+(sample|gift|coffee|latte|drink|treat|tote|shirt|t-shirt|merch|product|item|goodie|makeup|lipstick|skincare|fragrance|ice cream|donut|doughnut|pizza|slice|cookie|cupcake|smoothie|juice|chai|matcha|espresso|bagel|croissant|muffin|chocolate|beer|wine|cocktail|seltzer|swag)/i) ||
-      text.match(/\b(complimentary|giveaway|swag|goodie bag|gift bag|gift with purchase|free gifts?|free tasting)\b/i) ||
-      text.match(/while supplies last/i) ||
-      text.match(/first\s+\d+\s+(guests?|people|visitors?|customers?)/i)) {
+    text.match(/\b(complimentary|giveaway|swag|goodie bag|gift bag|gift with purchase|free gifts?|free tasting)\b/i) ||
+    text.match(/while supplies last/i) ||
+    text.match(/first\s+\d+\s+(guests?|people|visitors?|customers?)/i)) {
     return 'perks';
   }
 
@@ -336,65 +337,7 @@ async function enrichWithDetailPages(events, batchSize = 10) {
   return events;
 }
 
-// Scrape events from The Skint (free events aggregator - includes museum events)
-async function scrapeTheSkint() {
-  try {
-    console.log('Fetching events from The Skint...');
-    const response = await axios.get('https://theskint.com/', {
-      timeout: 10000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    });
 
-    const $ = cheerio.load(response.data);
-    const events = [];
-
-    // Parse event listings
-    $('.event-item, .post, article').each((i, elem) => {
-      if (events.length >= 15) return false;
-
-      const $elem = $(elem);
-      const title = $elem.find('h2, h3, .title, .entry-title').first().text().trim();
-      if (!title || title.length < 5) return;
-
-      const description = $elem.find('p, .excerpt, .entry-content').first().text().trim();
-      const location = $elem.find('.venue, .location').first().text().trim() || 'NYC';
-      const link = $elem.find('a').first().attr('href');
-      if (!link) return;
-
-      const category = categorizeEvent(title, description, location);
-      const eventUrl = link.startsWith('http') ? link : `https://theskint.com${link}`;
-
-      const dateStr = 'This Week';
-      const timeStr = 'See details';
-      const { start_date, end_date } = parseDateText(dateStr, timeStr);
-
-      events.push({
-        name: title.substring(0, 255),
-        category,
-        date: dateStr,
-        time: timeStr,
-        start_date,
-        end_date,
-        location: location.substring(0, 255) || 'Various NYC',
-        address: location.substring(0, 500),
-        price: 'free',
-        spots: Math.floor(Math.random() * 100) + 50,
-        image: getEventImage(title, category),
-        description: (description || `Join us for ${title.toLowerCase()} in NYC.`).substring(0, 500),
-        highlights: ['Free entry', 'NYC location', 'Curated by The Skint', 'Quality events'],
-        url: eventUrl.substring(0, 500)
-      });
-    });
-
-    console.log(`Scraped ${events.length} events from The Skint`);
-    return events;
-  } catch (error) {
-    console.error('The Skint scraping failed:', error.message);
-    return [];
-  }
-}
 
 // Scrape events from TimeOut NY (includes museum events and exhibitions)
 async function scrapeTimeOut() {
@@ -430,22 +373,25 @@ async function scrapeTimeOut() {
       const timeStr = 'Various times';
       const { start_date, end_date } = parseDateText(dateStr, timeStr);
 
-      events.push({
-        name: title.substring(0, 255),
+      const event = createNormalizedEvent({
+        name: title,
         category,
         date: dateStr,
         time: timeStr,
         start_date,
         end_date,
-        location: (location || 'Manhattan').substring(0, 255),
-        address: location.substring(0, 500),
+        location,
+        address: location,
         price: 'free',
         spots: Math.floor(Math.random() * 150) + 30,
         image: getEventImage(title, category),
-        description: (description || `Experience ${title.toLowerCase()} in New York City.`).substring(0, 500),
+        description: description || `Experience ${title.toLowerCase()} in New York City.`,
         highlights: ['Free admission', 'TimeOut curated', 'NYC cultural event', 'All ages welcome'],
-        url: eventUrl.substring(0, 500)
+        url: eventUrl,
+        source: 'TimeOut NY'
       });
+
+      if (event) events.push(event);
     });
 
     console.log(`Scraped ${events.length} events from TimeOut NY`);
@@ -540,22 +486,25 @@ async function scrapeNYCForFree() {
       // Parse structured dates
       const { start_date, end_date } = parseDateText(date, time);
 
-      events.push({
-        name: name.substring(0, 255),
+      const event = createNormalizedEvent({
+        name,
         category,
-        date: date.substring(0, 100),
-        time: time.substring(0, 100),
+        date,
+        time,
         start_date,
         end_date,
-        location: location.substring(0, 255),
-        address: address.substring(0, 500),
+        location,
+        address,
         price: 'free',
-        spots: Math.floor(Math.random() * 200) + 50, // Random capacity
+        spots: Math.floor(Math.random() * 200) + 50,
         image: getEventImage(name, category),
-        description: description.substring(0, 500),
+        description,
         highlights: ['Free event', 'NYC location', 'Limited spots', 'RSVP recommended'],
-        url: eventUrl.substring(0, 500)
+        url: eventUrl,
+        source: 'NYC For Free'
       });
+
+      if (event) events.push(event);
     });
 
     console.log(`Scraped ${events.length} events from nycforfree.co`);
@@ -628,22 +577,25 @@ async function scrapeMoMA() {
       // Parse structured dates
       const { start_date, end_date } = parseDateText(date, time);
 
-      events.push({
-        name: name.substring(0, 255),
+      const event = createNormalizedEvent({
+        name,
         category,
-        date: date.substring(0, 100),
-        time: time.substring(0, 100),
+        date,
+        time,
         start_date,
         end_date,
-        location: location.substring(0, 255),
-        address: address.substring(0, 500),
+        location,
+        address,
         price: 'free',
         spots: Math.floor(Math.random() * 150) + 50,
         image: getEventImage(name, category),
-        description: description.substring(0, 500),
+        description,
         highlights: ['MoMA', 'Modern art', 'Contemporary culture', 'Free event'],
-        url: eventUrl.substring(0, 500)
+        url: eventUrl,
+        source: 'MoMA'
       });
+
+      if (event) events.push(event);
     });
 
     console.log(`Scraped ${events.length} events from MoMA`);
@@ -710,22 +662,25 @@ async function scrapeAMNH() {
       // Parse structured dates
       const { start_date, end_date } = parseDateText(date, time);
 
-      events.push({
-        name: name.substring(0, 255),
+      const event = createNormalizedEvent({
+        name,
         category,
-        date: date.substring(0, 100),
-        time: time.substring(0, 100),
+        date,
+        time,
         start_date,
         end_date,
-        location: location.substring(0, 255),
-        address: address.substring(0, 500),
+        location,
+        address,
         price: 'free',
         spots: Math.floor(Math.random() * 150) + 50,
         image: getEventImage(name, category),
-        description: description.substring(0, 500),
+        description,
         highlights: ['Natural History', 'Science talks', 'Family friendly', 'Free admission'],
-        url: eventUrl.substring(0, 500)
+        url: eventUrl,
+        source: 'AMNH'
       });
+
+      if (event) events.push(event);
     });
 
     console.log(`Scraped ${events.length} events from AMNH`);
@@ -786,22 +741,25 @@ async function scrapeWhitney() {
       // Parse structured dates
       const { start_date, end_date } = parseDateText(date, time);
 
-      events.push({
-        name: name.substring(0, 255),
+      const event = createNormalizedEvent({
+        name,
         category,
-        date: date.substring(0, 100),
-        time: time.substring(0, 100),
+        date,
+        time,
         start_date,
         end_date,
-        location: location.substring(0, 255),
-        address: address.substring(0, 500),
+        location,
+        address,
         price: 'free',
         spots: Math.floor(Math.random() * 150) + 50,
         image: getEventImage(name, category),
-        description: description.substring(0, 500),
+        description,
         highlights: ['Whitney Museum', 'American art', 'Contemporary exhibitions', 'Free event'],
-        url: eventUrl.substring(0, 500)
+        url: eventUrl,
+        source: 'Whitney Museum'
       });
+
+      if (event) events.push(event);
     });
 
     console.log(`Scraped ${events.length} events from Whitney`);
@@ -843,22 +801,25 @@ async function scrapeGuggenheim() {
       const timeStr = 'See details';
       const { start_date, end_date } = parseDateText(dateStr, timeStr);
 
-      events.push({
-        name: name.substring(0, 255),
+      const event = createNormalizedEvent({
+        name,
         category,
         date: dateStr,
         time: timeStr,
         start_date,
         end_date,
-        location: location.substring(0, 255),
-        address: address.substring(0, 500),
+        location,
+        address,
         price: 'free',
         spots: Math.floor(Math.random() * 150) + 50,
         image: getEventImage(name, category),
-        description: (description || `${name} at the Guggenheim Museum.`).substring(0, 500),
+        description: description || `${name} at the Guggenheim Museum.`,
         highlights: ['Guggenheim', 'Modern art', 'Iconic architecture', 'Free event'],
-        url: eventUrl.substring(0, 500)
+        url: eventUrl,
+        source: 'Guggenheim'
       });
+
+      if (event) events.push(event);
     }
 
     console.log(`Scraped ${events.length} events from Guggenheim`);
@@ -914,22 +875,25 @@ async function scrapeNewMuseum() {
           // Parse structured dates
           const { start_date, end_date } = parseDateText(startDate, 'See details');
 
-          events.push({
-            name: name.substring(0, 255),
+          const event = createNormalizedEvent({
+            name,
             category,
-            date: startDate.substring(0, 100),
+            date: startDate,
             time: 'See details',
             start_date,
             end_date,
-            location: location.substring(0, 255),
-            address: address.substring(0, 500),
+            location,
+            address,
             price: 'free',
             spots: Math.floor(Math.random() * 150) + 50,
             image: getEventImage(name, category),
-            description: (description || `${name} at the New Museum.`).substring(0, 500),
+            description: description || `${name} at the New Museum.`,
             highlights: ['New Museum', 'Contemporary art', 'Cutting-edge exhibitions', 'Free admission'],
-            url: eventUrl.substring(0, 500)
+            url: eventUrl,
+            source: 'New Museum'
           });
+
+          if (event) events.push(event);
         }
       } catch (parseError) {
         console.log('Could not parse New Museum __NEXT_DATA__:', parseError.message);
@@ -960,22 +924,25 @@ async function scrapeNewMuseum() {
         const timeStr = 'See details';
         const { start_date, end_date } = parseDateText(dateStr, timeStr);
 
-        events.push({
-          name: name.substring(0, 255),
+        const event = createNormalizedEvent({
+          name,
           category,
           date: dateStr,
           time: timeStr,
           start_date,
           end_date,
-          location: location.substring(0, 255),
-          address: address.substring(0, 500),
+          location,
+          address,
           price: 'free',
           spots: Math.floor(Math.random() * 150) + 50,
           image: getEventImage(name, category),
-          description: description.substring(0, 500),
+          description,
           highlights: ['New Museum', 'Contemporary art', 'Cutting-edge exhibitions', 'Free admission'],
-          url: eventUrl.substring(0, 500)
+          url: eventUrl,
+          source: 'New Museum'
         });
+
+        if (event) events.push(event);
       });
     }
 
@@ -987,6 +954,167 @@ async function scrapeNewMuseum() {
   }
 }
 
+// Scrape events from The Local Girl (Hoboken/JC)
+async function scrapeTheLocalGirl() {
+  try {
+    console.log('Fetching events from The Local Girl...');
+    const response = await axios.get('https://thelocalgirl.com/calendar/hoboken/', {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
+
+    const $ = cheerio.load(response.data);
+    const events = [];
+
+    // The Local Girl uses a standard layout, events are distinct blocks
+    // Based on HTML analysis, we look for event items. 
+    // Since the structure can be tricky, we'll look for the repeating pattern of headers or article/div classes.
+    // The previous chunks showed <h2> with links as event titles.
+
+    // Find containers that look like event listings
+    // Structure seems to be: 
+    // <h2><a href="...">Title</a></h2>
+    // ... metadata ...
+    // <img ... src="...">
+
+    $('h2').each((i, elem) => {
+      if (events.length >= 15) return false;
+
+      const $title = $(elem).find('a').first();
+      const name = $title.text().trim();
+      const href = $title.attr('href');
+
+      if (!name || !href) return;
+
+      // Locate the container or sibling elements for other details
+      // The chunks suggest a flat structure where <h2> appears before other details
+      // We might need to look at the next few siblings
+      let $next = $(elem).next();
+      let description = '';
+      let image = '';
+      let categories = [];
+      let location = 'Hoboken/Jersey City';
+      let address = '';
+
+      // Try to find image and categories in following siblings
+      // We scan up to 10 next siblings to find relevant info
+      for (let j = 0; j < 10; j++) {
+        if ($next.length === 0 || $next.is('h2')) break;
+
+        // Check for image
+        const $img = $next.find('img');
+        if ($img.length && !image) {
+          image = $img.attr('src');
+        }
+
+        // Check for categories links
+        $next.find('a[href*="/category/"]').each((_, catLink) => {
+          const catText = $(catLink).text().trim();
+          if (catText && catText !== 'The Hoboken Girl Calendar' && !categories.includes(catText)) {
+            categories.push(catText);
+          }
+        });
+
+        // Check for maps link to get address
+        $next.find('a[href*="maps.google.com"], a[href*="maps.apple.com"]').each((_, mapLink) => {
+          const href = $(mapLink).attr('href');
+          // Extract query param from map link which usually contains address
+          try {
+            const url = new URL(href);
+            const query = url.searchParams.get('q') || url.searchParams.get('query');
+            if (query && !address) {
+              address = query;
+            }
+          } catch (e) { }
+        });
+
+        $next = $next.next();
+      }
+
+      if (address) {
+        // Try to infer city from address
+        if (address.includes('Jersey City')) location = 'Jersey City';
+        else if (address.includes('Hoboken')) location = 'Hoboken';
+      }
+
+      const category = categorizeEvent(name, categories.join(' '), location);
+
+      // Since listing page doesn't show dates clearly in the text chunks, we set 'Upcoming'
+      // Ideally we would fetch the detail page, but for now we fallback to generic
+      const dateStr = 'Upcoming';
+      const timeStr = 'See details';
+      const { start_date, end_date } = parseDateText(dateStr, timeStr);
+
+      const event = createNormalizedEvent({
+        name,
+        category,
+        date: dateStr,
+        time: timeStr,
+        start_date,
+        end_date,
+        location,
+        address: address || location,
+        price: 'See details', // Price isn't obvious on listing
+        spots: Math.floor(Math.random() * 100) + 20,
+        image: image || getEventImage(name, category),
+        description: description || `Event in ${location}: ${name}`,
+        highlights: categories.length ? categories.slice(0, 4) : ['Local event', 'Community', location],
+        url: href,
+        source: 'The Local Girl'
+      });
+
+      if (event) events.push(event);
+    });
+
+    console.log(`Scraped ${events.length} events from The Local Girl, fetching dates...`);
+
+    // Fetch details for each event to get the real date
+    await Promise.allSettled(events.map(async (event) => {
+      try {
+        const detailRes = await axios.get(event.url, {
+          timeout: 5000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          }
+        });
+        const $detail = cheerio.load(detailRes.data);
+
+        // Metadata often appears in the first paragraph after the H1 title
+        const dateText = $detail('h1').next('p').text().trim();
+
+        // Also try to find time if possible, but date is priority
+        // Sometimes dateText includes time, e.g. "February 7, 2026 @ 7:00 pm - 10:00 pm"
+
+        if (dateText && dateText.length < 50) {
+          // Check if it looks like a date
+          if (dateText.match(/([A-Z][a-z]+ \d{1,2}, \d{4})/)) {
+            event.date = dateText;
+            if (dateText.includes('@')) {
+              const parts = dateText.split('@');
+              event.date = parts[0].trim();
+              event.time = parts[1].trim();
+            }
+            // Re-parse with new date
+            const { start_date, end_date } = parseDateText(event.date, event.time);
+            event.start_date = start_date;
+            event.end_date = end_date;
+          }
+        }
+      } catch (e) {
+        console.log(`Failed to fetch details for ${event.url} in LocalGirl scraper: ${e.message}`);
+      }
+    }));
+
+    return events;
+
+  } catch (error) {
+    console.error('The Local Girl scraping failed:', error.message);
+    return [];
+  }
+}
+
 // Main orchestrator - scrapes all sources and merges results
 async function scrapeAllEvents() {
   try {
@@ -994,35 +1122,35 @@ async function scrapeAllEvents() {
 
     // Run all scrapers in parallel
     const [
-      theSkintEvents,
       timeoutEvents,
       nycFreeEvents,
       whitneyEvents,
       momaEvents,
       guggenheimEvents,
       amnhEvents,
-      newMuseumEvents
+      newMuseumEvents,
+      localGirlEvents
     ] = await Promise.all([
-      scrapeTheSkint(),
       scrapeTimeOut(),
       scrapeNYCForFree(),
       scrapeWhitney(),
       scrapeMoMA(),
       scrapeGuggenheim(),
       scrapeAMNH(),
-      scrapeNewMuseum()
+      scrapeNewMuseum(),
+      scrapeTheLocalGirl()
     ]);
 
     // Merge all events
     const merged = [
-      ...theSkintEvents,
       ...timeoutEvents,
       ...nycFreeEvents,
       ...whitneyEvents,
       ...momaEvents,
       ...guggenheimEvents,
       ...amnhEvents,
-      ...newMuseumEvents
+      ...newMuseumEvents,
+      ...localGirlEvents
     ];
 
     // Filter out permanent/long-running exhibitions
@@ -1039,7 +1167,7 @@ async function scrapeAllEvents() {
     });
 
     console.log(`Total events scraped: ${merged.length}, after filtering: ${allEvents.length}`);
-    console.log(`  - The Skint: ${theSkintEvents.length}`);
+
     console.log(`  - TimeOut NY: ${timeoutEvents.length}`);
     console.log(`  - NYC For Free: ${nycFreeEvents.length}`);
     console.log(`  - Whitney Museum: ${whitneyEvents.length}`);
@@ -1047,6 +1175,7 @@ async function scrapeAllEvents() {
     console.log(`  - Guggenheim: ${guggenheimEvents.length}`);
     console.log(`  - AMNH: ${amnhEvents.length}`);
     console.log(`  - New Museum: ${newMuseumEvents.length}`);
+    console.log(`  - The Local Girl: ${localGirlEvents.length}`);
 
     // If no events found at all, use fallback
     if (allEvents.length === 0) {
@@ -1105,14 +1234,16 @@ module.exports = async function handler(req, res) {
         highlights JSONB,
         url VARCHAR(500),
         scraped_at TIMESTAMP DEFAULT NOW(),
-        created_at TIMESTAMP DEFAULT NOW()
+        created_at TIMESTAMP DEFAULT NOW(),
+        source VARCHAR(100)
       )
     `);
 
     // Add url column if it doesn't exist (for existing tables)
     await pool.query(`
       ALTER TABLE events
-      ADD COLUMN IF NOT EXISTS url VARCHAR(500)
+      ADD COLUMN IF NOT EXISTS url VARCHAR(500),
+      ADD COLUMN IF NOT EXISTS source VARCHAR(100)
     `);
 
     // Clean existing duplicates before creating unique index
@@ -1155,12 +1286,12 @@ module.exports = async function handler(req, res) {
     for (const event of uniqueEvents) {
       try {
         await pool.query(
-          `INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights, url, start_date, end_date)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+          `INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights, url, start_date, end_date, source)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
            ON CONFLICT (url) DO NOTHING`,
           [event.name, event.category, event.date, event.time, event.location,
-           event.address, event.price, event.spots, event.image, event.description,
-           JSON.stringify(event.highlights), event.url, event.start_date, event.end_date]
+          event.address, event.price, event.spots, event.image, event.description,
+          JSON.stringify(event.highlights), event.url, event.start_date, event.end_date, event.source]
         );
         inserted++;
       } catch (error) {
