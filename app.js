@@ -272,10 +272,10 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a =
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
@@ -673,8 +673,8 @@ function updateFilterCounts() {
 
 // Render Events
 function renderEvents() {
-  // Check if current region is not NYC - show coming soon placeholder
-  if (currentRegion && currentRegion !== 'nyc') {
+  // Check if current region is not supported - only support NYC and Hoboken for now
+  if (currentRegion && currentRegion !== 'nyc' && currentRegion !== 'hoboken-jc') {
     const regionData = REGIONS[currentRegion];
     renderComingSoon(regionData ? regionData.name : 'this area');
     return;
@@ -689,7 +689,24 @@ function renderEvents() {
       event.description.toLowerCase().includes(searchQuery);
     const matchesTime = matchesTimeFilter(event);
 
-    return matchesFilter && matchesSearch && matchesTime;
+    const matchesTime = matchesTimeFilter(event);
+
+    // Region Filter
+    let matchesRegion = true;
+    if (currentRegion === 'hoboken-jc') {
+      const loc = event.location.toLowerCase();
+      const addr = (event.address || '').toLowerCase();
+      matchesRegion = loc.includes('hoboken') || loc.includes('jersey city') ||
+        addr.includes('hoboken') || addr.includes('jersey city');
+    } else if (currentRegion === 'nyc') {
+      // Default to NYC if not hoboken
+      const loc = event.location.toLowerCase();
+      // Exclude events that are explicitly for Hoboken/JC if we are in NYC view
+      const isHoboken = loc.includes('hoboken') || loc.includes('jersey city');
+      matchesRegion = !isHoboken;
+    }
+
+    return matchesFilter && matchesSearch && matchesTime && matchesRegion;
   });
 
   if (filteredEvents.length === 0) {
@@ -1088,7 +1105,7 @@ async function loadTechStats() {
           try {
             const hostname = new URL(event.url).hostname;
             sources.add(hostname);
-          } catch (e) {}
+          } catch (e) { }
         }
       });
 
