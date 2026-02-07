@@ -642,7 +642,20 @@ function updateFilterCounts() {
       event.description.toLowerCase().includes(searchQuery);
     const matchesTime = matchesTimeFilter(event);
 
-    if (matchesSearch && matchesTime) {
+    // Region Filter (same logic as renderEvents)
+    let matchesRegion = true;
+    if (currentRegion === 'hoboken-jc') {
+      const loc = event.location.toLowerCase();
+      const addr = (event.address || '').toLowerCase();
+      matchesRegion = loc.includes('hoboken') || loc.includes('jersey city') ||
+        addr.includes('hoboken') || addr.includes('jersey city');
+    } else if (currentRegion === 'nyc') {
+      const loc = event.location.toLowerCase();
+      const isHoboken = loc.includes('hoboken') || loc.includes('jersey city');
+      matchesRegion = !isHoboken;
+    }
+
+    if (matchesSearch && matchesTime && matchesRegion) {
       total++;
       counts[event.category] = (counts[event.category] || 0) + 1;
     }
