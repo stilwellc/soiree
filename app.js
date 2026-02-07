@@ -785,14 +785,21 @@ function renderFavorites() {
 function formatEventDate(event) {
   // If we have structured dates, format them nicely
   if (event.start_date) {
-    const startDate = new Date(event.start_date);
-    const endDate = event.end_date ? new Date(event.end_date) : startDate;
+    // Parse as UTC to avoid timezone conversion
+    const startDateStr = event.start_date.split('T')[0];
+    const endDateStr = event.end_date ? event.end_date.split('T')[0] : startDateStr;
 
-    const options = { month: 'short', day: 'numeric' };
+    const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
+    const [endYear, endMonth, endDay] = endDateStr.split('-').map(Number);
+
+    const startDate = new Date(Date.UTC(startYear, startMonth - 1, startDay));
+    const endDate = new Date(Date.UTC(endYear, endMonth - 1, endDay));
+
+    const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
     const startFormatted = startDate.toLocaleDateString('en-US', options);
 
     // If single day event
-    if (event.start_date === event.end_date) {
+    if (startDateStr === endDateStr) {
       return `${startFormatted}${event.time ? ' • ' + event.time : ''}`;
     } else {
       // Multi-day event
@@ -810,31 +817,35 @@ function formatBadgeDate(event) {
   // Only use structured dates if they exist and seem valid
   if (event.start_date) {
     try {
-      const startDate = new Date(event.start_date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      // Parse date without timezone conversion
+      const startDateStr = event.start_date.split('T')[0];
+      const todayStr = new Date().toISOString().split('T')[0];
 
-      // Sanity check: only use if date is within reasonable range (not in far future/past)
-      const yearsDiff = (startDate.getFullYear() - today.getFullYear());
+      const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
+      const [todayYear, todayMonth, todayDay] = todayStr.split('-').map(Number);
+
+      // Sanity check: only use if date is within reasonable range
+      const yearsDiff = startYear - todayYear;
       if (yearsDiff < -1 || yearsDiff > 2) {
-        // Invalid date, fall back to text
         return event.date || 'See Details';
       }
 
       // Check if it's today
-      if (startDate.toDateString() === today.toDateString()) {
+      if (startDateStr === todayStr) {
         return 'Today';
       }
 
       // Check if it's tomorrow
-      if (startDate.toDateString() === tomorrow.toDateString()) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      if (startDateStr === tomorrowStr) {
         return 'Tomorrow';
       }
 
       // Otherwise show formatted date
-      const options = { month: 'short', day: 'numeric' };
+      const startDate = new Date(Date.UTC(startYear, startMonth - 1, startDay));
+      const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
       return startDate.toLocaleDateString('en-US', options);
     } catch (e) {
       // If date parsing fails, fall back to text
