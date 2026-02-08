@@ -291,7 +291,7 @@ async function run() {
                     await pool.query(
                         `UPDATE events 
                          SET name = $1, category = $2, date = $3, time = $4, 
-                             start_date = $5, end_date = $6, updated_at = CURRENT_TIMESTAMP
+                             start_date = $5, end_date = $6, scraped_at = CURRENT_TIMESTAMP
                          WHERE url = $7`,
                         [event.name, event.category, event.date, event.time,
                         event.start_date, event.end_date, event.url]
