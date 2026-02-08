@@ -935,13 +935,13 @@ function createEventCard(event, index) {
         </button>
         <div class="event-badge">${formatBadgeDate(event)}</div>
         <div class="event-category-badge">${getCategoryName(event.category)}</div>
+        ${isFree ? '<div class="event-free-badge">FREE</div>' : ''}
       </div>
       <div class="event-details">
         <div class="event-name">${event.name}</div>
         <div class="event-date">${formatEventDate(event)}</div>
         <div class="event-location">${event.location}</div>
       </div>
-      ${isFree ? '<div class="event-free-badge">FREE</div>' : ''}
     </div>
   `;
 }
