@@ -822,6 +822,11 @@ function formatEventDate(event) {
     const startDateStr = event.start_date.split('T')[0];
     const endDateStr = event.end_date ? event.end_date.split('T')[0] : startDateStr;
 
+    // Check if this is a placeholder date (Feb 15, 2026)
+    if (startDateStr === '2026-02-15') {
+      return `Ongoing${event.time && event.time !== 'See details' ? ' • ' + event.time : ''}`;
+    }
+
     const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
     const [endYear, endMonth, endDay] = endDateStr.split('-').map(Number);
 
