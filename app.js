@@ -1581,6 +1581,95 @@ async function initNetworkGraph() {
       addLog(msg, 'info');
     }, 2500);
   }
+
+
+  // 4. Traffic Chart (v2.2)
+  const trafficCanvas = document.getElementById('traffic-chart');
+  if (trafficCanvas && !trafficCanvas.hasAttribute('init')) {
+    trafficCanvas.setAttribute('init', 'true');
+    const ctx = trafficCanvas.getContext('2d');
+
+    const dpr = window.devicePixelRatio || 1;
+    let points = new Array(60).fill(60).map((_, i) => 60 + Math.sin(i * 0.5) * 10 + Math.random() * 10);
+
+    function frame() {
+      const rect = trafficCanvas.getBoundingClientRect();
+      if (rect.width === 0) return requestAnimationFrame(frame);
+
+      // Auto-resize
+      if (trafficCanvas.width !== Math.floor(rect.width * dpr)) {
+        trafficCanvas.width = rect.width * dpr;
+        trafficCanvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+      }
+
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw Grid
+      ctx.strokeStyle = '#f9f9f9'; // Lighter grid
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      const stepX = w / 10;
+      for (let x = 0; x < w; x += stepX) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
+      ctx.stroke();
+
+      // Draw Area
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        const x = (i / (points.length - 1)) * w;
+        const y = h - ((p / 100) * h);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, 'rgba(76, 175, 80, 0.15)');
+      grad.addColorStop(1, 'rgba(76, 175, 80, 0.0)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Draw Line
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        const x = (i / (points.length - 1)) * w;
+        const y = h - ((p / 100) * h);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = '#4CAF50';
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    // Update Data
+    setInterval(() => {
+      points.shift();
+      const last = points[points.length - 1] || 50;
+      let next = last + (Math.random() - 0.5) * 15;
+      next = Math.max(20, Math.min(95, next)); // Clamp
+      points.push(next);
+
+      const rpsEl = document.getElementById('traffic-rps');
+      if (rpsEl) rpsEl.textContent = Math.floor(next * 2 + 100);
+
+      const deltaEl = document.querySelector('.traffic-delta');
+      if (deltaEl) {
+        const change = ((next - last) / last) * 100;
+        deltaEl.textContent = (change > 0 ? '▲' : '▼') + Math.abs(change).toFixed(1) + '%';
+        deltaEl.style.color = change > 0 ? '#4CAF50' : '#FF9800';
+      }
+    }, 1000);
+  }
+
   const regions = new Set();
   allEvents.forEach(e => {
     const loc = e.location.toLowerCase();
