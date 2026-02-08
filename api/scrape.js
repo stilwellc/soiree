@@ -1160,8 +1160,14 @@ async function scrapeAllEvents() {
       scrapeTimeOut(),
       scrapeNYCForFree(),
       scrapeWhitney(),
-      scrapeMoMA(),
-      scrapeGuggenheim(),
+      scrapeWithPuppeteer(CONFIGS.moma).catch(err => {
+        console.error('MoMA Puppeteer failed:', err.message);
+        return [];
+      }),
+      scrapeWithPuppeteer(CONFIGS.guggenheim).catch(err => {
+        console.error('Guggenheim Puppeteer failed:', err.message);
+        return [];
+      }),
       scrapeAMNH(),
       scrapeNewMuseum(),
       scrapeTheLocalGirl(),

@@ -59,16 +59,21 @@ async function scrapeWithPuppeteer(config) {
             eventElements.forEach((elem, index) => {
                 if (results.length >= 30) return;
 
-                // Get all links in this element
-                const allLinks = elem.querySelectorAll ? Array.from(elem.querySelectorAll('a')) : [elem];
-
-                // Find the main event link (not login, not favorites)
+                // Check if the element itself is a link
                 let eventLink = null;
-                for (const link of allLinks) {
-                    const href = link.href || '';
-                    if (href && !href.includes('login') && !href.includes('flag_anon') && !href.includes('#')) {
-                        eventLink = link;
-                        break;
+                if (elem.tagName === 'A' && elem.href && !elem.href.includes('login') && !elem.href.includes('#')) {
+                    eventLink = elem;
+                } else {
+                    // Get all links in this element
+                    const allLinks = elem.querySelectorAll ? Array.from(elem.querySelectorAll('a')) : [elem];
+
+                    // Find the main event link (not login, not favorites)
+                    for (const link of allLinks) {
+                        const href = link.href || '';
+                        if (href && !href.includes('login') && !href.includes('flag_anon') && !href.includes('#')) {
+                            eventLink = link;
+                            break;
+                        }
                     }
                 }
 
@@ -226,6 +231,28 @@ const CONFIGS = {
             title: ['h2', 'h3', '.listing-title', 'a.listing-link', 'a'],
             date: ['.listing-date', '.date', 'time', '[class*="date"]'],
             location: ['.listing-location', '.location', '.address', '[class*="location"]']
+        }
+    },
+    moma: {
+        name: 'MoMA',
+        url: 'https://www.moma.org/calendar',
+        defaultLocation: 'MoMA, New York',
+        selectors: {
+            container: ['a[href*="/calendar/events/"]'],
+            title: ['h2', 'h3', 'h4', '.title', '[class*="title"]'],
+            date: ['.date', 'time', '[class*="date"]', '[class*="time"]'],
+            location: ['.location', '.venue', '[class*="location"]']
+        }
+    },
+    guggenheim: {
+        name: 'Guggenheim',
+        url: 'https://www.guggenheim.org/events',
+        defaultLocation: 'Guggenheim Museum, New York',
+        selectors: {
+            container: ['article', '[class*="event"]'],
+            title: ['h2', 'h3', 'a', '[class*="title"]'],
+            date: ['.date', 'time', '[class*="date"]'],
+            location: ['.location', '.venue', '[class*="location"]']
         }
     },
     monmouthCounty: {
