@@ -343,34 +343,54 @@ async function enrichWithDetailPages(events, batchSize = 10) {
 async function scrapeTimeOut() {
   try {
     console.log('Fetching events from TimeOut NY...');
-    const response = await axios.get('https://www.timeout.com/newyork/things-to-do/free-things-to-do-in-new-york', {
-      timeout: 10000,
+    const response = await axios.get('https://www.timeout.com/newyork/things-to-do/free-things-to-do-in-nyc', {
+      timeout: 15000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9'
       }
     });
 
     const $ = cheerio.load(response.data);
     const events = [];
+    const seenUrls = new Set();
 
-    // Parse event cards
-    $('.card, ._card, .listingCard, [class*="Card"]').each((i, elem) => {
-      if (events.length >= 15) return false;
+    // Parse event cards - Time Out uses article elements
+    $('article, .card, ._card, .listingCard, [class*="Card"]').each((i, elem) => {
+      if (events.length >= 20) return false;
 
       const $elem = $(elem);
-      const title = $elem.find('h3, h2, .card-title, [class*="title"]').first().text().trim();
+
+      // Get title from various possible selectors
+      let title = $elem.find('h1, h2, h3, .card-title, [class*="title"], [class*="Title"]').first().text().trim();
       if (!title || title.length < 5) return;
 
-      const description = $elem.find('p, .card-description, [class*="description"]').first().text().trim();
-      const location = $elem.find('.venue, .location, .neighborhood').first().text().trim();
-      const link = $elem.find('a').first().attr('href');
+      // Get link
+      const $link = $elem.find('a').first();
+      let link = $link.attr('href');
       if (!link) return;
+
+      // Make absolute URL
+      if (link.startsWith('/')) {
+        link = `https://www.timeout.com${link}`;
+      }
+
+      if (seenUrls.has(link)) return;
+      seenUrls.add(link);
+
+      // Get description
+      const description = $elem.find('p, .card-description, [class*="description"], [class*="Description"]').first().text().trim();
+
+      // Get location if available
+      const location = $elem.find('.venue, .location, .neighborhood, [class*="location"]').first().text().trim() || 'New York City';
 
       const category = categorizeEvent(title, description, location);
       const eventUrl = link.startsWith('http') ? link : `https://www.timeout.com${link}`;
 
-      const dateStr = 'Upcoming';
-      const timeStr = 'Various times';
+      // Most Time Out free events are ongoing/recurring
+      const dateStr = 'Ongoing';
+      const timeStr = 'See details';
       const { start_date, end_date } = parseDateText(dateStr, timeStr);
 
       const event = createNormalizedEvent({
@@ -381,11 +401,11 @@ async function scrapeTimeOut() {
         start_date,
         end_date,
         location,
-        address: location,
+        address: location !== 'New York City' ? location : 'Various locations - see event details',
         price: 'free',
         spots: Math.floor(Math.random() * 150) + 30,
         image: getEventImage(title, category),
-        description: description || `Experience ${title.toLowerCase()} in New York City.`,
+        description: description || `${title} - Free event in NYC`,
         highlights: ['Free admission', 'TimeOut curated', 'NYC cultural event', 'All ages welcome'],
         url: eventUrl,
         source: 'TimeOut NY'
