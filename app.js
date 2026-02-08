@@ -1677,9 +1677,8 @@ async function initNetworkGraph() {
 
 /* Free Mode Logic */
 function toggleFreeMode() {
-  freeMode = !freeMode;
-  const btn = document.getElementById('free-mode-toggle');
-  if (btn) btn.classList.toggle('active', freeMode);
+  const checkbox = document.getElementById('free-mode-toggle');
+  freeMode = checkbox ? checkbox.checked : !freeMode;
   renderEvents();
 }
 
@@ -1689,8 +1688,8 @@ if (document.readyState === 'loading') {
     init();
     initRotatingTitle();
 
-    const freeBtn = document.getElementById('free-mode-toggle');
-    if (freeBtn) freeBtn.addEventListener('click', toggleFreeMode);
+    const freeCheckbox = document.getElementById('free-mode-toggle');
+    if (freeCheckbox) freeCheckbox.addEventListener('change', toggleFreeMode);
 
     // Initialize network graph when About view is shown
     const aboutView = document.getElementById('about-view');

@@ -154,9 +154,19 @@
           </svg>
           <button id="search-clear" class="search-clear" aria-label="Clear search">×</button>
         </div>
-        <button id=\"free-mode-toggle\" class=\"free-toggle-pill\" aria-label=\"Show Free Events Only\">
-          <span class=\"icon\">🎁</span> Free
-        </button>
+
+        <!-- Free Events Toggle -->
+        <div class="free-toggle-container">
+          <label class="free-toggle-label" for="free-mode-toggle">
+            <span class="free-toggle-text">Free Only</span>
+            <div class="toggle-switch">
+              <input type="checkbox" id="free-mode-toggle" class="toggle-input" aria-label="Show Free Events Only">
+              <span class="toggle-slider">
+                <span class="toggle-icon">✨</span>
+              </span>
+            </div>
+          </label>
+        </div>
       </section>
 
       <!-- Filters -->
