@@ -923,6 +923,7 @@ function formatBadgeDate(event) {
 function createEventCard(event, index) {
   const isFavorited = favorites.includes(event.id);
   const animationDelay = index < 3 ? `style="animation-delay: ${0.4 + index * 0.1}s"` : '';
+  const isFree = FREE_SOURCES.includes(event.source);
 
   return `
     <div class="event-card" data-id="${event.id}" data-category="${event.category}" data-start-date="${event.start_date || ''}" data-end-date="${event.end_date || ''}" ${animationDelay} role="article" tabindex="0">
@@ -940,6 +941,7 @@ function createEventCard(event, index) {
         <div class="event-date">${formatEventDate(event)}</div>
         <div class="event-location">${event.location}</div>
       </div>
+      ${isFree ? '<div class="event-free-badge">FREE</div>' : ''}
     </div>
   `;
 }
