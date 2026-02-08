@@ -1168,7 +1168,10 @@ async function scrapeAllEvents() {
         console.error('Guggenheim Puppeteer failed:', err.message);
         return [];
       }),
-      scrapeAMNH(),
+      scrapeWithPuppeteer(CONFIGS.amnh).catch(err => {
+        console.error('AMNH Puppeteer failed:', err.message);
+        return [];
+      }),
       scrapeNewMuseum(),
       scrapeTheLocalGirl(),
       scrapeWithPuppeteer(CONFIGS.visitNJ).catch(err => {

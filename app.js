@@ -281,6 +281,7 @@ let manualRegionOverride = localStorage.getItem('soireeManualRegion') === 'true'
 const REGIONS = {
   'nyc': { name: 'New York City', shortName: 'NYC', coords: { lat: 40.7128, lng: -74.0060 } },
   'hoboken-jc': { name: 'Hoboken/Jersey City', shortName: 'Hoboken/JC', coords: { lat: 40.7439, lng: -74.0324 } },
+  'nj-state': { name: 'New Jersey (All)', shortName: 'NJ', coords: { lat: 40.0583, lng: -74.4057 } },
   'north-nj': { name: 'North NJ', shortName: 'North', coords: { lat: 40.7357, lng: -74.1724 } },
   'central-nj': { name: 'Central NJ', shortName: 'Central', coords: { lat: 40.3573, lng: -74.6672 } },
   'south-nj': { name: 'South NJ', shortName: 'South', coords: { lat: 39.9259, lng: -75.0259 } },
@@ -655,7 +656,7 @@ const matchesCurrentRegion = (event) => {
   const r = getEventRegion(event);
   if (currentRegion === 'nyc') return r === 'nyc';
   if (currentRegion === 'hoboken-jc') return r === 'hoboken-jc';
-  if (currentRegion === 'jersey-shore') return r !== 'nyc' && r !== 'hoboken-jc';
+  if (currentRegion === 'nj-state') return r !== 'nyc' && r !== 'hoboken-jc';
   return r === currentRegion;
 };
 
@@ -725,7 +726,7 @@ function updateFilterCounts() {
 // Render Events
 function renderEvents() {
   // Check if current region is legitimate
-  const validRegions = ['nyc', 'hoboken-jc', 'north-nj', 'central-nj', 'south-nj', 'jersey-shore'];
+  const validRegions = ['nyc', 'hoboken-jc', 'nj-state', 'north-nj', 'central-nj', 'south-nj', 'jersey-shore'];
   if (currentRegion && !validRegions.includes(currentRegion)) {
     const regionData = REGIONS[currentRegion];
     renderComingSoon(regionData ? regionData.name : 'this area');

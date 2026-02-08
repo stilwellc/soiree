@@ -265,6 +265,17 @@ const CONFIGS = {
             date: ['.date', 'time', '[class*="date"]'],
             location: ['.location', '.venue', '[class*="location"]']
         }
+    },
+    amnh: {
+        name: 'American Museum of Natural History',
+        url: 'https://www.amnh.org/calendar',
+        defaultLocation: 'American Museum of Natural History',
+        selectors: {
+            container: ['.mod.event', '.calendar-event', '.result-item', 'article', '.listing-item'],
+            title: ['h3', 'h4', 'a', '.title'],
+            date: ['.date', '.time', '.event-date'],
+            location: ['.location', '.venue']
+        }
     }
 };
 
