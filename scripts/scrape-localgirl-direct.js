@@ -139,10 +139,13 @@ async function scrapeTheLocalGirl() {
         // Fetch details for each event to get the real date
         console.log(`Fetching details for ${basicEvents.length} events...`);
 
+        let successCount = 0;
+        let failCount = 0;
+
         await Promise.allSettled(basicEvents.map(async (event) => {
             try {
                 const detailRes = await axios.get(event.url, {
-                    timeout: 5000,
+                    timeout: 8000,
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -152,28 +155,76 @@ async function scrapeTheLocalGirl() {
                 });
                 const $detail = cheerio.load(detailRes.data);
 
-                const dateText = $detail('h1').next('p').text().trim();
+                // Try multiple selectors to find the date
+                let dateText = null;
 
-                if (dateText && dateText.length < 50) {
-                    if (dateText.match(/([A-Z][a-z]+ \d{1,2}, \d{4})/)) {
-                        event.date = dateText;
+                // Method 1: h1 next p (most common)
+                dateText = $detail('h1').next('p').text().trim();
+
+                // Method 2: Look for time element
+                if (!dateText || dateText.length > 100) {
+                    const timeText = $detail('time').first().text().trim();
+                    if (timeText && timeText.length < 50) {
+                        dateText = timeText;
+                    }
+                }
+
+                // Method 3: Search for date pattern in first few paragraphs
+                if (!dateText || dateText.length > 100) {
+                    $detail('p').slice(0, 5).each((i, elem) => {
+                        const text = $detail(elem).text().trim();
+                        if (text.match(/^[A-Z][a-z]+ \d{1,2}, \d{4}/)) {
+                            dateText = text;
+                            return false; // break
+                        }
+                    });
+                }
+
+                // Parse the date if we found one
+                if (dateText && dateText.length < 100) {
+                    const dateMatch = dateText.match(/([A-Z][a-z]+ \d{1,2}, \d{4})/);
+                    if (dateMatch) {
+                        event.date = dateMatch[1];
+
+                        // Extract time if present (e.g., "February 8, 2026 @ 2:00 PM")
                         if (dateText.includes('@')) {
                             const parts = dateText.split('@');
                             event.date = parts[0].trim();
                             event.time = parts[1].trim();
+                        } else if (dateText.includes(' at ')) {
+                            const parts = dateText.split(' at ');
+                            event.date = parts[0].trim();
+                            event.time = parts[1].trim();
                         }
+
                         const { start_date, end_date } = parseDateText(event.date, event.time);
-                        event.start_date = start_date;
-                        event.end_date = end_date;
+                        if (start_date) {
+                            event.start_date = start_date;
+                            event.end_date = end_date;
+                            successCount++;
+                            console.log(`  ✓ ${event.name.substring(0, 40)}... → ${start_date}`);
+                        } else {
+                            failCount++;
+                        }
+                    } else {
+                        failCount++;
                     }
+                } else {
+                    failCount++;
                 }
+
                 events.push(event);
             } catch (e) {
-                console.log(`Failed to fetch details for ${event.url}: ${e.message}`);
+                console.log(`  ✗ ${event.name.substring(0, 40)}... (${e.message})`);
+                failCount++;
                 events.push(event);
             }
+
+            // Small delay to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 100));
         }));
 
+        console.log(`\nDate extraction: ${successCount} successful, ${failCount} failed`);
         return events;
 
     } catch (error) {
