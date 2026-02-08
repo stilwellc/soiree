@@ -290,6 +290,9 @@ const REGIONS = {
   'philly': { name: 'Philadelphia', shortName: 'Philly', coords: { lat: 39.9526, lng: -75.1652 } }
 };
 
+// Data Sources deemed "Always Free" by user definition
+const FREE_SOURCES = ['NYC For Free'];
+
 // DOM Elements
 const eventsList = document.getElementById('events-list');
 const filterChips = document.querySelectorAll('.filter-chip');
@@ -746,10 +749,10 @@ function renderEvents() {
     // Use consistent region logic
     const matchesRegion = matchesCurrentRegion(event);
 
-    // Free Filter Logic (Source-based: 'NYC For Free' only)
+    // Free Filter Logic (Source-based: User Defined)
     let matchesFree = true;
     if (freeMode) {
-      matchesFree = (event.source === 'NYC For Free');
+      matchesFree = FREE_SOURCES.includes(event.source);
     }
 
     return matchesFilter && matchesSearch && matchesTime && matchesRegion && matchesFree;
