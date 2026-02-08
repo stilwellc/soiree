@@ -63,14 +63,27 @@ module.exports = async function handler(req, res) {
     // Fetch events (only show future events with dates)
     // Use CURRENT_DATE - 1 to account for timezone differences (EST is UTC-5)
     // This ensures events happening "today" in EST are still shown even after midnight UTC
+    // Sort: Real dates first (chronologically), then placeholder dates (Feb 15) at bottom
     let result;
     if (category && category !== 'all') {
       result = await pool.query(
-        'SELECT * FROM events WHERE category = $1 AND start_date IS NOT NULL AND start_date >= (CURRENT_DATE - INTERVAL \'1 day\') ORDER BY start_date ASC, created_at DESC',
+        `SELECT * FROM events 
+         WHERE category = $1 AND start_date IS NOT NULL AND start_date >= (CURRENT_DATE - INTERVAL '1 day') 
+         ORDER BY 
+           CASE WHEN start_date = '2026-02-15' THEN 1 ELSE 0 END,
+           start_date ASC, 
+           created_at DESC`,
         [category]
       );
     } else {
-      result = await pool.query('SELECT * FROM events WHERE start_date IS NOT NULL AND start_date >= (CURRENT_DATE - INTERVAL \'1 day\') ORDER BY start_date ASC, created_at DESC');
+      result = await pool.query(
+        `SELECT * FROM events 
+         WHERE start_date IS NOT NULL AND start_date >= (CURRENT_DATE - INTERVAL '1 day') 
+         ORDER BY 
+           CASE WHEN start_date = '2026-02-15' THEN 1 ELSE 0 END,
+           start_date ASC, 
+           created_at DESC`
+      );
     }
 
     return res.status(200).json({
