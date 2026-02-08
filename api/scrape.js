@@ -1369,7 +1369,7 @@ module.exports = async function handler(req, res) {
              highlights = EXCLUDED.highlights,
              start_date = EXCLUDED.start_date,
              end_date = EXCLUDED.end_date,
-             updated_at = CURRENT_TIMESTAMP
+             scraped_at = CURRENT_TIMESTAMP
            RETURNING (xmax = 0) AS inserted`,
           [event.name, event.category, event.date, event.time, event.location,
           event.address, event.price, event.spots, event.image, event.description,
