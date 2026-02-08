@@ -1160,24 +1160,14 @@ async function scrapeAllEvents() {
       scrapeTimeOut(),
       scrapeNYCForFree(),
       scrapeWhitney(),
-      scrapeWithPuppeteer(CONFIGS.moma).catch(err => {
-        console.error('MoMA Puppeteer failed:', err.message);
-        return [];
-      }),
-      scrapeWithPuppeteer(CONFIGS.guggenheim).catch(err => {
-        console.error('Guggenheim Puppeteer failed:', err.message);
-        return [];
-      }),
-      scrapeWithPuppeteer(CONFIGS.amnh).catch(err => {
-        console.error('AMNH Puppeteer failed:', err.message);
-        return [];
-      }),
+      // MoMA, Guggenheim, AMNH, Visit NJ now scraped via GitHub Actions direct scripts
+      // (Puppeteer doesn't work in Vercel serverless functions)
+      Promise.resolve([]), // momaEvents placeholder
+      Promise.resolve([]), // guggenheimEvents placeholder
+      Promise.resolve([]), // amnhEvents placeholder
       scrapeNewMuseum(),
       scrapeTheLocalGirl(),
-      scrapeWithPuppeteer(CONFIGS.visitNJ).catch(err => {
-        console.error('Visit NJ Puppeteer failed:', err.message);
-        return [];
-      })
+      Promise.resolve([])  // visitNJEvents placeholder
     ]);
 
     // Merge all events
