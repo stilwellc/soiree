@@ -1,0 +1,253 @@
+/* Technical / High-End Theme for About Page */
+:root {
+    --tech-bg: #0a0a0a;
+    --tech-accent: #D4AF37;
+    /* Gold */
+    --tech-accent-dim: rgba(212, 175, 55, 0.1);
+    --tech-text: #e0e0e0;
+    --tech-text-dim: #666;
+    --tech-border: rgba(255, 255, 255, 0.1);
+    --tech-glow: 0 0 10px rgba(212, 175, 55, 0.2);
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Roboto Mono', monospace;
+}
+
+#about-view {
+    background-color: var(--tech-bg);
+    color: var(--tech-text);
+    font-family: var(--font-primary);
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Background Grid */
+.tech-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(var(--tech-border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--tech-border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center;
+    opacity: 0.1;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.tech-container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 20px;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 40px;
+    height: calc(100vh - 60px);
+    /* Account for navbar */
+}
+
+@media (max-width: 900px) {
+    .tech-container {
+        grid-template-columns: 1fr;
+        height: auto;
+        padding-top: 100px;
+    }
+}
+
+/* Main Visual Area */
+.tech-visual {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+}
+
+.tech-header {
+    border-bottom: 1px solid var(--tech-border);
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.tech-overline {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--tech-accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tech-overline::before {
+    content: '';
+    display: block;
+    width: 8px;
+    height: 8px;
+    background: var(--tech-accent);
+    box-shadow: var(--tech-glow);
+    border-radius: 50%;
+}
+
+.tech-title {
+    font-size: 48px;
+    font-weight: 300;
+    letter-spacing: -1px;
+    margin: 0;
+    background: linear-gradient(180deg, #fff, #888);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.tech-canvas-wrapper {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--tech-border);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+}
+
+#network-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.tech-overlay-stats {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    gap: 30px;
+    pointer-events: none;
+}
+
+.tech-stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.tech-stat-val {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    color: #fff;
+    font-weight: 500;
+}
+
+.tech-stat-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Sidebar / HUD */
+.tech-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.tech-panel {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--tech-border);
+    padding: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.tech-panel-header {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--tech-border);
+    padding-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.tech-log-container {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #aaa;
+    height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tech-log-entry {
+    display: flex;
+    gap: 10px;
+}
+
+.tech-log-time {
+    color: #555;
+}
+
+.tech-log-msg {
+    color: var(--tech-text);
+}
+
+.tech-log-msg.success {
+    color: #4CAF50;
+}
+
+.tech-log-msg.warn {
+    color: #FFC107;
+}
+
+/* Legend */
+.tech-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.tech-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #ccc;
+    font-family: var(--font-mono);
+}
+
+.tech-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.tech-footer {
+    margin-top: auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: #444;
+    text-align: center;
+}
+
+/* Scrollbar for log */
+.tech-log-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tech-log-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tech-log-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+}

@@ -1509,10 +1509,71 @@ async function initNetworkGraph() {
   animate();
 
   // Update stats
-  document.getElementById('network-nodes').textContent = sources.length;
-  document.getElementById('network-events').textContent = allEvents.length;
+  const nodesEl = document.getElementById('network-nodes');
+  const eventsEl = document.getElementById('network-events');
+  if (nodesEl) nodesEl.textContent = sources.length;
+  if (eventsEl) eventsEl.textContent = allEvents.length;
 
-  // Count unique regions
+  // --- Technical Dashboard Logic ---
+
+  // Populate Legend
+  const legendEl = document.getElementById('js-tech-legend');
+  if (legendEl) {
+    legendEl.innerHTML = '';
+    const sortedSources = sources.sort();
+
+    sortedSources.forEach(source => {
+      // Determine color (reuse logic roughly or default)
+      // For simplicity, we'll try to match the graph's color logic or default to gray
+      // We can iterate sourceMap but that is local 
+      // Let's just create simple items
+      const item = document.createElement('div');
+      item.className = 'tech-legend-item';
+      item.innerHTML = `
+        <div class="tech-dot" style="background: var(--tech-accent);"></div>
+        <span>${source}</span>
+      `;
+      legendEl.appendChild(item);
+    });
+  }
+
+  // Populate Tech Log
+  const logEl = document.getElementById('js-tech-log');
+  if (logEl && !logEl.hasAttribute('data-initialized')) {
+    logEl.setAttribute('data-initialized', 'true');
+    const logs = [
+      { msg: 'System initialized', type: 'success' },
+      { msg: 'Connecting to database...', type: 'info' },
+      { msg: 'Fetching event data streams...', type: 'info' },
+      { msg: `Parsing JSON payload (${(allEvents.length * 0.5).toFixed(1)} KB)`, type: 'success' },
+      { msg: ' Analyzing geospatial vectors...', type: 'info' },
+      { msg: 'Node clustering active', type: 'success' },
+      { msg: 'UI Layer mounted', type: 'success' }
+    ];
+
+    // Initial fill
+    logs.forEach(l => addLog(l.msg, l.type));
+
+    // Random activity simulator
+    setInterval(() => {
+      const verbs = ['Ping', 'Sync', 'Optimizing', 'Calibrating', 'Verifying'];
+      const nouns = ['Node', 'Packet', 'Latency', 'Cache', 'Buffer'];
+      const msg = `${verbs[Math.floor(Math.random() * verbs.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]} ${Math.floor(Math.random() * 999)}`;
+      addLog(msg, 'info');
+    }, 2500);
+
+    function addLog(msg, type = 'info') {
+      const entry = document.createElement('div');
+      entry.className = 'tech-log-entry';
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      entry.innerHTML = `
+        <span class="tech-log-time">[${time}]</span>
+        <span class="tech-log-msg ${type}">${msg}</span>
+      `;
+      logEl.insertBefore(entry, logEl.firstChild);
+      if (logEl.children.length > 20) logEl.lastChild.remove();
+    }
+  }
   const regions = new Set();
   allEvents.forEach(e => {
     const loc = e.location.toLowerCase();
