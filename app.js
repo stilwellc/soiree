@@ -276,6 +276,7 @@ let favorites = JSON.parse(localStorage.getItem('soireeFavorites') || '[]');
 let currentRegion = localStorage.getItem('soireeRegion') || null;
 let detectedRegion = null;
 let manualRegionOverride = localStorage.getItem('soireeManualRegion') === 'true';
+let freeMode = false;
 
 // Region Definitions
 const REGIONS = {
@@ -742,10 +743,12 @@ function renderEvents() {
       event.description.toLowerCase().includes(searchQuery);
     const matchesTime = matchesTimeFilter(event);
 
-    // Region Bucket Logic
+    // Use consistent region logic
     const matchesRegion = matchesCurrentRegion(event);
 
-    return matchesFilter && matchesSearch && matchesTime && matchesRegion;
+    const matchesFree = !freeMode || (event.price && event.price.toLowerCase().includes('free')) || event.source === 'NYC For Free';
+
+    return matchesFilter && matchesSearch && matchesTime && matchesRegion && matchesFree;
   });
 
   if (filteredEvents.length === 0) {
@@ -1663,11 +1666,23 @@ async function initNetworkGraph() {
   document.getElementById('network-regions').textContent = regions.size;
 }
 
+/* Free Mode Logic */
+function toggleFreeMode() {
+  freeMode = !freeMode;
+  const btn = document.getElementById('free-mode-toggle');
+  if (btn) btn.classList.toggle('active', freeMode);
+  renderEvents();
+}
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     init();
     initRotatingTitle();
+
+    const freeBtn = document.getElementById('free-mode-toggle');
+    if (freeBtn) freeBtn.addEventListener('click', toggleFreeMode);
+
     // Initialize network graph when About view is shown
     const aboutView = document.getElementById('about-view');
     const observer = new MutationObserver(() => {

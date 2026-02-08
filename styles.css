@@ -2142,3 +2142,61 @@ button:focus-visible,
   gap: 20px;
   flex-wrap: wrap;
 }
+/* Free Mode Toggle (High-End Sub-style) */
+.free-mode-toggle {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--dark);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  padding: 12px 20px;
+  border-radius: 99px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform: translateY(0);
+}
+
+.free-mode-toggle .icon {
+  font-size: 16px;
+  filter: grayscale(1);
+  transition: filter 0.3s;
+}
+
+.free-mode-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.free-mode-toggle.active {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+.free-mode-toggle.active .icon {
+  filter: grayscale(0);
+}
+
+@media (max-width: 600px) {
+  .free-mode-toggle {
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
