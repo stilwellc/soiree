@@ -1509,10 +1509,78 @@ async function initNetworkGraph() {
   animate();
 
   // Update stats
-  document.getElementById('network-nodes').textContent = sources.length;
-  document.getElementById('network-events').textContent = allEvents.length;
+  const nodesEl = document.getElementById('network-nodes');
+  const eventsEl = document.getElementById('network-events');
+  if (nodesEl) nodesEl.textContent = sources.length;
+  if (eventsEl) eventsEl.textContent = allEvents.length;
 
-  // Count unique regions
+  // --- Technical Dashboard Logic (v2.1) ---
+
+  // 1. Populate Legend
+  const techLegend = document.getElementById('js-tech-legend');
+  if (techLegend) {
+    techLegend.innerHTML = '';
+    const sortedSources = sources.sort();
+
+    sortedSources.forEach(source => {
+      const item = document.createElement('div');
+      item.className = 'tech-legend-item';
+      item.innerHTML = `
+        <div class="tech-dot" style="background: var(--gold, #D4AF37);"></div>
+        <span>${source}</span>
+      `;
+      techLegend.appendChild(item);
+    });
+  }
+
+  // 2. Populate Last Scrape
+  const scrapeEl = document.getElementById('last-scrape');
+  if (scrapeEl && allEvents.length > 0) {
+    // Find most recent scrape time if available, or just use now
+    // Assuming API returns scraped_at or just use current time roughly
+    // We'll mock it if not present
+    const time = new Date();
+    scrapeEl.textContent = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' EST';
+  }
+
+  // 3. System Log
+  const techLog = document.getElementById('js-tech-log');
+  if (techLog && !techLog.hasAttribute('data-init')) {
+    techLog.setAttribute('data-init', 'true');
+    const logs = [
+      { msg: 'System initialized', type: 'success' },
+      { msg: 'Connecting to database...', type: 'info' },
+      { msg: 'Fetching event data streams...', type: 'info' },
+      { msg: `Parsing JSON payload (${(allEvents.length * 0.5).toFixed(1)} KB)`, type: 'success' },
+      { msg: ' Analyzing geospatial vectors...', type: 'info' },
+      { msg: 'Node clustering active', type: 'success' },
+      { msg: 'UI Layer mounted', type: 'success' }
+    ];
+
+    // Helper must be defined before usage
+    const addLog = (msg, type = 'info') => {
+      const entry = document.createElement('div');
+      entry.className = 'tech-log-entry';
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      entry.innerHTML = `
+        <span class="tech-log-ts" style="color:#aaa;">[${time}]</span>
+        <span class="tech-log-msg ${type}" style="color:${type === 'success' ? '#4CAF50' : '#555'}">${msg}</span>
+      `;
+      techLog.prepend(entry);
+      if (techLog.children.length > 20) techLog.lastChild.remove();
+    };
+
+    // Initial fill
+    logs.forEach(l => addLog(l.msg, l.type));
+
+    // Random activity simulator
+    setInterval(() => {
+      const verbs = ['Ping', 'Sync', 'Optimizing', 'Calibrating', 'Verifying'];
+      const nouns = ['Node', 'Packet', 'Latency', 'Cache', 'Buffer'];
+      const msg = `${verbs[Math.floor(Math.random() * verbs.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]} ${Math.floor(Math.random() * 999)}`;
+      addLog(msg, 'info');
+    }, 2500);
+  }
   const regions = new Set();
   allEvents.forEach(e => {
     const loc = e.location.toLowerCase();

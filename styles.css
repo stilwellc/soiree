@@ -1891,3 +1891,198 @@ button:focus-visible,
     font-size: 28px;
   }
 }
+/* High-End Technical Dashboard (About Page) */
+.technical-dashboard {
+  margin-top: 40px;
+  border-top: 1px solid #eaeaea;
+  padding-top: 40px;
+}
+
+.tech-header-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.version-tag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #666;
+  margin-left: 10px;
+  font-weight: normal;
+}
+
+.status-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+  padding: 6px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.status-dot-pulse {
+  width: 8px;
+  height: 8px;
+  background: #4CAF50;
+  border-radius: 50%;
+  box-shadow: 0 0 0 rgba(76, 175, 80, 0.4);
+  animation: tech-pulse 2s infinite;
+}
+
+@keyframes tech-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(76, 175, 80, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+}
+
+.tech-dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+@media (max-width: 800px) {
+  .tech-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tech-card {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.graph-module {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.module-header {
+  padding: 12px 16px;
+  background: #fafafa;
+  border-bottom: 1px solid #eaeaea;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: #888;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.module-id { color: #ccc; }
+
+.graph-wrapper-refined {
+  position: relative;
+  flex: 1;
+  background: #fff; /* or dark if needed */
+}
+
+.graph-overlay {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  gap: 20px;
+}
+
+.g-stat { display: flex; flex-direction: column; }
+.g-val { font-size: 20px; font-weight: 600; font-family: ui-monospace, monospace; line-height: 1.2; }
+.g-lbl { font-size: 10px; color: #999; letter-spacing: 0.5px; }
+
+.tech-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.specs-list { padding: 16px; }
+
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 13px;
+}
+.spec-item:last-child { border-bottom: none; }
+
+.spec-key { color: #666; }
+.spec-val { font-family: ui-monospace, monospace; font-weight: 500; }
+
+.tech-log-refined {
+  height: 150px;
+  overflow-y: hidden; /* Or auto */
+  padding: 12px;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: #666;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fafafa;
+}
+
+.tech-log-entry { display: flex; gap: 8px; }
+.tech-log-ts { color: #bbb; }
+.tech-log-msg.success { color: #4CAF50; }
+.tech-log-msg.info { color: #555; }
+
+.tech-legend-refined {
+  padding: 12px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-top: 1px solid #eaeaea;
+}
+
+.tech-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #555;
+  font-family: ui-monospace, monospace;
+  background: #f5f5f5;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.tech-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+.github-button-refined {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid #eaeaea;
+  border-radius: 6px;
+  color: #333;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.github-button-refined:hover {
+  background: #f5f5f5;
+  border-color: #ddd;
+}
+.links-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
