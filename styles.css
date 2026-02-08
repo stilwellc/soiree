@@ -1891,6 +1891,7 @@ button:focus-visible,
     font-size: 28px;
   }
 }
+
 /* High-End Technical Dashboard (About Page) */
 .technical-dashboard {
   margin-top: 40px;
@@ -1939,15 +1940,23 @@ button:focus-visible,
 }
 
 @keyframes tech-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
-  70% { box-shadow: 0 0 0 6px rgba(76, 175, 80, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 6px rgba(76, 175, 80, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+  }
 }
 
 .tech-dashboard-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
   margin-top: 30px;
 }
 
@@ -1962,7 +1971,7 @@ button:focus-visible,
   border: 1px solid #eaeaea;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .graph-module {
@@ -1983,12 +1992,15 @@ button:focus-visible,
   justify-content: space-between;
 }
 
-.module-id { color: #ccc; }
+.module-id {
+  color: #ccc;
+}
 
 .graph-wrapper-refined {
   position: relative;
   flex: 1;
-  background: #fff; /* or dark if needed */
+  background: #fff;
+  /* or dark if needed */
 }
 
 .graph-overlay {
@@ -1999,9 +2011,23 @@ button:focus-visible,
   gap: 20px;
 }
 
-.g-stat { display: flex; flex-direction: column; }
-.g-val { font-size: 20px; font-weight: 600; font-family: ui-monospace, monospace; line-height: 1.2; }
-.g-lbl { font-size: 10px; color: #999; letter-spacing: 0.5px; }
+.g-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.g-val {
+  font-size: 20px;
+  font-weight: 600;
+  font-family: ui-monospace, monospace;
+  line-height: 1.2;
+}
+
+.g-lbl {
+  font-size: 10px;
+  color: #999;
+  letter-spacing: 0.5px;
+}
 
 .tech-side-column {
   display: flex;
@@ -2009,7 +2035,9 @@ button:focus-visible,
   gap: 20px;
 }
 
-.specs-list { padding: 16px; }
+.specs-list {
+  padding: 16px;
+}
 
 .spec-item {
   display: flex;
@@ -2018,14 +2046,24 @@ button:focus-visible,
   border-bottom: 1px solid #f5f5f5;
   font-size: 13px;
 }
-.spec-item:last-child { border-bottom: none; }
 
-.spec-key { color: #666; }
-.spec-val { font-family: ui-monospace, monospace; font-weight: 500; }
+.spec-item:last-child {
+  border-bottom: none;
+}
+
+.spec-key {
+  color: #666;
+}
+
+.spec-val {
+  font-family: ui-monospace, monospace;
+  font-weight: 500;
+}
 
 .tech-log-refined {
   height: 150px;
-  overflow-y: hidden; /* Or auto */
+  overflow-y: hidden;
+  /* Or auto */
   padding: 12px;
   font-family: ui-monospace, monospace;
   font-size: 11px;
@@ -2036,10 +2074,22 @@ button:focus-visible,
   background: #fafafa;
 }
 
-.tech-log-entry { display: flex; gap: 8px; }
-.tech-log-ts { color: #bbb; }
-.tech-log-msg.success { color: #4CAF50; }
-.tech-log-msg.info { color: #555; }
+.tech-log-entry {
+  display: flex;
+  gap: 8px;
+}
+
+.tech-log-ts {
+  color: #bbb;
+}
+
+.tech-log-msg.success {
+  color: #4CAF50;
+}
+
+.tech-log-msg.info {
+  color: #555;
+}
 
 .tech-legend-refined {
   padding: 12px 16px;
@@ -2061,7 +2111,11 @@ button:focus-visible,
   border-radius: 10px;
 }
 
-.tech-dot { width: 6px; height: 6px; border-radius: 50%; }
+.tech-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
 
 .github-button-refined {
   display: inline-flex;
@@ -2076,10 +2130,12 @@ button:focus-visible,
   font-weight: 500;
   transition: all 0.2s;
 }
+
 .github-button-refined:hover {
   background: #f5f5f5;
   border-color: #ddd;
 }
+
 .links-row {
   display: flex;
   align-items: center;
