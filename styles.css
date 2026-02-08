@@ -188,6 +188,7 @@ body {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -208,6 +209,7 @@ body {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -229,6 +231,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -343,6 +346,7 @@ body {
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -404,6 +408,7 @@ body {
   from {
     transform: translateY(100%);
   }
+
   to {
     transform: translateY(0);
   }
@@ -427,9 +432,12 @@ body {
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -494,6 +502,7 @@ body {
     width: 0;
     opacity: 0;
   }
+
   to {
     width: 40px;
     opacity: 0.4;
@@ -622,6 +631,7 @@ body {
     gap: 10px;
     padding: 0 25px 20px;
   }
+
   .filter-chip {
     padding: 10px 20px;
   }
@@ -655,12 +665,15 @@ body {
 .event-card:nth-child(1) {
   animation-delay: 0.4s;
 }
+
 .event-card:nth-child(2) {
   animation-delay: 0.5s;
 }
+
 .event-card:nth-child(3) {
   animation-delay: 0.6s;
 }
+
 .event-card:nth-child(n+4) {
   animation-delay: 0.7s;
 }
@@ -670,6 +683,7 @@ body {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1019,10 +1033,13 @@ body {
 }
 
 @keyframes capacity-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
   }
+
   50% {
     transform: scale(1.05);
     box-shadow: 0 6px 16px rgba(231, 76, 60, 0.5);
@@ -1130,8 +1147,15 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* Modal */
@@ -1174,10 +1198,12 @@ body {
     opacity: 0;
     transform: translateY(60px) scale(0.92);
   }
+
   60% {
     opacity: 1;
     transform: translateY(-8px) scale(1.01);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -1473,6 +1499,7 @@ body {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -1772,9 +1799,36 @@ button:focus-visible,
   height: auto;
   max-width: 600px;
   display: block;
-  margin: 0 auto 24px;
+  margin: 0 auto 16px;
   border-radius: 12px;
   background: radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.03) 0%, transparent 70%);
+}
+
+.network-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.legend-label {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
 }
 
 .network-stats {
@@ -1823,16 +1877,16 @@ button:focus-visible,
   .network-graph-container {
     padding: 24px 16px;
   }
-  
+
   #network-graph {
     max-height: 300px;
   }
-  
+
   .network-stats {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .network-stat-value {
     font-size: 28px;
   }

@@ -1,303 +1,330 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="description" content="Discover curated pop-up events in New York City. Art galleries, live music, culinary experiences, and fashion showcases - all free entry.">
-<meta name="keywords" content="NYC events, pop-ups, art, music, culinary, fashion, free events, New York City">
-<meta name="theme-color" content="#FAF8F3">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description"
+    content="Discover curated pop-up events in New York City. Art galleries, live music, culinary experiences, and fashion showcases - all free entry.">
+  <meta name="keywords" content="NYC events, pop-ups, art, music, culinary, fashion, free events, New York City">
+  <meta name="theme-color" content="#FAF8F3">
 
-<!-- Open Graph -->
-<meta property="og:title" content="Soirée - Curated Pop-Up Events">
-<meta property="og:description" content="Discover exclusive pop-up events in NYC. Art, music, culinary experiences & more.">
-<meta property="og:type" content="website">
-<meta property="og:image" content="https://soiree-one.vercel.app/api/og">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:type" content="image/svg+xml">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Soirée - Curated Pop-Up Events">
+  <meta property="og:description"
+    content="Discover exclusive pop-up events in NYC. Art, music, culinary experiences & more.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://soiree-one.vercel.app/api/og">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/svg+xml">
 
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Soirée - Curated Pop-Up Events">
-<meta name="twitter:description" content="Discover exclusive pop-up events in NYC">
-<meta name="twitter:image" content="https://soiree-one.vercel.app/api/og">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Soirée - Curated Pop-Up Events">
+  <meta name="twitter:description" content="Discover exclusive pop-up events in NYC">
+  <meta name="twitter:image" content="https://soiree-one.vercel.app/api/og">
 
-<title>Soirée - Curated Pop-Up Events in NYC</title>
+  <title>Soirée - Curated Pop-Up Events in NYC</title>
 
-<!-- Fonts -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
 
-<!-- Google Maps -->
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDummy_ReplaceWithRealKey&callback=initMap"></script>
+  <!-- Google Maps -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDummy_ReplaceWithRealKey&callback=initMap"></script>
 
-<!-- Styles -->
-<link rel="stylesheet" href="styles.css">
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css">
 
-<!-- Favicon -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+  <!-- Favicon -->
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
 </head>
+
 <body>
-<!-- Navigation -->
-<nav class="nav-bar" role="navigation" aria-label="Main navigation">
-  <div class="nav-brand" aria-label="Soirée">✨</div>
-  <div class="nav-items">
-    <div class="nav-item active" data-view="discover" role="button" tabindex="0" aria-label="All Events">
-      <span class="nav-label">All</span>
-    </div>
-    <div class="nav-item" data-view="today" role="button" tabindex="0" aria-label="Today's events">
-      <span class="nav-label">Today</span>
-    </div>
-    <div class="nav-item" data-view="week" role="button" tabindex="0" aria-label="This week's events">
-      <span class="nav-label">This Week</span>
-    </div>
-    <div class="nav-item nav-item-icon" data-view="favorites" role="button" tabindex="0" aria-label="Favorites">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-      </svg>
-      <span class="favorite-badge" style="display: none;">0</span>
-    </div>
-    <div class="nav-item" data-view="about" role="button" tabindex="0" aria-label="About">
-      <span class="nav-label">About</span>
-    </div>
-  </div>
-</nav>
-
-<!-- Main Content -->
-<main class="app-container">
-  <!-- Discover View -->
-  <div id="discover-view">
-    <!-- Header -->
-    <header class="header">
-      <div class="decorative-line" aria-hidden="true"></div>
-      <p class="greeting">Curated for you</p>
-      <h1 class="title"><span class="title-rotating"><span class="title-word active">Tonight's</span><span class="title-word">Today's</span><span class="title-word">This Week's</span><span class="title-word">Tomorrow's</span></span><br>Soirée</h1>
-      <div class="location">Manhattan, New York</div>
-
-      <!-- Region Selector -->
-      <div class="region-selector">
-        <button class="region-toggle" id="region-toggle" aria-label="Change region">
-          <svg class="region-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-          <span class="region-name" id="current-region-name">NYC</span>
-          <svg class="region-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </button>
-
-        <div class="region-dropdown" id="region-dropdown" style="display: none;">
-          <div class="region-option" data-region="auto">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
-              <circle cx="12" cy="10" r="3"/>
-            </svg>
-            <span>Auto-detect location</span>
-          </div>
-          <div class="region-divider"></div>
-          <div class="region-option" data-region="nyc">
-            <span>New York City</span>
-          </div>
-          <div class="region-option" data-region="hoboken-jc">
-            <span>Hoboken/Jersey City</span>
-          </div>
-          <div class="region-option" data-region="jersey-shore">
-            <span>Jersey Shore</span>
-          </div>
-          <div class="region-option" data-region="philly">
-            <span>Philadelphia</span>
-          </div>
-        </div>
+  <!-- Navigation -->
+  <nav class="nav-bar" role="navigation" aria-label="Main navigation">
+    <div class="nav-brand" aria-label="Soirée">✨</div>
+    <div class="nav-items">
+      <div class="nav-item active" data-view="discover" role="button" tabindex="0" aria-label="All Events">
+        <span class="nav-label">All</span>
       </div>
-    </header>
-
-    <!-- Search -->
-    <section class="search-container" aria-label="Search events">
-      <div class="search-box">
-        <input
-          type="search"
-          id="search-input"
-          class="search-input"
-          placeholder="Search events, locations..."
-          aria-label="Search events"
-        >
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"></circle>
-          <path d="m21 21-4.35-4.35"></path>
+      <div class="nav-item" data-view="today" role="button" tabindex="0" aria-label="Today's events">
+        <span class="nav-label">Today</span>
+      </div>
+      <div class="nav-item" data-view="week" role="button" tabindex="0" aria-label="This week's events">
+        <span class="nav-label">This Week</span>
+      </div>
+      <div class="nav-item nav-item-icon" data-view="favorites" role="button" tabindex="0" aria-label="Favorites">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path
+            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+          </path>
         </svg>
-        <button id="search-clear" class="search-clear" aria-label="Clear search">×</button>
+        <span class="favorite-badge" style="display: none;">0</span>
       </div>
-    </section>
-
-    <!-- Filters -->
-    <section class="filters" role="radiogroup" aria-label="Event categories">
-      <button class="filter-chip active" data-filter="all" role="radio" aria-checked="true">All Events</button>
-      <button class="filter-chip" data-filter="art" role="radio" aria-checked="false">Art & Culture</button>
-      <button class="filter-chip" data-filter="culinary" role="radio" aria-checked="false">Food & Drink</button>
-      <button class="filter-chip" data-filter="music" role="radio" aria-checked="false">Music</button>
-      <button class="filter-chip" data-filter="perks" role="radio" aria-checked="false">Perks</button>
-      <button class="filter-chip" data-filter="lifestyle" role="radio" aria-checked="false">Lifestyle</button>
-      <button class="filter-chip" data-filter="community" role="radio" aria-checked="false">Community</button>
-    </section>
-
-    <!-- Events List -->
-    <section class="events" id="events-list" aria-label="Event listings">
-      <div class="loading">
-        <div class="loading-spinner" aria-hidden="true"></div>
-        <p>Loading amazing events...</p>
+      <div class="nav-item" data-view="about" role="button" tabindex="0" aria-label="About">
+        <span class="nav-label">About</span>
       </div>
-    </section>
-  </div>
-
-  <!-- Favorites View -->
-  <div id="favorites-view" class="hidden">
-    <header class="header">
-      <div class="decorative-line" aria-hidden="true"></div>
-      <p class="greeting">Your collection</p>
-      <h1 class="title">Saved<br>Events</h1>
-      <div class="location">Ready when you are</div>
-    </header>
-    <div class="empty-state">
-      <div class="empty-state-icon">❤️</div>
-      <div class="empty-state-title">No favorites yet</div>
-      <div class="empty-state-text">Start adding events you love to see them here</div>
     </div>
-  </div>
+  </nav>
 
-  <!-- About View -->
-  <div id="about-view" class="hidden">
-    <header class="header">
-      <div class="decorative-line" aria-hidden="true"></div>
-      <p class="greeting">Our story</p>
-      <h1 class="title">About<br>Soirée</h1>
-      <div class="location">Connecting NYC</div>
-    </header>
+  <!-- Main Content -->
+  <main class="app-container">
+    <!-- Discover View -->
+    <div id="discover-view">
+      <!-- Header -->
+      <header class="header">
+        <div class="decorative-line" aria-hidden="true"></div>
+        <p class="greeting">Curated for you</p>
+        <h1 class="title"><span class="title-rotating"><span class="title-word active">Tonight's</span><span
+              class="title-word">Today's</span><span class="title-word">This Week's</span><span
+              class="title-word">Tomorrow's</span></span><br>Soirée</h1>
+        <div class="location">Manhattan, New York</div>
 
-    <div class="about-content">
-      <section class="about-section">
-        <h2 class="about-heading">Our Mission</h2>
-        <p class="about-text">
-          Soirée curates the best pop-up events happening across New York City.
-          From intimate art gallery openings to exclusive culinary experiences,
-          we help you discover unique moments that make the city magical.
-        </p>
-      </section>
+        <!-- Region Selector -->
+        <div class="region-selector">
+          <button class="region-toggle" id="region-toggle" aria-label="Change region">
+            <svg class="region-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              aria-hidden="true">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <span class="region-name" id="current-region-name">NYC</span>
+            <svg class="region-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
 
-      <section class="about-section">
-        <h2 class="about-heading">Impact</h2>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-number" id="stat-events">-</div>
-            <div class="stat-label">Events Connected</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="stat-views">-</div>
-            <div class="stat-label">Page Views</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="stat-unique">-</div>
-            <div class="stat-label">Unique Experiences</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="about-section">
-        <h2 class="about-heading">How It Works</h2>
-        <p class="about-text">
-          We scan dozens of sources daily to find the most exciting pop-up events
-          in NYC. Our team curates each event to ensure quality and authenticity,
-          so you always discover something worth your time.
-        </p>
-      </section>
-
-      <section class="about-section">
-        <h2 class="about-heading">Data Network</h2>
-        <p class="about-text">
-          Our platform aggregates events from multiple trusted sources across the region.
-          Each node represents a data connection point in our network.
-        </p>
-        <div class="network-graph-container">
-          <canvas id="network-graph" width="600" height="400"></canvas>
-          <div class="network-stats">
-            <div class="network-stat">
-              <span class="network-stat-value" id="network-nodes">-</span>
-              <span class="network-stat-label">Active Nodes</span>
+          <div class="region-dropdown" id="region-dropdown" style="display: none;">
+            <div class="region-option" data-region="auto">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span>Auto-detect location</span>
             </div>
-            <div class="network-stat">
-              <span class="network-stat-value" id="network-events">-</span>
-              <span class="network-stat-label">Events Aggregated</span>
+            <div class="region-divider"></div>
+            <div class="region-option" data-region="nyc">
+              <span>New York City</span>
             </div>
-            <div class="network-stat">
-              <span class="network-stat-value" id="network-regions">-</span>
-              <span class="network-stat-label">Regions Covered</span>
+            <div class="region-option" data-region="hoboken-jc">
+              <span>Hoboken/Jersey City</span>
+            </div>
+            <div class="region-option" data-region="jersey-shore">
+              <span>Jersey Shore</span>
+            </div>
+            <div class="region-option" data-region="philly">
+              <span>Philadelphia</span>
             </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      <section class="about-section">
-        <h2 class="about-heading">Stay Connected</h2>
-        <p class="about-text">
-          New events are added daily. Bookmark your favorites and check back often
-          to never miss out on the city's best experiences.
-        </p>
-      </section>
-
-      <section class="about-section nerds-section">
-        <h2 class="about-heading">🤓 For the Nerds</h2>
-        <div class="nerds-content">
-          <div class="tech-detail">
-            <span class="tech-label">Last Scrape</span>
-            <span class="tech-value" id="last-scrape">Loading...</span>
-          </div>
-          <div class="tech-detail">
-            <span class="tech-label">Database</span>
-            <span class="tech-value">PostgreSQL on Vercel</span>
-          </div>
-          <div class="tech-detail">
-            <span class="tech-label">Automation</span>
-            <span class="tech-value">GitHub Actions (Daily 6 AM EST)</span>
-          </div>
-          <div class="tech-detail">
-            <span class="tech-label">Frontend</span>
-            <span class="tech-value">Vanilla JS • Zero Dependencies</span>
-          </div>
-          <div class="tech-detail">
-            <span class="tech-label">Data Sources</span>
-            <span class="tech-value" id="source-count">Multiple NYC event platforms</span>
-          </div>
-          <div class="tech-detail">
-            <span class="tech-label">API Response</span>
-            <span class="tech-value" id="api-speed">~200ms</span>
-          </div>
-        </div>
-        <a href="https://github.com/stilwellc/soiree" target="_blank" rel="noopener noreferrer" class="github-link">
-          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+      <!-- Search -->
+      <section class="search-container" aria-label="Search events">
+        <div class="search-box">
+          <input type="search" id="search-input" class="search-input" placeholder="Search events, locations..."
+            aria-label="Search events">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
           </svg>
-          View Source on GitHub
-        </a>
+          <button id="search-clear" class="search-clear" aria-label="Clear search">×</button>
+        </div>
+      </section>
+
+      <!-- Filters -->
+      <section class="filters" role="radiogroup" aria-label="Event categories">
+        <button class="filter-chip active" data-filter="all" role="radio" aria-checked="true">All Events</button>
+        <button class="filter-chip" data-filter="art" role="radio" aria-checked="false">Art & Culture</button>
+        <button class="filter-chip" data-filter="culinary" role="radio" aria-checked="false">Food & Drink</button>
+        <button class="filter-chip" data-filter="music" role="radio" aria-checked="false">Music</button>
+        <button class="filter-chip" data-filter="perks" role="radio" aria-checked="false">Perks</button>
+        <button class="filter-chip" data-filter="lifestyle" role="radio" aria-checked="false">Lifestyle</button>
+        <button class="filter-chip" data-filter="community" role="radio" aria-checked="false">Community</button>
+      </section>
+
+      <!-- Events List -->
+      <section class="events" id="events-list" aria-label="Event listings">
+        <div class="loading">
+          <div class="loading-spinner" aria-hidden="true"></div>
+          <p>Loading amazing events...</p>
+        </div>
       </section>
     </div>
-  </div>
-</main>
 
-<!-- Event Detail Modal -->
-<div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-  <div class="modal">
-    <button id="modal-close" class="modal-close" aria-label="Close modal">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
-      </svg>
-    </button>
-    <div id="modal-body"></div>
-  </div>
-</div>
+    <!-- Favorites View -->
+    <div id="favorites-view" class="hidden">
+      <header class="header">
+        <div class="decorative-line" aria-hidden="true"></div>
+        <p class="greeting">Your collection</p>
+        <h1 class="title">Saved<br>Events</h1>
+        <div class="location">Ready when you are</div>
+      </header>
+      <div class="empty-state">
+        <div class="empty-state-icon">❤️</div>
+        <div class="empty-state-title">No favorites yet</div>
+        <div class="empty-state-text">Start adding events you love to see them here</div>
+      </div>
+    </div>
 
-<!-- App Script -->
-<script src="app.js"></script>
+    <!-- About View -->
+    <div id="about-view" class="hidden">
+      <header class="header">
+        <div class="decorative-line" aria-hidden="true"></div>
+        <p class="greeting">Our story</p>
+        <h1 class="title">About<br>Soirée</h1>
+        <div class="location">Connecting NYC</div>
+      </header>
+
+      <div class="about-content">
+        <section class="about-section">
+          <h2 class="about-heading">Our Mission</h2>
+          <p class="about-text">
+            Soirée curates the best pop-up events happening across New York City.
+            From intimate art gallery openings to exclusive culinary experiences,
+            we help you discover unique moments that make the city magical.
+          </p>
+        </section>
+
+        <section class="about-section">
+          <h2 class="about-heading">Impact</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number" id="stat-events">-</div>
+              <div class="stat-label">Events Connected</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="stat-views">-</div>
+              <div class="stat-label">Page Views</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="stat-unique">-</div>
+              <div class="stat-label">Unique Experiences</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="about-section">
+          <h2 class="about-heading">How It Works</h2>
+          <p class="about-text">
+            We scan dozens of sources daily to find the most exciting pop-up events
+            in NYC. Our team curates each event to ensure quality and authenticity,
+            so you always discover something worth your time.
+          </p>
+        </section>
+
+        <section class="about-section">
+          <h2 class="about-heading">Data Network</h2>
+          <p class="about-text">
+            Our platform aggregates events from multiple trusted sources across the region.
+            Each node represents a data connection point in our network.
+          </p>
+          <div class="network-graph-container">
+            <canvas id="network-graph" width="600" height="400"></canvas>
+            <div class="network-legend">
+              <div class="legend-item">
+                <div class="legend-dot" style="background: #D4AF37;"></div>
+                <span class="legend-label">Soirée Hub</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background: #4A90E2;"></div>
+                <span class="legend-label">NYC Sources</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background: #6B8E23;"></div>
+                <span class="legend-label">Hoboken/JC Sources</span>
+              </div>
+            </div>
+            <div class="network-stats">
+              <div class="network-stat">
+                <span class="network-stat-value" id="network-nodes">-</span>
+                <span class="network-stat-label">Active Nodes</span>
+              </div>
+              <div class="network-stat">
+                <span class="network-stat-value" id="network-events">-</span>
+                <span class="network-stat-label">Events Aggregated</span>
+              </div>
+              <div class="network-stat">
+                <span class="network-stat-value" id="network-regions">-</span>
+                <span class="network-stat-label">Regions Covered</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="about-section">
+          <h2 class="about-heading">Stay Connected</h2>
+          <p class="about-text">
+            New events are added daily. Bookmark your favorites and check back often
+            to never miss out on the city's best experiences.
+          </p>
+        </section>
+
+        <section class="about-section nerds-section">
+          <h2 class="about-heading">🤓 For the Nerds</h2>
+          <div class="nerds-content">
+            <div class="tech-detail">
+              <span class="tech-label">Last Scrape</span>
+              <span class="tech-value" id="last-scrape">Loading...</span>
+            </div>
+            <div class="tech-detail">
+              <span class="tech-label">Database</span>
+              <span class="tech-value">PostgreSQL on Vercel</span>
+            </div>
+            <div class="tech-detail">
+              <span class="tech-label">Automation</span>
+              <span class="tech-value">GitHub Actions (Daily 6 AM EST)</span>
+            </div>
+            <div class="tech-detail">
+              <span class="tech-label">Frontend</span>
+              <span class="tech-value">Vanilla JS • Zero Dependencies</span>
+            </div>
+            <div class="tech-detail">
+              <span class="tech-label">Data Sources</span>
+              <span class="tech-value" id="source-count">Multiple NYC event platforms</span>
+            </div>
+            <div class="tech-detail">
+              <span class="tech-label">API Response</span>
+              <span class="tech-value" id="api-speed">~200ms</span>
+            </div>
+          </div>
+          <a href="https://github.com/stilwellc/soiree" target="_blank" rel="noopener noreferrer" class="github-link">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+              <path
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+              </path>
+            </svg>
+            View Source on GitHub
+          </a>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Event Detail Modal -->
+  <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <button id="modal-close" class="modal-close" aria-label="Close modal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- App Script -->
+  <script src="app.js"></script>
 </body>
+
 </html>

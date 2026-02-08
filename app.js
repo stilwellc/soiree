@@ -1290,7 +1290,15 @@ function initNetworkGraph() {
   const height = 400;
 
   // Create nodes based on actual data sources (without revealing names)
-  const sourceCount = new Set(events.map(e => e.source)).size;
+  // Group events by source to determine region
+  const sourceMap = new Map();
+  events.forEach(e => {
+    if (!sourceMap.has(e.source)) {
+      sourceMap.set(e.source, []);
+    }
+    sourceMap.get(e.source).push(e);
+  });
+
   const nodes = [];
 
   // Central node
@@ -1302,26 +1310,39 @@ function initNetworkGraph() {
     vx: 0,
     vy: 0,
     fixed: true,
-    label: 'Soirée'
+    label: 'Soirée',
+    region: 'central'
   });
 
-  // Create nodes for each data source (anonymized)
-  const angleStep = (Math.PI * 2) / sourceCount;
+  // Create nodes for each data source (color-coded by region)
+  const sources = Array.from(sourceMap.keys());
+  const angleStep = (Math.PI * 2) / sources.length;
   const orbitRadius = Math.min(width, height) * 0.3;
 
-  for (let i = 0; i < sourceCount; i++) {
+  sources.forEach((source, i) => {
+    const sourceEvents = sourceMap.get(source);
+
+    // Determine region based on majority of events from this source
+    const hobokenCount = sourceEvents.filter(e => {
+      const loc = e.location.toLowerCase();
+      return loc.includes('hoboken') || loc.includes('jersey city');
+    }).length;
+
+    const isHoboken = hobokenCount > sourceEvents.length / 2;
+
     const angle = i * angleStep;
     nodes.push({
       x: width / 2 + Math.cos(angle) * orbitRadius,
       y: height / 2 + Math.sin(angle) * orbitRadius,
       radius: 6,
-      color: '#8B7355',
+      color: isHoboken ? '#6B8E23' : '#4A90E2', // Olive green for Hoboken, Blue for NYC
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.5,
       fixed: false,
-      label: `Node ${i + 1}`
+      label: `Node ${i + 1}`,
+      region: isHoboken ? 'hoboken' : 'nyc'
     });
-  }
+  });
 
   // Animation loop
   function animate() {
@@ -1404,7 +1425,7 @@ function initNetworkGraph() {
   animate();
 
   // Update stats
-  document.getElementById('network-nodes').textContent = sourceCount;
+  document.getElementById('network-nodes').textContent = sources.length;
   document.getElementById('network-events').textContent = events.length;
 
   // Count unique regions
