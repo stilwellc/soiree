@@ -1259,3 +1259,4 @@ if (document.readyState === 'loading') {
   init();
   initRotatingTitle();
 }
+// v1.0.1
