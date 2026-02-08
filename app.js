@@ -1269,9 +1269,172 @@ function setFixedTitle(text) {
   words[0].classList.add('active');
 }
 
+// ============================================================================
+// NETWORK GRAPH VISUALIZATION
+// ============================================================================
+
+function initNetworkGraph() {
+  const canvas = document.getElementById('network-graph');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  // Set canvas size
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 400 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const width = rect.width;
+  const height = 400;
+
+  // Create nodes based on actual data sources (without revealing names)
+  const sourceCount = new Set(events.map(e => e.source)).size;
+  const nodes = [];
+
+  // Central node
+  nodes.push({
+    x: width / 2,
+    y: height / 2,
+    radius: 12,
+    color: '#D4AF37',
+    vx: 0,
+    vy: 0,
+    fixed: true,
+    label: 'Soirée'
+  });
+
+  // Create nodes for each data source (anonymized)
+  const angleStep = (Math.PI * 2) / sourceCount;
+  const orbitRadius = Math.min(width, height) * 0.3;
+
+  for (let i = 0; i < sourceCount; i++) {
+    const angle = i * angleStep;
+    nodes.push({
+      x: width / 2 + Math.cos(angle) * orbitRadius,
+      y: height / 2 + Math.sin(angle) * orbitRadius,
+      radius: 6,
+      color: '#8B7355',
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+      fixed: false,
+      label: `Node ${i + 1}`
+    });
+  }
+
+  // Animation loop
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+
+    // Update node positions (simple physics)
+    nodes.forEach((node, i) => {
+      if (node.fixed) return;
+
+      // Attract to orbit
+      const dx = width / 2 - node.x;
+      const dy = height / 2 - node.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const targetDist = orbitRadius;
+      const force = (dist - targetDist) * 0.01;
+
+      node.vx += (dx / dist) * force;
+      node.vy += (dy / dist) * force;
+
+      // Damping
+      node.vx *= 0.95;
+      node.vy *= 0.95;
+
+      // Update position
+      node.x += node.vx;
+      node.y += node.vy;
+
+      // Repel from other nodes
+      nodes.forEach((other, j) => {
+        if (i === j) return;
+        const dx2 = other.x - node.x;
+        const dy2 = other.y - node.y;
+        const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+        if (dist2 < 50 && dist2 > 0) {
+          const repel = (50 - dist2) * 0.02;
+          node.vx -= (dx2 / dist2) * repel;
+          node.vy -= (dy2 / dist2) * repel;
+        }
+      });
+    });
+
+    // Draw connections
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.15)';
+    ctx.lineWidth = 1;
+    nodes.forEach((node, i) => {
+      if (i === 0) return; // Skip central node
+      ctx.beginPath();
+      ctx.moveTo(nodes[0].x, nodes[0].y);
+      ctx.lineTo(node.x, node.y);
+      ctx.stroke();
+    });
+
+    // Draw nodes
+    nodes.forEach((node, i) => {
+      // Glow effect
+      const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, node.radius * 2);
+      gradient.addColorStop(0, node.color + '40');
+      gradient.addColorStop(1, node.color + '00');
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.radius * 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Node circle
+      ctx.fillStyle = node.color;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.beginPath();
+      ctx.arc(node.x - node.radius * 0.3, node.y - node.radius * 0.3, node.radius * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  // Update stats
+  document.getElementById('network-nodes').textContent = sourceCount;
+  document.getElementById('network-events').textContent = events.length;
+
+  // Count unique regions
+  const regions = new Set();
+  events.forEach(e => {
+    const loc = e.location.toLowerCase();
+    if (loc.includes('hoboken') || loc.includes('jersey city')) {
+      regions.add('Hoboken/JC');
+    } else {
+      regions.add('NYC');
+    }
+  });
+  document.getElementById('network-regions').textContent = regions.size;
+}
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => { init(); initRotatingTitle(); });
+  document.addEventListener('DOMContentLoaded', () => {
+    init();
+    initRotatingTitle();
+    // Initialize network graph when About view is shown
+    const aboutView = document.getElementById('about-view');
+    const observer = new MutationObserver(() => {
+      if (!aboutView.classList.contains('hidden')) {
+        initNetworkGraph();
+        observer.disconnect();
+      }
+    });
+    observer.observe(aboutView, { attributes: true, attributeFilter: ['class'] });
+  });
 } else {
   init();
   initRotatingTitle();
