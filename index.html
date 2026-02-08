@@ -185,73 +185,136 @@
       </div>
     </div>
 
-    <!-- Technical About View -->
-    <div id="about-view" class="hidden tech-view">
-      <div class="tech-grid"></div>
-      <div class="tech-container">
-        <div class="tech-visual">
-          <div class="tech-header">
-            <div class="tech-overline">System Overview</div>
-            <h1 class="tech-title">Soirée Intelligence<br>Network v2.0</h1>
+    <!-- About View -->
+    <div id="about-view" class="hidden">
+      <header class="header">
+        <div class="decorative-line" aria-hidden="true"></div>
+        <p class="greeting">Our story</p>
+        <h1 class="title">About<br>Soirée</h1>
+        <div class="location">Connecting NYC</div>
+      </header>
+
+      <div class="about-content">
+        <section class="about-section">
+          <h2 class="about-heading">Our Mission</h2>
+          <p class="about-text">
+            Soirée curates the best pop-up events happening across New York City.
+            From intimate art gallery openings to exclusive culinary experiences,
+            we help you discover unique moments that make the city magical.
+          </p>
+        </section>
+
+        <section class="about-section">
+          <h2 class="about-heading">Impact</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number" id="stat-events">-</div>
+              <div class="stat-label">Events Connected</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="stat-views">-</div>
+              <div class="stat-label">Page Views</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="stat-unique">-</div>
+              <div class="stat-label">Unique Experiences</div>
+            </div>
           </div>
+        </section>
 
-          <div class="tech-canvas-wrapper">
-            <canvas id="network-graph"></canvas>
+        <section class="about-section">
+          <h2 class="about-heading">How It Works</h2>
+          <p class="about-text">
+            We scan dozens of sources daily to find the most exciting pop-up events
+            in NYC. Our team curates each event to ensure quality and authenticity,
+            so you always discover something worth your time.
+          </p>
+        </section>
 
-            <div class="tech-overlay-stats">
-              <div class="tech-stat-item">
-                <span class="tech-stat-val" id="network-nodes">0</span>
-                <span class="tech-stat-label">Active Nodes</span>
+        <section class="about-section">
+          <h2 class="about-heading">Data Network</h2>
+          <p class="about-text">
+            Our platform aggregates events from multiple trusted sources across the region.
+            Each node represents a data connection point in our network.
+          </p>
+          <div class="network-graph-container">
+            <canvas id="network-graph" width="600" height="400"></canvas>
+            <div class="network-legend">
+              <div class="legend-item">
+                <div class="legend-dot" style="background: #D4AF37;"></div>
+                <span class="legend-label">Soirée Hub</span>
               </div>
-              <div class="tech-stat-item">
-                <span class="tech-stat-val" id="network-events">0</span>
-                <span class="tech-stat-label">Events Processed</span>
+              <div class="legend-item">
+                <div class="legend-dot" style="background: #4A90E2;"></div>
+                <span class="legend-label">NYC Sources</span>
               </div>
-              <div class="tech-stat-item">
-                <span class="tech-stat-val" style="color:#4CAF50">ONLINE</span>
-                <span class="tech-stat-label">System Status</span>
+              <div class="legend-item">
+                <div class="legend-dot" style="background: #6B8E23;"></div>
+                <span class="legend-label">Hoboken/JC Sources</span>
+              </div>
+            </div>
+            <div class="network-stats">
+              <div class="network-stat">
+                <span class="network-stat-value" id="network-nodes">-</span>
+                <span class="network-stat-label">Active Nodes</span>
+              </div>
+              <div class="network-stat">
+                <span class="network-stat-value" id="network-events">-</span>
+                <span class="network-stat-label">Events Aggregated</span>
+              </div>
+              <div class="network-stat">
+                <span class="network-stat-value" id="network-regions">-</span>
+                <span class="network-stat-label">Regions Covered</span>
               </div>
             </div>
           </div>
+        </section>
 
-          <div class="tech-mission"
-            style="margin-top: 30px; border-top: 1px solid var(--tech-border); padding-top: 20px;">
-            <p style="font-family: var(--font-mono); color: #aaa; font-size: 13px; line-height: 1.8; max-width: 600px;">
-              <span style="color: var(--tech-accent);">>> MISSION PROTOCOL:</span>
-              Curate high-value cultural events across the N.E. Megalopolis region.
-              Aggregation of art galleries, culinary pop-ups, and nightlife signals in real-time.
-              <br><br>
-              <span style="color: var(--tech-accent);">>> TARGETS:</span>
-              Unique experiences that defy the algorithm.
-            </p>
-          </div>
-        </div>
+        <section class="about-section">
+          <h2 class="about-heading">Stay Connected</h2>
+          <p class="about-text">
+            New events are added daily. Bookmark your favorites and check back often
+            to never miss out on the city's best experiences.
+          </p>
+        </section>
 
-        <div class="tech-sidebar">
-          <div class="tech-panel">
-            <div class="tech-panel-header">Data Streams (Sources)</div>
-            <div class="tech-legend" id="js-tech-legend">
-              <!-- Populated via JS -->
+        <section class="about-section nerds-section">
+          <h2 class="about-heading">🤓 For the Nerds</h2>
+          <div class="nerds-content">
+            <div class="tech-detail">
+              <span class="tech-label">Last Scrape</span>
+              <span class="tech-value" id="last-scrape">Loading...</span>
+            </div>
+            <div class="tech-detail">
+              <span class="tech-label">Database</span>
+              <span class="tech-value">PostgreSQL on Vercel</span>
+            </div>
+            <div class="tech-detail">
+              <span class="tech-label">Automation</span>
+              <span class="tech-value">GitHub Actions (Daily 6 AM EST)</span>
+            </div>
+            <div class="tech-detail">
+              <span class="tech-label">Frontend</span>
+              <span class="tech-value">Vanilla JS • Zero Dependencies</span>
+            </div>
+            <div class="tech-detail">
+              <span class="tech-label">Data Sources</span>
+              <span class="tech-value" id="source-count">Multiple NYC event platforms</span>
+            </div>
+            <div class="tech-detail">
+              <span class="tech-label">API Response</span>
+              <span class="tech-value" id="api-speed">~200ms</span>
             </div>
           </div>
-
-          <div class="tech-panel">
-            <div class="tech-panel-header">
-              <span>System Log</span>
-              <div
-                style="width: 8px; height: 8px; background: #4CAF50; border-radius: 50%; box-shadow: 0 0 5px #4CAF50;">
-              </div>
-            </div>
-            <div class="tech-log-container" id="js-tech-log">
-              <!-- Populated via JS -->
-            </div>
-          </div>
-
-          <div class="tech-footer">
-            <div>SYSTEM: SOIRÉE CORE</div>
-            <div>BUILD: 2026.02.08</div>
-          </div>
-        </div>
+          <a href="https://github.com/stilwellc/soiree" target="_blank" rel="noopener noreferrer" class="github-link">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+              <path
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+              </path>
+            </svg>
+            View Source on GitHub
+          </a>
+        </section>
       </div>
     </div>
   </main>
