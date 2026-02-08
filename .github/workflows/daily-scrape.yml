@@ -69,13 +69,22 @@ jobs:
           # Run the script
           node scripts/scrape-visitnj-direct.js
 
-      # TODO: Re-enable museum scrapers once date parsing is fixed
-      # Museums are currently creating events without start_date/end_date
+      - name: Scrape AMNH (Direct)
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+        run: |
+          echo "🏛️  Scraping AMNH (Direct Puppeteer Script)..."
+          # Puppeteer already installed from previous step
+          
+          # Run the script
+          node scripts/scrape-amnh-direct.js
+
+      # TODO: Re-enable other museum scrapers (MoMA, Guggenheim) once date parsing is fixed
       # - name: Scrape Museums (Direct)
       #   env:
       #     POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
       #   run: |
-      #     echo "🏛️  Scraping Museums (MoMA, Guggenheim, AMNH)..."
+      #     echo "🏛️  Scraping Museums (MoMA, Guggenheim)..."
       #     node scripts/scrape-museums-direct.js
 
       - name: Upload results
