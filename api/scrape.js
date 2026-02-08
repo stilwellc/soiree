@@ -3,6 +3,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const { parseDateText } = require('./lib/dateParser.js');
 const { createNormalizedEvent } = require('./lib/normalize.js');
+const { scrapeWithPuppeteer, CONFIGS } = require('../scripts/scrape-puppeteer.js');
 
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
@@ -1153,7 +1154,8 @@ async function scrapeAllEvents() {
       guggenheimEvents,
       amnhEvents,
       newMuseumEvents,
-      localGirlEvents
+      localGirlEvents,
+      visitNJEvents
     ] = await Promise.all([
       scrapeTimeOut(),
       scrapeNYCForFree(),
@@ -1162,7 +1164,11 @@ async function scrapeAllEvents() {
       scrapeGuggenheim(),
       scrapeAMNH(),
       scrapeNewMuseum(),
-      scrapeTheLocalGirl()
+      scrapeTheLocalGirl(),
+      scrapeWithPuppeteer(CONFIGS.visitNJ).catch(err => {
+        console.error('Visit NJ Puppeteer failed:', err.message);
+        return [];
+      })
     ]);
 
     // Merge all events
@@ -1174,7 +1180,8 @@ async function scrapeAllEvents() {
       ...guggenheimEvents,
       ...amnhEvents,
       ...newMuseumEvents,
-      ...localGirlEvents
+      ...localGirlEvents,
+      ...visitNJEvents
     ];
 
     // Filter out permanent/long-running exhibitions

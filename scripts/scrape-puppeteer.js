@@ -59,27 +59,66 @@ async function scrapeWithPuppeteer(config) {
             eventElements.forEach((elem, index) => {
                 if (results.length >= 30) return;
 
-                // Get title - try multiple selectors
-                let title = '';
-                for (const sel of selectors.title) {
-                    const titleElem = elem.querySelector ? elem.querySelector(sel) : elem;
-                    if (titleElem && titleElem.textContent) {
-                        title = titleElem.textContent.trim();
-                        if (title.length > 5) break;
+                // Get all links in this element
+                const allLinks = elem.querySelectorAll ? Array.from(elem.querySelectorAll('a')) : [elem];
+
+                // Find the main event link (not login, not favorites)
+                let eventLink = null;
+                for (const link of allLinks) {
+                    const href = link.href || '';
+                    if (href && !href.includes('login') && !href.includes('flag_anon') && !href.includes('#')) {
+                        eventLink = link;
+                        break;
                     }
                 }
 
-                if (!title || title.length < 5) {
-                    title = elem.textContent ? elem.textContent.trim().substring(0, 100) : '';
+                if (!eventLink) return;
+
+                // Get title from the event link or nearby heading
+                let title = eventLink.textContent ? eventLink.textContent.trim() : '';
+
+                // If title is too short, look for h2/h3 in parent
+                if (title.length < 5) {
+                    for (const sel of selectors.title) {
+                        const titleElem = elem.querySelector ? elem.querySelector(sel) : null;
+                        if (titleElem && titleElem.textContent) {
+                            const text = titleElem.textContent.trim();
+                            // Skip if it's "Check It Out" or similar button text
+                            if (text.length > 5 && !text.match(/check it out|favorite|login/i)) {
+                                title = text;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // If still no good title, try getting text from the link's parent or the element itself
+                if (title.length < 5) {
+                    const allText = elem.textContent || '';
+                    const lines = allText.split('\n').map(l => l.trim()).filter(l => l.length > 10 && l.length < 150);
+                    if (lines.length > 0) {
+                        title = lines[0];
+                    }
                 }
 
                 if (!title || title.length < 5) return;
 
-                // Get link
-                const linkElem = elem.querySelector ? elem.querySelector('a') : elem;
-                const link = linkElem && linkElem.href ? linkElem.href : (elem.href || '');
+                const link = eventLink.href;
+                if (!link || link.includes('login') || link.includes('#')) return;
 
-                if (!link || link.includes('#')) return;
+                // If title is still generic text, extract from URL slug
+                if (title.match(/login|register|favorite|check it out/i)) {
+                    const urlParts = link.split('/');
+                    const slug = urlParts[urlParts.length - 1];
+                    if (slug) {
+                        // Convert slug to title: "monmouth-battlefield-lecture" -> "Monmouth Battlefield Lecture"
+                        title = slug
+                            .replace(/-/g, ' ')
+                            .split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+                    }
+                }
 
                 // Get date
                 let date = '';
@@ -183,10 +222,10 @@ const CONFIGS = {
         url: 'https://visitnj.org/nj/events',
         defaultLocation: 'New Jersey',
         selectors: {
-            container: ['article', '.event', '.card', '[class*="event"]', '[class*="Event"]', 'a[href*="/event"]'],
-            title: ['h1', 'h2', 'h3', 'h4', '.title', '[class*="title"]', '[class*="Title"]'],
-            date: ['.date', 'time', '[class*="date"]', '[class*="Date"]'],
-            location: ['.location', '.venue', '[class*="location"]', '[class*="Location"]']
+            container: ['.listing', 'article.listing', '.node-event'],
+            title: ['h2', 'h3', '.listing-title', 'a.listing-link', 'a'],
+            date: ['.listing-date', '.date', 'time', '[class*="date"]'],
+            location: ['.listing-location', '.location', '.address', '[class*="location"]']
         }
     },
     monmouthCounty: {
