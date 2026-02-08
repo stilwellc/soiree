@@ -1273,9 +1273,25 @@ function setFixedTitle(text) {
 // NETWORK GRAPH VISUALIZATION
 // ============================================================================
 
-function initNetworkGraph() {
+
+async function initNetworkGraph() {
   const canvas = document.getElementById('network-graph');
   if (!canvas) return;
+
+  // Fetch ALL events from API (not filtered by region)
+  let allEvents = [];
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/events`);
+    const data = await response.json();
+    if (data.success && data.events) {
+      allEvents = data.events;
+    }
+  } catch (error) {
+    console.error('Failed to fetch events for network graph:', error);
+    return;
+  }
+
+  if (allEvents.length === 0) return;
 
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
@@ -1292,7 +1308,7 @@ function initNetworkGraph() {
   // Create nodes based on actual data sources (without revealing names)
   // Group events by source to determine region
   const sourceMap = new Map();
-  events.forEach(e => {
+  allEvents.forEach(e => {
     if (!sourceMap.has(e.source)) {
       sourceMap.set(e.source, []);
     }
@@ -1426,11 +1442,11 @@ function initNetworkGraph() {
 
   // Update stats
   document.getElementById('network-nodes').textContent = sources.length;
-  document.getElementById('network-events').textContent = events.length;
+  document.getElementById('network-events').textContent = allEvents.length;
 
   // Count unique regions
   const regions = new Set();
-  events.forEach(e => {
+  allEvents.forEach(e => {
     const loc = e.location.toLowerCase();
     if (loc.includes('hoboken') || loc.includes('jersey city')) {
       regions.add('Hoboken/JC');
