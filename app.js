@@ -281,7 +281,7 @@ let manualRegionOverride = localStorage.getItem('soireeManualRegion') === 'true'
 const REGIONS = {
   'nyc': { name: 'New York City', shortName: 'NYC', coords: { lat: 40.7128, lng: -74.0060 } },
   'hoboken-jc': { name: 'Hoboken/Jersey City', shortName: 'Hoboken/JC', coords: { lat: 40.7439, lng: -74.0324 } },
-  'jersey-shore': { name: 'Jersey Shore', shortName: 'Shore', coords: { lat: 40.2206, lng: -74.0076 } },
+  'jersey-shore': { name: 'New Jersey', shortName: 'Jersey', coords: { lat: 40.2206, lng: -74.0076 } },
   'philly': { name: 'Philadelphia', shortName: 'Philly', coords: { lat: 39.9526, lng: -75.1652 } }
 };
 
@@ -704,74 +704,90 @@ function updateFilterCounts() {
 }
 
 // Render Events
-function renderEvents() {
-  // Check if current region is not supported - only support NYC and Hoboken for now
-  if (currentRegion && currentRegion !== 'nyc' && currentRegion !== 'hoboken-jc') {
-    const regionData = REGIONS[currentRegion];
-    renderComingSoon(regionData ? regionData.name : 'this area');
-    return;
+// Check if current region is not supported - only support NYC, Hoboken, and Jersey Shore
+if (currentRegion && !['nyc', 'hoboken-jc', 'jersey-shore'].includes(currentRegion)) {
+  const regionData = REGIONS[currentRegion];
+  renderComingSoon(regionData ? regionData.name : 'this area');
+  return;
+}
+
+updateFilterCounts();
+const filteredEvents = events.filter(event => {
+  const matchesFilter = currentFilter === 'all' || event.category === currentFilter;
+  const matchesSearch = !searchQuery ||
+    event.name.toLowerCase().includes(searchQuery) ||
+    event.location.toLowerCase().includes(searchQuery) ||
+    event.description.toLowerCase().includes(searchQuery);
+  const matchesTime = matchesTimeFilter(event);
+
+  // Region Filter -- Improved Logic
+  let matchesRegion = true;
+  const loc = event.location.toLowerCase();
+  const addr = (event.address || '').toLowerCase();
+  const source = (event.source || '').toLowerCase();
+
+  const isHobokenJC = loc.includes('hoboken') || loc.includes('jersey city') ||
+    addr.includes('hoboken') || addr.includes('jersey city');
+
+  // Check for Jersey Shore / Other NJ (excluding Hoboken/JC)
+  const isNJShore = source.includes('visit nj') || loc.includes('asbury') ||
+    loc.includes('cape may') || loc.includes('monmouth') ||
+    loc.includes('shore') || loc.includes('princeton') ||
+    addr.includes(', nj') || addr.includes('new jersey');
+
+  // Refine NJ Shore to strictly exclude Hoboken/JC
+  const isStrictlyNJShore = isNJShore && !isHobokenJC;
+
+  if (currentRegion === 'hoboken-jc') {
+    matchesRegion = isHobokenJC;
+  } else if (currentRegion === 'jersey-shore') {
+    matchesRegion = isStrictlyNJShore;
+  } else if (currentRegion === 'nyc') {
+    // NYC logic: NOT Hoboken/JC AND NOT Jersey Shore/NJ
+    matchesRegion = !isHobokenJC && !isStrictlyNJShore;
+
+    // Safety check: if it says "NY" or "New York" explicitly, include it even if logic failed
+    if (!matchesRegion && (loc.includes('ny') || loc.includes('new york'))) {
+      matchesRegion = true;
+    }
   }
 
-  updateFilterCounts();
-  const filteredEvents = events.filter(event => {
-    const matchesFilter = currentFilter === 'all' || event.category === currentFilter;
-    const matchesSearch = !searchQuery ||
-      event.name.toLowerCase().includes(searchQuery) ||
-      event.location.toLowerCase().includes(searchQuery) ||
-      event.description.toLowerCase().includes(searchQuery);
-    const matchesTime = matchesTimeFilter(event);
+  return matchesFilter && matchesSearch && matchesTime && matchesRegion;
+});
 
-    // Region Filter
-    let matchesRegion = true;
-    if (currentRegion === 'hoboken-jc') {
-      const loc = event.location.toLowerCase();
-      const addr = (event.address || '').toLowerCase();
-      matchesRegion = loc.includes('hoboken') || loc.includes('jersey city') ||
-        addr.includes('hoboken') || addr.includes('jersey city');
-    } else if (currentRegion === 'nyc') {
-      // Default to NYC if not hoboken
-      const loc = event.location.toLowerCase();
-      // Exclude events that are explicitly for Hoboken/JC if we are in NYC view
-      const isHoboken = loc.includes('hoboken') || loc.includes('jersey city');
-      matchesRegion = !isHoboken;
-    }
-
-    return matchesFilter && matchesSearch && matchesTime && matchesRegion;
-  });
-
-  if (filteredEvents.length === 0) {
-    eventsList.innerHTML = `
+if (filteredEvents.length === 0) {
+  eventsList.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">🔍</div>
         <div class="empty-state-title">No events found</div>
         <div class="empty-state-text">Try adjusting your filters or search</div>
       </div>
     `;
-    return;
-  }
+  return;
+}
 
-  eventsList.innerHTML = filteredEvents.map((event, index) =>
-    createEventCard(event, index)
-  ).join('');
+eventsList.innerHTML = filteredEvents.map((event, index) =>
+  createEventCard(event, index)
+).join('');
 
-  // Add event listeners to cards
-  document.querySelectorAll('.event-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      if (!e.target.closest('.favorite-btn')) {
-        const eventId = parseInt(card.dataset.id);
-        openModal(eventId);
-      }
-    });
+// Add event listeners to cards
+document.querySelectorAll('.event-card').forEach(card => {
+  card.addEventListener('click', (e) => {
+    if (!e.target.closest('.favorite-btn')) {
+      const eventId = parseInt(card.dataset.id);
+      openModal(eventId);
+    }
   });
+});
 
-  // Add favorite button listeners
-  document.querySelectorAll('.favorite-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const eventId = parseInt(btn.dataset.id);
-      toggleFavorite(eventId);
-    });
+// Add favorite button listeners
+document.querySelectorAll('.favorite-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const eventId = parseInt(btn.dataset.id);
+    toggleFavorite(eventId);
   });
+});
 }
 
 // Render Favorites
