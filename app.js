@@ -281,7 +281,10 @@ let manualRegionOverride = localStorage.getItem('soireeManualRegion') === 'true'
 const REGIONS = {
   'nyc': { name: 'New York City', shortName: 'NYC', coords: { lat: 40.7128, lng: -74.0060 } },
   'hoboken-jc': { name: 'Hoboken/Jersey City', shortName: 'Hoboken/JC', coords: { lat: 40.7439, lng: -74.0324 } },
-  'jersey-shore': { name: 'New Jersey', shortName: 'Jersey', coords: { lat: 40.2206, lng: -74.0076 } },
+  'north-nj': { name: 'North NJ', shortName: 'North', coords: { lat: 40.7357, lng: -74.1724 } },
+  'central-nj': { name: 'Central NJ', shortName: 'Central', coords: { lat: 40.3573, lng: -74.6672 } },
+  'south-nj': { name: 'South NJ', shortName: 'South', coords: { lat: 39.9259, lng: -75.0259 } },
+  'jersey-shore': { name: 'Jersey Shore', shortName: 'Shore', coords: { lat: 40.2206, lng: -74.0076 } },
   'philly': { name: 'Philadelphia', shortName: 'Philly', coords: { lat: 39.9526, lng: -75.1652 } }
 };
 
@@ -704,8 +707,9 @@ function updateFilterCounts() {
 }
 
 // Render Events
-// Check if current region is not supported - only support NYC, Hoboken, and Jersey Shore
-if (currentRegion && !['nyc', 'hoboken-jc', 'jersey-shore'].includes(currentRegion)) {
+// Check if current region is legitimate
+const validRegions = ['nyc', 'hoboken-jc', 'north-nj', 'central-nj', 'south-nj', 'jersey-shore'];
+if (currentRegion && !validRegions.includes(currentRegion)) {
   const regionData = REGIONS[currentRegion];
   renderComingSoon(regionData ? regionData.name : 'this area');
   return;
@@ -720,36 +724,43 @@ const filteredEvents = events.filter(event => {
     event.description.toLowerCase().includes(searchQuery);
   const matchesTime = matchesTimeFilter(event);
 
-  // Region Filter -- Improved Logic
-  let matchesRegion = true;
-  const loc = event.location.toLowerCase();
+  // Region Bucket Logic
+  let eventRegion = 'nyc'; // Default
+  const loc = (event.location || '').toLowerCase();
   const addr = (event.address || '').toLowerCase();
   const source = (event.source || '').toLowerCase();
 
-  const isHobokenJC = loc.includes('hoboken') || loc.includes('jersey city') ||
-    addr.includes('hoboken') || addr.includes('jersey city');
+  // Keywords for NJ sub-regions
+  const shoreKeywords = ['shore', 'beach', 'ocean', 'sea', 'asbury', 'long branch', 'belmar', 'point pleasant', 'seaside', 'avalon', 'stone harbor', 'brigantine', 'atlantic city', 'cape may', 'wildwood', 'manasquan', 'bradley beach', 'ocean grove', 'spring lake', 'sea girt', 'deal'];
+  const southKeywords = ['camden', 'cherry hill', 'mount laurel', 'medford', 'glassboro', 'vineland', 'millville', 'bridgeton', 'salem', 'deptford', 'moorestown', 'haddonfield', 'collingswood'];
+  const centralKeywords = ['princeton', 'new brunswick', 'edison', 'woodbridge', 'manalapan', 'freehold', 'marlboro', 'sayreville', 'old bridge', 'rahway', 'somerville', 'flemington', 'plainfield', 'trenton', 'hamilton', 'ewing', 'lawrence', 'robbinsville'];
+  const northKeywords = ['newark', 'paterson', 'clifton', 'passaic', 'wayne', 'hackensack', 'teaneck', 'fort lee', 'paramus', 'ridgewood', 'montclair', 'morristown', 'mahwah', 'summit', 'chatham', 'madison', 'dover', 'sparta', 'sussex'];
 
-  // Check for Jersey Shore / Other NJ (excluding Hoboken/JC)
-  const isNJShore = source.includes('visit nj') || loc.includes('asbury') ||
-    loc.includes('cape may') || loc.includes('monmouth') ||
-    loc.includes('shore') || loc.includes('princeton') ||
-    addr.includes(', nj') || addr.includes('new jersey');
+  // Determine region priority
+  if (loc.includes('hoboken') || loc.includes('jersey city') || addr.includes('hoboken') || addr.includes('jersey city')) {
+    eventRegion = 'hoboken-jc';
+  } else if (shoreKeywords.some(k => loc.includes(k) || addr.includes(k))) {
+    eventRegion = 'jersey-shore';
+  } else if (southKeywords.some(k => loc.includes(k) || addr.includes(k))) {
+    eventRegion = 'south-nj';
+  } else if (centralKeywords.some(k => loc.includes(k) || addr.includes(k))) {
+    eventRegion = 'central-nj';
+  } else if (northKeywords.some(k => loc.includes(k) || addr.includes(k))) {
+    eventRegion = 'north-nj';
+  } else if (source.includes('visit nj') || loc.includes('nj') || addr.includes('new jersey')) {
+    // Fallback for generic NJ events depending on context, or default to Central
+    eventRegion = 'central-nj';
+  }
 
-  // Refine NJ Shore to strictly exclude Hoboken/JC
-  const isStrictlyNJShore = isNJShore && !isHobokenJC;
-
-  if (currentRegion === 'hoboken-jc') {
-    matchesRegion = isHobokenJC;
-  } else if (currentRegion === 'jersey-shore') {
-    matchesRegion = isStrictlyNJShore;
-  } else if (currentRegion === 'nyc') {
-    // NYC logic: NOT Hoboken/JC AND NOT Jersey Shore/NJ
-    matchesRegion = !isHobokenJC && !isStrictlyNJShore;
-
-    // Safety check: if it says "NY" or "New York" explicitly, include it even if logic failed
-    if (!matchesRegion && (loc.includes('ny') || loc.includes('new york'))) {
-      matchesRegion = true;
-    }
+  // Match logic
+  let matchesRegion = false;
+  if (currentRegion === 'nyc') {
+    // NYC matches if it's NOT any of the NJ regions
+    matchesRegion = (eventRegion === 'nyc');
+    // Safety: if explicily NY
+    if (loc.includes('ny') || loc.includes('new york')) matchesRegion = true;
+  } else {
+    matchesRegion = (currentRegion === eventRegion);
   }
 
   return matchesFilter && matchesSearch && matchesTime && matchesRegion;
