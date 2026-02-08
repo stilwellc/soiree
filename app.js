@@ -604,9 +604,12 @@ function matchesTimeFilter(event) {
   // If no structured date, can't filter by time
   if (!event.start_date) return false;
 
-  // Get today's date in YYYY-MM-DD format (local timezone)
+  // Get today's date in YYYY-MM-DD format (LOCAL timezone, not UTC)
   const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
 
   // Extract date portion from ISO strings (ignore timezone)
   const startDateStr = event.start_date.split('T')[0];
@@ -621,7 +624,10 @@ function matchesTimeFilter(event) {
     // Calculate end of this week (Sunday)
     const endOfWeek = new Date(today);
     endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
-    const endOfWeekStr = endOfWeek.toISOString().split('T')[0];
+    const endYear = endOfWeek.getFullYear();
+    const endMonth = String(endOfWeek.getMonth() + 1).padStart(2, '0');
+    const endDay = String(endOfWeek.getDate()).padStart(2, '0');
+    const endOfWeekStr = `${endYear}-${endMonth}-${endDay}`;
 
     // Event is this week if it starts on or before end of week and ends on or after today
     return startDateStr <= endOfWeekStr && endDateStr >= todayStr;
@@ -832,7 +838,10 @@ function formatBadgeDate(event) {
     try {
       // Parse date without timezone conversion
       const startDateStr = event.start_date.split('T')[0];
-      const todayStr = new Date().toISOString().split('T')[0];
+
+      // Get today in LOCAL timezone
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
       const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
       const [todayYear, todayMonth, todayDay] = todayStr.split('-').map(Number);
@@ -849,9 +858,9 @@ function formatBadgeDate(event) {
       }
 
       // Check if it's tomorrow
-      const tomorrow = new Date();
+      const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
       if (startDateStr === tomorrowStr) {
         return 'Tomorrow';
       }
