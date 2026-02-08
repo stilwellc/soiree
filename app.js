@@ -746,7 +746,15 @@ function renderEvents() {
     // Use consistent region logic
     const matchesRegion = matchesCurrentRegion(event);
 
-    const matchesFree = !freeMode || (event.price && event.price.toLowerCase().includes('free')) || event.source === 'NYC For Free';
+    // Free Filter Logic (Strict for NYC to start)
+    let matchesFree = true;
+    if (freeMode) {
+      if (currentRegion === 'nyc') {
+        matchesFree = (event.source === 'NYC For Free');
+      } else {
+        matchesFree = (event.price && event.price.toLowerCase().includes('free')) || event.source === 'NYC For Free';
+      }
+    }
 
     return matchesFilter && matchesSearch && matchesTime && matchesRegion && matchesFree;
   });
