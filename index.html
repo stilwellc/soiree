@@ -142,8 +142,9 @@
       </header>
 
       <!-- Search -->
-      <section class="search-container" aria-label="Search events">
-        <div class="search-box">
+      <section class="search-container" aria-label="Search events"
+        style="display: flex; gap: 12px; align-items: center;">
+        <div class="search-box" style="flex: 1;">
           <input type="search" id="search-input" class="search-input" placeholder="Search events, locations..."
             aria-label="Search events">
           <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -153,6 +154,9 @@
           </svg>
           <button id="search-clear" class="search-clear" aria-label="Clear search">×</button>
         </div>
+        <button id=\"free-mode-toggle\" class=\"free-toggle-pill\" aria-label=\"Show Free Events Only\">
+          <span class=\"icon\">🎁</span> Free
+        </button>
       </section>
 
       <!-- Filters -->
@@ -363,9 +367,7 @@
   </div>
   </div>
 
-  <button id="free-mode-toggle" class="free-mode-toggle" aria-label="Show Free Events Only">
-    <span class="icon">🎁</span> Free Only
-  </button>
+
 
   <!-- App Script -->
   <script src="app.js"></script>

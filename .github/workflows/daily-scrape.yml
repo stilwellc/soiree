@@ -58,6 +58,17 @@ jobs:
           # Run the script
           node scripts/scrape-localgirl-direct.js
 
+      - name: Scrape Visit NJ (Direct)
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+        run: |
+          echo "🌐 Scraping Visit NJ (Direct Puppeteer Script)..."
+          # Install Puppeteer and dependencies
+          npm install puppeteer pg dotenv
+          
+          # Run the script
+          node scripts/scrape-visitnj-direct.js
+
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
