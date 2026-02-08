@@ -1372,24 +1372,59 @@ async function initNetworkGraph() {
     const sourceEvents = sourceMap.get(source);
 
     // Determine region based on majority of events from this source
-    const hobokenCount = sourceEvents.filter(e => {
-      const loc = e.location.toLowerCase();
-      return loc.includes('hoboken') || loc.includes('jersey city');
-    }).length;
+    const regionCounts = {
+      'nyc': 0,
+      'hoboken-jc': 0,
+      'north-nj': 0,
+      'central-nj': 0,
+      'south-nj': 0,
+      'jersey-shore': 0
+    };
 
-    const isHoboken = hobokenCount > sourceEvents.length / 2;
+    sourceEvents.forEach(e => {
+      const loc = (e.location || '').toLowerCase();
+      const addr = (e.address || '').toLowerCase();
+      const src = (e.source || '').toLowerCase();
+
+      // Simple keyword matching (duplicate logic for now to keep it self-contained)
+      if (loc.includes('hoboken') || loc.includes('jersey city')) regionCounts['hoboken-jc']++;
+      else if (loc.includes('shore') || loc.includes('beach') || loc.includes('asbury') || loc.includes('cape may') || loc.includes('wildwood') || loc.includes('ocean')) regionCounts['jersey-shore']++;
+      else if (loc.includes('camden') || loc.includes('cherry hill')) regionCounts['south-nj']++;
+      else if (src.includes('visit nj') || loc.includes('princeton') || loc.includes('trenton') || loc.includes('new brunswick')) regionCounts['central-nj']++;
+      else if (loc.includes('newark') || loc.includes('paterson') || loc.includes('montclair')) regionCounts['north-nj']++;
+      else regionCounts['nyc']++;
+    });
+
+    // Find majority region
+    let maxRegion = 'nyc';
+    let maxCount = -1;
+    for (const [region, count] of Object.entries(regionCounts)) {
+      if (count > maxCount) {
+        maxCount = count;
+        maxRegion = region;
+      }
+    }
+
+    const NODE_COLORS = {
+      'nyc': '#4A90E2',      // Blue
+      'hoboken-jc': '#6B8E23', // Olive
+      'north-nj': '#9370DB',   // Purple
+      'central-nj': '#FFA500', // Orange
+      'south-nj': '#FF6347',   // Red
+      'jersey-shore': '#00CED1' // Turquoise
+    };
 
     const angle = i * angleStep;
     nodes.push({
       x: width / 2 + Math.cos(angle) * orbitRadius,
       y: height / 2 + Math.sin(angle) * orbitRadius,
       radius: 6,
-      color: isHoboken ? '#6B8E23' : '#4A90E2', // Olive green for Hoboken, Blue for NYC
+      color: NODE_COLORS[maxRegion] || '#4A90E2',
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.5,
       fixed: false,
       label: `Node ${i + 1}`,
-      region: isHoboken ? 'hoboken' : 'nyc'
+      region: maxRegion
     });
   });
 
