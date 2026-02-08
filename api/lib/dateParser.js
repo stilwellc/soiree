@@ -28,18 +28,8 @@ export function parseDateText(dateText = '', timeText = '') {
     endDate = new Date(startDate);
   }
 
-  // Handle day of week (e.g., "Friday", "Saturday")
-  else {
-    const dayMatch = combinedText.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/);
-    if (dayMatch) {
-      const targetDay = dayMatch[1];
-      startDate = getNextDayOfWeek(targetDay, now);
-      endDate = new Date(startDate);
-    }
-  }
-
-  // Handle full date formats with year FIRST (e.g., "Sat, Oct 11, 2025", "January 15, 2026")
-  // When year is explicit, use it directly without parseMonthDay's year adjustment logic
+  // Handle full date formats with year FIRST (e.g., "Sat, Oct 11, 2025", "January 15, 2026", "Tuesday, March 17, 2026")
+  // Check this BEFORE day-of-week to avoid matching "Tuesday" in "Tuesday, March 17, 2026"
   if (!startDate) {
     const fullDateMatch = combinedText.match(/([A-Za-z]+)[,\s]+([A-Za-z]+)\s+(\d{1,2})[,\s]+(\d{4})/);
     if (fullDateMatch) {
@@ -258,3 +248,12 @@ export function extractDateFromTimeText(timeElemText) {
     end_date
   };
 }
+
+// CommonJS exports for Node.js scripts
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    parseDateText,
+    extractDateFromTimeText
+  };
+}
+
