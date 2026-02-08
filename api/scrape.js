@@ -1267,10 +1267,6 @@ module.exports = async function handler(req, res) {
       CREATE UNIQUE INDEX IF NOT EXISTS events_url_unique ON events(url)
     `);
 
-    // Clear ALL events to ensure fresh categorizations
-    // This guarantees events always have the latest category logic
-    await pool.query(`DELETE FROM events`);
-
     // Get events from all sources
     const events = await scrapeAllEvents();
 
@@ -1284,23 +1280,76 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // Insert events with conflict handling (skip duplicates)
+    // Get all existing placeholder events (Feb 15, 2026)
+    const placeholderEvents = await pool.query(`
+      SELECT url, name, source 
+      FROM events 
+      WHERE start_date = '2026-02-15'
+    `);
+
+    // Track which placeholder events are still found
+    const foundPlaceholderUrls = new Set();
+    uniqueEvents.forEach(event => {
+      if (event.start_date === '2026-02-15') {
+        foundPlaceholderUrls.add(event.url);
+      }
+    });
+
+    // Mark missing placeholder events as past (set date to yesterday)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    let markedPast = 0;
+    for (const oldEvent of placeholderEvents.rows) {
+      if (!foundPlaceholderUrls.has(oldEvent.url)) {
+        // Event no longer found on source website - mark as past
+        await pool.query(
+          `UPDATE events 
+           SET start_date = $1, end_date = $1 
+           WHERE url = $2`,
+          [yesterdayStr, oldEvent.url]
+        );
+        markedPast++;
+        console.log(`Marked as past: ${oldEvent.name} (${oldEvent.source})`);
+      }
+    }
+
+    // Insert or update events
     let inserted = 0;
-    let skipped = 0;
+    let updated = 0;
     for (const event of uniqueEvents) {
       try {
-        await pool.query(
+        const result = await pool.query(
           `INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights, url, start_date, end_date, source)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-           ON CONFLICT (url) DO NOTHING`,
+           ON CONFLICT (url) DO UPDATE SET
+             name = EXCLUDED.name,
+             category = EXCLUDED.category,
+             date = EXCLUDED.date,
+             time = EXCLUDED.time,
+             location = EXCLUDED.location,
+             address = EXCLUDED.address,
+             price = EXCLUDED.price,
+             image = EXCLUDED.image,
+             description = EXCLUDED.description,
+             highlights = EXCLUDED.highlights,
+             start_date = EXCLUDED.start_date,
+             end_date = EXCLUDED.end_date,
+             updated_at = CURRENT_TIMESTAMP
+           RETURNING (xmax = 0) AS inserted`,
           [event.name, event.category, event.date, event.time, event.location,
           event.address, event.price, event.spots, event.image, event.description,
           JSON.stringify(event.highlights), event.url, event.start_date, event.end_date, event.source]
         );
-        inserted++;
+
+        if (result.rows[0].inserted) {
+          inserted++;
+        } else {
+          updated++;
+        }
       } catch (error) {
-        console.log(`Skipped duplicate: ${event.name}`);
-        skipped++;
+        console.log(`Error with event: ${event.name} - ${error.message}`);
       }
     }
 
@@ -1308,11 +1357,12 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      message: 'Scraping completed - duplicates removed',
+      message: 'Scraping completed - smart event management',
       scraped: events.length,
       unique: uniqueEvents.length,
       inserted: inserted,
-      skipped: skipped,
+      updated: updated,
+      markedPast: markedPast,
       totalEvents: parseInt(result.rows[0].count),
       timestamp: new Date().toISOString()
     });

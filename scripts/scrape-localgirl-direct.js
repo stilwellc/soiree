@@ -239,11 +239,42 @@ async function run() {
         console.log(`Found ${events.length} events.`);
 
         if (events.length > 0) {
-            console.log('Inserting/Updating events in database...');
+            console.log('Managing events in database...');
+
+            // Get existing placeholder events from The Local Girl
+            const { rows: placeholderEvents } = await pool.query(`
+                SELECT url, name 
+                FROM events 
+                WHERE source = 'The Local Girl' AND start_date = '2026-02-15'
+            `);
+
+            // Track which placeholder events are still found
+            const foundUrls = new Set(events.map(e => e.url));
+
+            // Mark missing placeholder events as past
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            let markedPast = 0;
+            for (const oldEvent of placeholderEvents) {
+                if (!foundUrls.has(oldEvent.url)) {
+                    await pool.query(
+                        `UPDATE events SET start_date = $1, end_date = $1 WHERE url = $2`,
+                        [yesterdayStr, oldEvent.url]
+                    );
+                    markedPast++;
+                    console.log(`  Marked as past: ${oldEvent.name.substring(0, 50)}...`);
+                }
+            }
+
+            // Insert or update events
             let inserted = 0;
+            let updated = 0;
             for (const event of events) {
                 const { rows } = await pool.query('SELECT id FROM events WHERE url = $1', [event.url]);
                 if (rows.length === 0) {
+                    // Insert new event
                     await pool.query(
                         `INSERT INTO events 
               (name, category, date, time, start_date, end_date, location, address, price, spots, image, description, highlights, url, source)
@@ -255,9 +286,22 @@ async function run() {
                         ]
                     );
                     inserted++;
+                } else {
+                    // Update existing event (in case date was extracted this time)
+                    await pool.query(
+                        `UPDATE events 
+                         SET name = $1, category = $2, date = $3, time = $4, 
+                             start_date = $5, end_date = $6, updated_at = CURRENT_TIMESTAMP
+                         WHERE url = $7`,
+                        [event.name, event.category, event.date, event.time,
+                        event.start_date, event.end_date, event.url]
+                    );
+                    updated++;
                 }
             }
-            console.log(`Inserted ${inserted} new events from The Local Girl.`);
+            console.log(`\nInserted: ${inserted} new events`);
+            console.log(`Updated: ${updated} existing events`);
+            console.log(`Marked as past: ${markedPast} events`);
         }
 
     } catch (err) {
