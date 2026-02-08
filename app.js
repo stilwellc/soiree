@@ -2,6 +2,38 @@
 const API_BASE_URL = window.location.origin;
 const USE_API = true; // Set to false to use fallback data
 
+// ============================================================================
+// DATE UTILITIES - Consistent timezone handling
+// ============================================================================
+// IMPORTANT: Always use these helpers to avoid UTC/local timezone bugs
+
+function getTodayLocal() {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
+
+function getTomorrowLocal() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+}
+
+function formatDateLocal(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function extractDateFromISO(isoString) {
+  return isoString.split('T')[0];
+}
+
+function getEndOfWeekLocal() {
+  const today = new Date();
+  const endOfWeek = new Date(today);
+  endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
+  return formatDateLocal(endOfWeek);
+}
+// ============================================================================
+
 // Event Data (fallback if API fails)
 let events = [
   {
@@ -600,36 +632,18 @@ function handleNavClick(item) {
 // Helper function to check if event matches time filter
 function matchesTimeFilter(event) {
   if (currentTimeFilter === 'all') return true;
-
-  // If no structured date, can't filter by time
   if (!event.start_date) return false;
 
-  // Get today's date in YYYY-MM-DD format (LOCAL timezone, not UTC)
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  const todayStr = `${year}-${month}-${day}`;
-
-  // Extract date portion from ISO strings (ignore timezone)
-  const startDateStr = event.start_date.split('T')[0];
-  const endDateStr = event.end_date ? event.end_date.split('T')[0] : startDateStr;
+  const todayStr = getTodayLocal();
+  const startDateStr = extractDateFromISO(event.start_date);
+  const endDateStr = event.end_date ? extractDateFromISO(event.end_date) : startDateStr;
 
   if (currentTimeFilter === 'today') {
-    // Event is today if today falls between start and end date (inclusive)
     return todayStr >= startDateStr && todayStr <= endDateStr;
   }
 
   if (currentTimeFilter === 'week') {
-    // Calculate end of this week (Sunday)
-    const endOfWeek = new Date(today);
-    endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
-    const endYear = endOfWeek.getFullYear();
-    const endMonth = String(endOfWeek.getMonth() + 1).padStart(2, '0');
-    const endDay = String(endOfWeek.getDate()).padStart(2, '0');
-    const endOfWeekStr = `${endYear}-${endMonth}-${endDay}`;
-
-    // Event is this week if it starts on or before end of week and ends on or after today
+    const endOfWeekStr = getEndOfWeekLocal();
     return startDateStr <= endOfWeekStr && endDateStr >= todayStr;
   }
 
@@ -836,15 +850,12 @@ function formatBadgeDate(event) {
   // Only use structured dates if they exist and seem valid
   if (event.start_date) {
     try {
-      // Parse date without timezone conversion
-      const startDateStr = event.start_date.split('T')[0];
-
-      // Get today in LOCAL timezone
-      const today = new Date();
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const startDateStr = extractDateFromISO(event.start_date);
+      const todayStr = getTodayLocal();
+      const tomorrowStr = getTomorrowLocal();
 
       const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
-      const [todayYear, todayMonth, todayDay] = todayStr.split('-').map(Number);
+      const [todayYear] = todayStr.split('-').map(Number);
 
       // Sanity check: only use if date is within reasonable range
       const yearsDiff = startYear - todayYear;
@@ -858,9 +869,6 @@ function formatBadgeDate(event) {
       }
 
       // Check if it's tomorrow
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
       if (startDateStr === tomorrowStr) {
         return 'Tomorrow';
       }

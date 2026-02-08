@@ -4,6 +4,30 @@ description: How to add a new event data source to the scraper
 
 # Adding a New Event Data Source
 
+## ⚠️ IMPORTANT: Timezone Best Practices
+
+**ALWAYS use local timezone for date comparisons in the frontend:**
+- Use the date helper functions in `utils/dateHelpers.js` (or inline helpers in `app.js`)
+- **NEVER** use `new Date().toISOString()` for "today" - it returns UTC time
+- **ALWAYS** use `getTodayLocal()`, `getTomorrowLocal()`, `formatDateLocal()` helpers
+- Database stores dates as DATE type (no timezone info)
+- API returns ISO strings like `"2026-02-07T00:00:00.000Z"`
+- Frontend must extract date portion with `extractDateFromISO()` before comparing
+
+**Example of CORRECT date handling:**
+```javascript
+const todayStr = getTodayLocal(); // "2026-02-07" in user's timezone
+const eventDateStr = extractDateFromISO(event.start_date); // "2026-02-07"
+if (todayStr === eventDateStr) { /* event is today */ }
+```
+
+**Example of INCORRECT date handling (DO NOT DO THIS):**
+```javascript
+const todayStr = new Date().toISOString().split('T')[0]; // WRONG! Uses UTC
+```
+
+---
+
 Follow these steps to add a new event scraping source to the Soiree application.
 
 ## Step 1: Determine Scraping Strategy
