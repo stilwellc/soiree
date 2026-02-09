@@ -70,6 +70,17 @@ body {
   line-height: 1;
   cursor: pointer;
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  /* align image */
+  align-items: center;
+}
+
+.nav-brand-img {
+  height: 28px;
+  width: auto;
+  mix-blend-mode: multiply;
+  /* Makes white background transparent on light bg */
+  filter: contrast(1.1);
 }
 
 .nav-brand:hover {
