@@ -26,4 +26,4 @@ def analyze_image(path):
     except Exception as e:
         print(f"Error: {e}")
 
-analyze_image("assets/images/nav-logo-transparent.png")
+analyze_image("assets/images/soiree-logo-transparent.png")
