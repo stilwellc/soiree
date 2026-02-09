@@ -796,14 +796,9 @@ function renderEvents() {
 // Render Favorites
 function renderFavorites() {
   const favoriteEvents = events.filter(e => favorites.includes(e.id));
-  const headerHtml = `
-    <header class="header">
-      <h1 class="card-title" style="text-align:center; margin-bottom:24px;">Saved Events</h1>
-    </header>
-  `;
 
   if (favoriteEvents.length === 0) {
-    favoritesView.innerHTML = headerHtml + `
+    favoritesView.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">❤️</div>
         <div class="empty-state-title">No favorites yet</div>
@@ -813,7 +808,7 @@ function renderFavorites() {
     return;
   }
 
-  favoritesView.innerHTML = headerHtml + `
+  favoritesView.innerHTML = `
     <div class="events">
       ${favoriteEvents.map((event, index) => createEventCard(event, index)).join('')}
     </div>
@@ -927,47 +922,25 @@ function formatBadgeDate(event) {
 // Create Event Card
 function createEventCard(event, index) {
   const isFavorited = favorites.includes(event.id);
-  // Stagger animation delay
-  const animationDelay = index < 6 ? `style="animation-delay: ${0.1 + index * 0.1}s"` : '';
-
-  // Determine if free
-  const isFree = FREE_SOURCES.includes(event.source) || (event.price && event.price.toLowerCase() === 'free');
-
-  // Formatting
-  const categoryName = getCategoryName(event.category).split(' ')[0]; // Shorten for badge (e.g. "Art" instead of "Art & Culture")
-  const dateBadge = formatBadgeDate(event);
-
-  // Image (using existing Unsplash URLs or placeholders)
-  // Ensure we have a valid image URL
-  const imageUrl = event.image || 'assets/images/placeholder.jpg';
+  const animationDelay = index < 3 ? `style="animation-delay: ${0.4 + index * 0.1}s"` : '';
+  const isFree = FREE_SOURCES.includes(event.source);
 
   return `
-    <div class="event-card" data-id="${event.id}" data-category="${event.category}" role="article" tabindex="0" ${animationDelay}>
-      <div class="card-image-container">
-        <div class="card-badge">${categoryName}</div>
-        <img src="${imageUrl}" alt="${event.name}" class="card-image" loading="lazy">
+    <div class="event-card" data-id="${event.id}" data-category="${event.category}" data-start-date="${event.start_date || ''}" data-end-date="${event.end_date || ''}" ${animationDelay} role="article" tabindex="0">
+      <div class="event-card-header">
         <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" data-id="${event.id}" aria-label="${isFavorited ? 'Remove from' : 'Add to'} favorites">
           <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
           </svg>
         </button>
+        <div class="event-badge">${formatBadgeDate(event)}</div>
+        <div class="event-category-badge">${getCategoryName(event.category)}</div>
+        ${isFree ? '<div class="event-free-badge">FREE</div>' : ''}
       </div>
-      
-      <div class="card-content">
-        <div class="card-meta-top">
-          <span class="card-date">${dateBadge}</span>
-          ${isFree ? '<span class="card-price free">Free</span>' : '<span class="card-price">Ticketed</span>'}
-        </div>
-        
-        <h3 class="card-title">${event.name}</h3>
-        
-        <div class="card-info-row">
-           <div class="card-location">
-             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-             <span>${event.location || event.address || 'NYC'}</span>
-           </div>
-           <div class="card-time">${event.time || ''}</div>
-        </div>
+      <div class="event-details">
+        <div class="event-name">${event.name}</div>
+        <div class="event-date">${formatEventDate(event)}</div>
+        <div class="event-location">${event.location}</div>
       </div>
     </div>
   `;
