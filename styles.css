@@ -249,14 +249,6 @@ body {
   }
 }
 
-.title-logo {
-  height: 0.9em;
-  /* Match font-size context */
-  width: auto;
-  vertical-align: middle;
-  margin-top: 4px;
-}
-
 /* Rotating title text */
 .title-rotating {
   display: inline-block;
