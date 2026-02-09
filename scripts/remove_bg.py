@@ -30,4 +30,4 @@ def remove_background(input_path, output_path, bg_color=None, tolerance=30):
     print(f"Saved to {output_path}")
 
 # Run
-remove_background("assets/images/nav-logo.jpg", "assets/images/nav-logo-transparent.png", tolerance=50)
+remove_background("assets/images/soiree-logo.jpg", "assets/images/soiree-logo-transparent.png", tolerance=50)
