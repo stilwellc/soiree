@@ -76,11 +76,11 @@ body {
 }
 
 .nav-brand-img {
-  height: 28px;
+  height: 38px;
   width: auto;
-  mix-blend-mode: multiply;
-  /* Makes white background transparent on light bg */
+  /* Removed multiply mode as we now have a transparent PNG */
   filter: contrast(1.1);
+  display: block;
 }
 
 .nav-brand:hover {
