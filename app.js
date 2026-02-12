@@ -424,8 +424,8 @@ function updateRegionUI() {
     locationDiv.textContent = regionData.name;
   }
 
-  // Mark active option in dropdown
-  document.querySelectorAll('.region-option').forEach(option => {
+  // Mark active option in region picker panel
+  document.querySelectorAll('.region-panel-option').forEach(option => {
     const optionRegion = option.dataset.region;
     if (optionRegion === 'auto') {
       option.classList.toggle('active', !manualRegionOverride);
@@ -455,29 +455,16 @@ function handleRegionChange(newRegion) {
   closeRegionDropdown();
 }
 
-// Toggle region dropdown
+// Toggle region picker (morphs hero title ↔ city list)
 function toggleRegionDropdown() {
-  const dropdown = document.getElementById('region-dropdown');
-  const backdrop = document.getElementById('region-backdrop');
-  const isVisible = dropdown && dropdown.style.display !== 'none';
-  if (dropdown) {
-    dropdown.style.display = isVisible ? 'none' : 'block';
-  }
-  if (backdrop) {
-    backdrop.classList.toggle('active', !isVisible);
-  }
+  const hero = document.querySelector('.hero');
+  if (hero) hero.classList.toggle('hero--picking');
 }
 
-// Close region dropdown
+// Close region picker
 function closeRegionDropdown() {
-  const dropdown = document.getElementById('region-dropdown');
-  const backdrop = document.getElementById('region-backdrop');
-  if (dropdown) {
-    dropdown.style.display = 'none';
-  }
-  if (backdrop) {
-    backdrop.classList.remove('active');
-  }
+  const hero = document.querySelector('.hero');
+  if (hero) hero.classList.remove('hero--picking');
 }
 
 // Render coming soon placeholder for non-NYC regions
@@ -552,25 +539,12 @@ function setupEventListeners() {
     regionToggle.addEventListener('click', toggleRegionDropdown);
   }
 
-  document.querySelectorAll('.region-option').forEach(option => {
+  document.querySelectorAll('.region-panel-option').forEach(option => {
     option.addEventListener('click', () => {
       const region = option.dataset.region;
       handleRegionChange(region);
     });
   });
-
-  // Close dropdown when clicking outside or tapping backdrop
-  document.addEventListener('click', (e) => {
-    const selector = document.querySelector('.region-selector');
-    if (selector && !selector.contains(e.target)) {
-      closeRegionDropdown();
-    }
-  });
-
-  const regionBackdrop = document.getElementById('region-backdrop');
-  if (regionBackdrop) {
-    regionBackdrop.addEventListener('click', closeRegionDropdown);
-  }
 
   // Keyboard navigation
   document.addEventListener('keydown', (e) => {

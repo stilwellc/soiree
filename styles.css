@@ -235,6 +235,82 @@ body {
   z-index: 2;
 }
 
+/* Hero panel transitions */
+.hero-title-panel {
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.hero-region-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  transform: translateY(14px);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.hero--picking .hero-title-panel {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+
+.hero--picking .hero-region-panel {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Region panel content */
+.region-panel-eyebrow {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 16px;
+}
+
+.region-panel-list {
+  overflow-y: auto;
+  max-height: 240px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.region-panel-option {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--deep);
+  padding: 5px 0;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: color 0.2s ease, transform 0.2s ease;
+  display: block;
+}
+
+.region-panel-option:hover {
+  color: var(--dusk);
+  transform: translateX(6px);
+}
+
+.region-panel-option.active {
+  color: var(--dusk);
+  font-style: italic;
+}
+
+/* Chevron rotates when picking */
+.region-chevron {
+  transition: transform 0.3s ease;
+}
+
+.hero--picking .region-chevron {
+  transform: rotate(180deg);
+}
+
 /* Eyebrow label */
 .hero-eyebrow {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -428,15 +504,7 @@ body {
   color: var(--gold);
 }
 
-/* Region Selector */
-.region-selector {
-  position: relative;
-  margin-top: 1rem;
-  animation: fadeIn 1s ease-out 0.5s both;
-  z-index: 500;
-  width: 100%;
-}
-
+/* Region toggle pill */
 .region-toggle {
   display: flex;
   align-items: center;
@@ -446,15 +514,19 @@ body {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 24px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   font-family: 'Jost', sans-serif;
 }
 
 .region-toggle:hover {
   background: rgba(255, 255, 255, 1);
   border-color: rgba(0, 0, 0, 0.2);
-  transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.hero--picking .region-toggle {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--dusk);
 }
 
 .region-icon,
@@ -468,77 +540,6 @@ body {
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--dark);
-}
-
-.region-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  background: white;
-  border-radius: 14px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.16);
-  z-index: 600;
-  max-height: 260px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  animation: dropdownSlideIn 0.2s ease;
-}
-
-@keyframes dropdownSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.region-option {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.9rem 1.1rem;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  font-size: 0.95rem;
-  color: var(--dark);
-}
-
-.region-option:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.region-option.active {
-  background: rgba(212, 175, 55, 0.1);
-  color: var(--gold);
-}
-
-.region-option svg {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.region-divider {
-  height: 1px;
-  background: rgba(0, 0, 0, 0.08);
-  margin: 0.25rem 0;
-}
-
-/* Backdrop (kept for tap-outside close) */
-.region-backdrop {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 499;
-}
-
-.region-backdrop.active {
-  display: block;
 }
 
 

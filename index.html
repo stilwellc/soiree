@@ -46,6 +46,9 @@
 </head>
 
 <body>
+  <!-- Region backdrop (mobile) -->
+  <div class="region-backdrop" id="region-backdrop"></div>
+
   <!-- Navigation -->
   <nav class="nav-bar" role="navigation" aria-label="Main navigation">
     <div class="nav-brand" aria-label="Soirée">
@@ -84,51 +87,50 @@
         <div class="hero-bg" aria-hidden="true"></div>
         <div class="hero-grain" aria-hidden="true"></div>
         <div class="hero-content">
-          <div class="hero-rule" aria-hidden="true"></div>
-          <h1 class="hero-title">
-            <span class="title-rotating">
-              <span class="title-word active">Tonight's</span>
-              <span class="title-word">Today's</span>
-              <span class="title-word">This Week's</span>
-              <span class="title-word">Tomorrow's</span>
-            </span><br>
-            <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="hero-title-logo">
-          </h1>
-          <p class="hero-sub">Curating local experience. Connecting communities.</p>
-          <div class="hero-location-row">
-            <!-- Region Selector -->
-            <div class="region-selector">
-              <button class="region-toggle" id="region-toggle" aria-label="Change region">
-                <svg class="region-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-                <span class="region-name" id="current-region-name">NYC</span>
-                <svg class="region-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-              <div class="region-dropdown" id="region-dropdown" style="display: none;">
-                <div class="region-option" data-region="auto">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                  <span>Auto-detect location</span>
-                </div>
-                <div class="region-divider"></div>
-                <div class="region-option" data-region="nyc"><span>New York City</span></div>
-                <div class="region-option" data-region="hoboken-jc"><span>Hoboken / Jersey City</span></div>
-                <div class="region-divider"></div>
-                <div class="region-option" data-region="nj-state"><span>New Jersey (Statewide)</span></div>
-                <div class="region-divider"></div>
-                <div class="region-option" data-region="north-nj"><span>North NJ</span></div>
-                <div class="region-option" data-region="central-nj"><span>Central NJ</span></div>
-                <div class="region-option" data-region="south-nj"><span>South NJ</span></div>
-                <div class="region-option" data-region="jersey-shore"><span>Jersey Shore</span></div>
-                <div class="region-option" data-region="philly"><span>Philadelphia</span></div>
-              </div>
+          <!-- Title panel — default state -->
+          <div class="hero-title-panel" id="hero-title-panel">
+            <div class="hero-rule" aria-hidden="true"></div>
+            <h1 class="hero-title">
+              <span class="title-rotating">
+                <span class="title-word active">Tonight's</span>
+                <span class="title-word">Today's</span>
+                <span class="title-word">This Week's</span>
+                <span class="title-word">Tomorrow's</span>
+              </span><br>
+              <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="hero-title-logo">
+            </h1>
+            <p class="hero-sub">Curating local experience. Connecting communities.</p>
+          </div>
+
+          <!-- Region picker panel — shown when location toggle is tapped -->
+          <div class="hero-region-panel" id="hero-region-panel" aria-hidden="true">
+            <div class="hero-rule" aria-hidden="true"></div>
+            <p class="region-panel-eyebrow">Choose your city</p>
+            <div class="region-panel-list">
+              <div class="region-panel-option" data-region="auto">Auto-detect</div>
+              <div class="region-panel-option" data-region="nyc">New York City</div>
+              <div class="region-panel-option" data-region="hoboken-jc">Hoboken · Jersey City</div>
+              <div class="region-panel-option" data-region="nj-state">New Jersey</div>
+              <div class="region-panel-option" data-region="north-nj">North NJ</div>
+              <div class="region-panel-option" data-region="central-nj">Central NJ</div>
+              <div class="region-panel-option" data-region="south-nj">South NJ</div>
+              <div class="region-panel-option" data-region="jersey-shore">Jersey Shore</div>
+              <div class="region-panel-option" data-region="philly">Philadelphia</div>
             </div>
+          </div>
+
+          <!-- Location toggle — always visible -->
+          <div class="hero-location-row">
+            <button class="region-toggle" id="region-toggle" aria-label="Change region">
+              <svg class="region-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span class="region-name" id="current-region-name">NYC</span>
+              <svg class="region-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
           </div>
         </div>
       </header>
