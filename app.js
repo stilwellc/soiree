@@ -455,16 +455,41 @@ function handleRegionChange(newRegion) {
   closeRegionDropdown();
 }
 
+// Lock/unlock body scroll (iOS-safe)
+function lockBodyScroll() {
+  const scrollY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${scrollY}px`;
+  document.body.style.width = '100%';
+  document.body.style.overflow = 'hidden';
+}
+
+function unlockBodyScroll() {
+  const scrollY = Math.abs(parseInt(document.body.style.top || '0', 10));
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+  document.body.style.overflow = '';
+  window.scrollTo(0, scrollY);
+}
+
 // Toggle region picker (morphs hero title ↔ city list)
 function toggleRegionDropdown() {
   const hero = document.querySelector('.hero');
-  if (hero) hero.classList.toggle('hero--picking');
+  if (!hero) return;
+  const opening = !hero.classList.contains('hero--picking');
+  hero.classList.toggle('hero--picking');
+  opening ? lockBodyScroll() : unlockBodyScroll();
 }
 
 // Close region picker
 function closeRegionDropdown() {
   const hero = document.querySelector('.hero');
-  if (hero) hero.classList.remove('hero--picking');
+  if (!hero) return;
+  if (hero.classList.contains('hero--picking')) {
+    hero.classList.remove('hero--picking');
+    unlockBodyScroll();
+  }
 }
 
 // Render coming soon placeholder for non-NYC regions
