@@ -514,7 +514,7 @@ body {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 24px;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
   font-family: 'Jost', sans-serif;
 }
 
@@ -525,8 +525,8 @@ body {
 }
 
 .hero--picking .region-toggle {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: var(--dusk);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .region-icon,
