@@ -275,9 +275,12 @@ body {
 }
 
 .region-panel-list {
+  overflow-x: hidden;
   overflow-y: auto;
   max-height: 240px;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .region-panel-option {
