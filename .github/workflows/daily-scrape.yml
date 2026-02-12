@@ -47,17 +47,6 @@ jobs:
 
           echo "✅ Main scrape completed successfully"
 
-      - name: Scrape The Local Girl (Direct)
-        env:
-          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
-        run: |
-          echo "🌐 Scraping The Local Girl (Direct Node Script)..."
-          # Install dependencies if not already (should be cached or fast)
-          npm install axios cheerio pg dotenv
-          
-          # Run the script
-          node scripts/scrape-localgirl-direct.js
-
       - name: Scrape Visit NJ (Direct)
         env:
           POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
@@ -75,9 +64,19 @@ jobs:
         run: |
           echo "🏛️  Scraping AMNH (Direct Puppeteer Script)..."
           # Puppeteer already installed from previous step
-          
+
           # Run the script
           node scripts/scrape-amnh-direct.js
+
+      - name: Scrape The Local Girl (Direct)
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+        run: |
+          echo "🌐 Scraping The Local Girl (Puppeteer)..."
+          # Puppeteer already installed from Visit NJ step
+
+          # Run the script
+          node scripts/scrape-localgirl-direct.js
 
       # TODO: Re-enable other museum scrapers (MoMA, Guggenheim) once date parsing is fixed
       # - name: Scrape Museums (Direct)
