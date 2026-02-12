@@ -1332,10 +1332,11 @@ async function initNetworkGraph() {
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
 
-  // Set canvas size
+  // Set canvas size — responsive height for mobile
   const rect = canvas.getBoundingClientRect();
   const width = rect.width;
-  const height = 440;
+  const isMobile = width < 480;
+  const height = isMobile ? Math.round(width * 0.85) : 440;
   canvas.width = width * dpr;
   canvas.height = height * dpr;
   ctx.scale(dpr, dpr);
@@ -1397,11 +1398,12 @@ async function initNetworkGraph() {
     ...ALL_SOURCES.filter(s => !sourceMap.has(s))
   ];
 
-  // Build nodes
+  // Build nodes — scale sizes down on mobile
+  const nodeScale = isMobile ? 0.7 : 1;
   const maxEvents = sources.length > 0 ? Math.max(...sources.map(s => sourceMap.get(s).length)) : 1;
   const nodes = [{
     x: cx, y: cy,
-    radius: 15,
+    radius: Math.round(15 * nodeScale),
     color: '#C1694F',
     vx: 0, vy: 0,
     fixed: true,
@@ -1416,7 +1418,7 @@ async function initNetworkGraph() {
     const isDead = evts.length === 0;
     const region = isDead ? null : getRegion(evts);
     const angle = (i / allSources.length) * Math.PI * 2 - Math.PI / 2;
-    const r = isDead ? 5 : 5 + Math.round((evts.length / maxEvents) * 12);
+    const r = isDead ? Math.round(5 * nodeScale) : Math.round((5 + (evts.length / maxEvents) * 12) * nodeScale);
     nodes.push({
       x: cx + Math.cos(angle) * orbitRadius,
       y: cy + Math.sin(angle) * orbitRadius,
@@ -1659,7 +1661,7 @@ async function initNetworkGraph() {
       }
 
       // Label below node
-      ctx.font = 'bold 8px ui-monospace, monospace';
+      ctx.font = `bold ${isMobile ? 7 : 8}px ui-monospace, monospace`;
       ctx.textAlign = 'center';
       if (i === 0) {
         ctx.fillStyle = 'rgba(193,105,79,0.90)';

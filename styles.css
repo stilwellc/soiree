@@ -2314,6 +2314,12 @@ button:focus-visible,
   border-color: #1a2035;
 }
 
+@media (max-width: 480px) {
+  .graph-module {
+    min-height: unset;
+  }
+}
+
 .module-header {
   padding: 10px 16px;
   background: #0c1220;
