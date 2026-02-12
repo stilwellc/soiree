@@ -546,6 +546,20 @@ function setupEventListeners() {
     });
   });
 
+  // Prevent page scroll when touching the region picker panel (iOS fix)
+  const regionPanel = document.getElementById('hero-region-panel');
+  const regionPanelList = regionPanel && regionPanel.querySelector('.region-panel-list');
+  if (regionPanel) {
+    regionPanel.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+    }, { passive: false });
+  }
+  if (regionPanelList) {
+    regionPanelList.addEventListener('touchmove', (e) => {
+      e.stopPropagation();
+    }, { passive: true });
+  }
+
   // Keyboard navigation
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
