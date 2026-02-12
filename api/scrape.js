@@ -976,115 +976,88 @@ async function scrapeNewMuseum() {
 }
 
 // Scrape events from The Local Girl (Hoboken/JC)
+// The listing page groups events under date header list items. We read them
+// in order, tracking the current date from each header's data-date attribute,
+// which avoids fetching individual detail pages (unreliable from CI/server IPs).
 async function scrapeTheLocalGirl() {
   try {
     console.log('Fetching events from The Local Girl...');
     const response = await axios.get('https://thelocalgirl.com/calendar/hoboken/', {
       timeout: 10000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9'
       }
     });
 
     const $ = cheerio.load(response.data);
     const events = [];
+    let currentDateStr = 'Upcoming';
 
-    const h2Count = $('h2').length;
-    console.log(`[TheLocalGirl] Found ${h2Count} H2 elements`);
+    $('ol.eventsList__list').children().each((i, elem) => {
+      const cls = $(elem).attr('class') || '';
 
-    // The Local Girl uses a standard layout, events are distinct blocks
-    // Based on HTML analysis, we look for event items. 
-    // Since the structure can be tricky, we'll look for the repeating pattern of headers or article/div classes.
-    // The previous chunks showed <h2> with links as event titles.
+      if (cls.includes('eventsList__list__dateHeader')) {
+        // Extract ISO date from toggle button's data-date (e.g. "2026-02-12, 23:00 UTC")
+        const dataDate = $(elem).find('button[data-date]').attr('data-date') || '';
+        const isoMatch = dataDate.match(/(\d{4}-\d{2}-\d{2})/);
+        if (isoMatch) {
+          const d = new Date(isoMatch[1] + 'T12:00:00Z');
+          currentDateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+        return;
+      }
 
-    // Find containers that look like event listings
-    // Structure seems to be: 
-    // <h2><a href="...">Title</a></h2>
-    // ... metadata ...
-    // <img ... src="...">
+      if (!cls.includes('eventsList__list__item')) return;
+      if (events.length >= 30) return false;
 
-    $('h2').each((i, elem) => {
-      if (events.length >= 15) return false;
-
-      const $title = $(elem).find('a').first();
-      const name = $title.text().trim();
-      const href = $title.attr('href');
-
+      const $elem = $(elem);
+      const $link = $elem.find('h2 a').first();
+      const name = $link.text().trim();
+      const href = $link.attr('href');
       if (!name || !href) return;
 
-      // Locate the container or sibling elements for other details
-      // The chunks suggest a flat structure where <h2> appears before other details
-      // We might need to look at the next few siblings
-      let $next = $(elem).next();
-      let description = '';
-      let image = '';
-      let categories = [];
-      let location = 'Hoboken/Jersey City';
-      let address = '';
-
-      // Try to find image and categories in following siblings
-      // We scan up to 10 next siblings to find relevant info
-      for (let j = 0; j < 10; j++) {
-        if ($next.length === 0 || $next.is('h2')) break;
-
-        // Check for image
-        const $img = $next.find('img');
-        if ($img.length && !image) {
-          image = $img.attr('src');
+      // Extract categories
+      const categories = [];
+      $elem.find('.eventsList__list__item__categories a').each((_, catLink) => {
+        const catText = $(catLink).text().trim();
+        if (catText && catText !== 'The Hoboken Girl Calendar' && !categories.includes(catText)) {
+          categories.push(catText);
         }
+      });
 
-        // Check for categories links
-        $next.find('a[href*="/category/"]').each((_, catLink) => {
-          const catText = $(catLink).text().trim();
-          if (catText && catText !== 'The Hoboken Girl Calendar' && !categories.includes(catText)) {
-            categories.push(catText);
-          }
-        });
-
-        // Check for maps link to get address
-        $next.find('a[href*="maps.google.com"], a[href*="maps.apple.com"]').each((_, mapLink) => {
-          const href = $(mapLink).attr('href');
-          // Extract query param from map link which usually contains address
-          try {
-            const url = new URL(href);
-            const query = url.searchParams.get('q') || url.searchParams.get('query');
-            if (query && !address) {
-              address = query;
-            }
-          } catch (e) { }
-        });
-
-        $next = $next.next();
+      // Extract location from address element
+      let location = 'Hoboken/Jersey City';
+      let address = location;
+      const locationText = $elem.find('.eventlocation').text().trim();
+      if (locationText) {
+        address = locationText;
+        if (locationText.includes('Jersey City')) location = 'Jersey City';
+        else if (locationText.includes('Hoboken')) location = 'Hoboken';
       }
 
-      if (address) {
-        if (address.includes('Jersey City')) location = 'Jersey City';
-        else if (address.includes('Hoboken')) location = 'Hoboken';
-      }
-
-      console.log(`[TheLocalGirl] Processing potential event: ${name} (${href})`);
+      // Extract image (prefer data-src for lazy-loaded images)
+      const image = $elem.find('.eventsList__list__item__image').attr('data-src')
+        || $elem.find('.eventsList__list__item__image').attr('src')
+        || getEventImage(name, 'community');
 
       const category = categorizeEvent(name, categories.join(' '), location);
-
-      // Since listing page doesn't show dates clearly in the text chunks, we set 'Upcoming'
-      // Ideally we would fetch the detail page, but for now we fallback to generic
-      const dateStr = 'Upcoming';
-      const timeStr = 'See details';
-      const { start_date, end_date } = parseDateText(dateStr, timeStr);
+      const { start_date, end_date } = parseDateText(currentDateStr, 'See details');
 
       const event = createNormalizedEvent({
         name,
         category,
-        date: dateStr,
-        time: timeStr,
+        date: currentDateStr,
+        time: 'See details',
         start_date,
         end_date,
         location,
-        address: address || location,
-        price: 'See details', // Price isn't obvious on listing
+        address,
+        price: 'See details',
         spots: Math.floor(Math.random() * 100) + 20,
-        image: image || getEventImage(name, category),
-        description: description || `Event in ${location}: ${name}`,
+        image,
+        description: `Event in ${location}: ${name}`,
         highlights: categories.length ? categories.slice(0, 4) : ['Local event', 'Community', location],
         url: href,
         source: 'The Local Girl'
@@ -1093,45 +1066,7 @@ async function scrapeTheLocalGirl() {
       if (event) events.push(event);
     });
 
-    console.log(`Scraped ${events.length} events from The Local Girl, fetching dates...`);
-
-    // Fetch details for each event to get the real date
-    await Promise.allSettled(events.map(async (event) => {
-      try {
-        const detailRes = await axios.get(event.url, {
-          timeout: 5000,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-          }
-        });
-        const $detail = cheerio.load(detailRes.data);
-
-        // Metadata often appears in the first paragraph after the H1 title
-        const dateText = $detail('h1').next('p').text().trim();
-
-        // Also try to find time if possible, but date is priority
-        // Sometimes dateText includes time, e.g. "February 7, 2026 @ 7:00 pm - 10:00 pm"
-
-        if (dateText && dateText.length < 50) {
-          // Check if it looks like a date
-          if (dateText.match(/([A-Z][a-z]+ \d{1,2}, \d{4})/)) {
-            event.date = dateText;
-            if (dateText.includes('@')) {
-              const parts = dateText.split('@');
-              event.date = parts[0].trim();
-              event.time = parts[1].trim();
-            }
-            // Re-parse with new date
-            const { start_date, end_date } = parseDateText(event.date, event.time);
-            event.start_date = start_date;
-            event.end_date = end_date;
-          }
-        }
-      } catch (e) {
-        console.log(`Failed to fetch details for ${event.url} in LocalGirl scraper: ${e.message}`);
-      }
-    }));
-
+    console.log(`Scraped ${events.length} events from The Local Girl`);
     return events;
 
   } catch (error) {

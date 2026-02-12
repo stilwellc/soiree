@@ -291,7 +291,7 @@ const REGIONS = {
 };
 
 // Data Sources deemed "Always Free" by user definition
-const FREE_SOURCES = ['NYC For Free'];
+const FREE_SOURCES = ['NYC For Free', 'The Local Girl', 'Hoboken Girl', 'The Hoboken Girl'];
 
 // DOM Elements
 const eventsList = document.getElementById('events-list');

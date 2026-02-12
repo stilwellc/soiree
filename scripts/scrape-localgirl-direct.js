@@ -58,68 +58,81 @@ async function scrapeTheLocalGirl() {
         const $ = cheerio.load(response.data);
         const events = [];
 
-        // Collect basic info first
-        const basicEvents = [];
-        $('h2').each((i, elem) => {
+        // The listing page groups events under date headers in an ordered list:
+        //   ol.eventsList__list
+        //     li.eventsList__list__dateHeader  (contains button with data-date="2026-02-12, 23:00 UTC")
+        //     li.eventsList__list__item        (event under that date)
+        //     li.eventsList__list__item
+        //     li.eventsList__list__dateHeader  (next date)
+        //     ...
+        // We read the children in order, tracking the current date from each header.
 
-            const $title = $(elem).find('a').first();
-            const name = $title.text().trim();
-            const href = $title.attr('href');
+        let currentDateStr = 'Upcoming';
+        let currentISODate = null;
+
+        $('ol.eventsList__list').children().each((i, el) => {
+            const cls = $(el).attr('class') || '';
+
+            if (cls.includes('eventsList__list__dateHeader')) {
+                // Extract date from the toggle button's data-date attribute
+                // Format: "2026-02-12, 23:00 UTC"
+                const dataDate = $(el).find('button[data-date]').attr('data-date') || '';
+                if (dataDate) {
+                    const isoMatch = dataDate.match(/(\d{4}-\d{2}-\d{2})/);
+                    if (isoMatch) {
+                        currentISODate = isoMatch[1];
+                        // Format as readable date string
+                        const d = new Date(currentISODate + 'T12:00:00Z');
+                        currentDateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    }
+                }
+                return; // skip to next child
+            }
+
+            if (!cls.includes('eventsList__list__item')) return;
+            if (events.length >= 120) return;
+
+            const $item = $(el);
+            const $link = $item.find('h2 a').first();
+            const name = $link.text().trim();
+            const href = $link.attr('href');
 
             if (!name || !href) return;
 
-            let $next = $(elem).next();
-            let description = '';
-            let image = '';
-            let categories = [];
+            // Extract categories
+            const categories = [];
+            $item.find('.eventsList__list__item__categories a').each((_, catLink) => {
+                const catText = $(catLink).text().trim();
+                if (catText && catText !== 'The Hoboken Girl Calendar' && !categories.includes(catText)) {
+                    categories.push(catText);
+                }
+            });
+
+            // Extract location from address field
             let location = 'Hoboken/Jersey City';
             let address = '';
-
-            for (let j = 0; j < 10; j++) {
-                if ($next.length === 0 || $next.is('h2')) break;
-
-                const $img = $next.find('img');
-                if ($img.length && !image) {
-                    image = $img.attr('src');
-                }
-
-                $next.find('a[href*="/category/"]').each((_, catLink) => {
-                    const catText = $(catLink).text().trim();
-                    if (catText && catText !== 'The Hoboken Girl Calendar' && !categories.includes(catText)) {
-                        categories.push(catText);
-                    }
-                });
-
-                $next.find('a[href*="maps.google.com"], a[href*="maps.apple.com"]').each((_, mapLink) => {
-                    const href = $(mapLink).attr('href');
-                    try {
-                        const url = new URL(href);
-                        const query = url.searchParams.get('q') || url.searchParams.get('query');
-                        if (query && !address) {
-                            address = query;
-                        }
-                    } catch (e) { }
-                });
-
-                $next = $next.next();
+            const locationText = $item.find('.eventlocation').text().trim();
+            if (locationText) {
+                address = locationText;
+                if (locationText.includes('Jersey City')) location = 'Jersey City';
+                else if (locationText.includes('Hoboken')) location = 'Hoboken';
             }
 
-            if (address) {
-                if (address.includes('Jersey City')) location = 'Jersey City';
-                else if (address.includes('Hoboken')) location = 'Hoboken';
-            }
+            // Extract image (use data-src for lazy-loaded images)
+            let image = $item.find('.eventsList__list__item__image').attr('data-src')
+                || $item.find('.eventsList__list__item__image').attr('src')
+                || '';
 
             const category = categorizeEvent(name, categories.join(' '), location);
 
-            const dateStr = 'Upcoming';
-            const timeStr = 'See details';
-            const { start_date, end_date } = parseDateText(dateStr, timeStr);
+            // Use date from section header
+            const { start_date, end_date } = parseDateText(currentDateStr, 'See details');
 
             const event = createNormalizedEvent({
                 name,
                 category,
-                date: dateStr,
-                time: timeStr,
+                date: currentDateStr,
+                time: 'See details',
                 start_date,
                 end_date,
                 location,
@@ -127,104 +140,19 @@ async function scrapeTheLocalGirl() {
                 price: 'See details',
                 spots: Math.floor(Math.random() * 100) + 20,
                 image: image || getEventImage(name, category),
-                description: description || `Event in ${location}: ${name}`,
+                description: `Event in ${location}: ${name}`,
                 highlights: categories.length ? categories.slice(0, 4) : ['Local event', 'Community', location],
                 url: href,
                 source: 'The Local Girl'
             });
 
-            if (event) basicEvents.push(event);
+            if (event) {
+                events.push(event);
+                console.log(`  ✓ ${name.substring(0, 40)} → ${start_date || 'no date'}`);
+            }
         });
 
-        // Fetch details for each event to get the real date
-        console.log(`Fetching details for ${basicEvents.length} events...`);
-
-        let successCount = 0;
-        let failCount = 0;
-
-        await Promise.allSettled(basicEvents.map(async (event) => {
-            try {
-                const detailRes = await axios.get(event.url, {
-                    timeout: 8000,
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.5',
-                        'Connection': 'keep-alive'
-                    }
-                });
-                const $detail = cheerio.load(detailRes.data);
-
-                // Try multiple selectors to find the date
-                let dateText = null;
-
-                // Method 1: h1 next p (most common)
-                dateText = $detail('h1').next('p').text().trim();
-
-                // Method 2: Look for time element
-                if (!dateText || dateText.length > 100) {
-                    const timeText = $detail('time').first().text().trim();
-                    if (timeText && timeText.length < 50) {
-                        dateText = timeText;
-                    }
-                }
-
-                // Method 3: Search for date pattern in first few paragraphs
-                if (!dateText || dateText.length > 100) {
-                    $detail('p').slice(0, 5).each((i, elem) => {
-                        const text = $detail(elem).text().trim();
-                        if (text.match(/^[A-Z][a-z]+ \d{1,2}, \d{4}/)) {
-                            dateText = text;
-                            return false; // break
-                        }
-                    });
-                }
-
-                // Parse the date if we found one
-                if (dateText && dateText.length < 100) {
-                    const dateMatch = dateText.match(/([A-Z][a-z]+ \d{1,2}, \d{4})/);
-                    if (dateMatch) {
-                        event.date = dateMatch[1];
-
-                        // Extract time if present (e.g., "February 8, 2026 @ 2:00 PM")
-                        if (dateText.includes('@')) {
-                            const parts = dateText.split('@');
-                            event.date = parts[0].trim();
-                            event.time = parts[1].trim();
-                        } else if (dateText.includes(' at ')) {
-                            const parts = dateText.split(' at ');
-                            event.date = parts[0].trim();
-                            event.time = parts[1].trim();
-                        }
-
-                        const { start_date, end_date } = parseDateText(event.date, event.time);
-                        if (start_date) {
-                            event.start_date = start_date;
-                            event.end_date = end_date;
-                            successCount++;
-                            console.log(`  ✓ ${event.name.substring(0, 40)}... → ${start_date}`);
-                        } else {
-                            failCount++;
-                        }
-                    } else {
-                        failCount++;
-                    }
-                } else {
-                    failCount++;
-                }
-
-                events.push(event);
-            } catch (e) {
-                console.log(`  ✗ ${event.name.substring(0, 40)}... (${e.message})`);
-                failCount++;
-                events.push(event);
-            }
-
-            // Small delay to avoid rate limiting
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }));
-
-        console.log(`\nDate extraction: ${successCount} successful, ${failCount} failed`);
+        console.log(`\nScraped ${events.length} events from The Local Girl (dates from listing page)`);
         return events;
 
     } catch (error) {
