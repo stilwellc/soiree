@@ -2459,6 +2459,65 @@ button:focus-visible,
   border-color: #ddd;
 }
 
+/* Footer */
+.app-footer {
+  padding: 48px 20px 56px;
+  text-align: center;
+  margin-top: auto;
+}
+
+.footer-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--accent);
+  opacity: 0.5;
+  letter-spacing: -0.3px;
+}
+
+.footer-rotating {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  vertical-align: bottom;
+  height: 1.1em;
+}
+
+.footer-word {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: transform 0.45s var(--transition), opacity 0.3s ease;
+  white-space: nowrap;
+}
+
+.footer-word.active {
+  position: relative;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.footer-word.exit {
+  opacity: 0;
+  transform: translateY(-100%);
+}
+
+.footer-logo {
+  height: 22px;
+  width: auto;
+  filter: grayscale(1);
+  opacity: 0.75;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
 .links-row {
   display: flex;
   align-items: center;
