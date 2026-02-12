@@ -458,17 +458,25 @@ function handleRegionChange(newRegion) {
 // Toggle region dropdown
 function toggleRegionDropdown() {
   const dropdown = document.getElementById('region-dropdown');
+  const backdrop = document.getElementById('region-backdrop');
   const isVisible = dropdown && dropdown.style.display !== 'none';
   if (dropdown) {
     dropdown.style.display = isVisible ? 'none' : 'block';
+  }
+  if (backdrop) {
+    backdrop.classList.toggle('active', !isVisible);
   }
 }
 
 // Close region dropdown
 function closeRegionDropdown() {
   const dropdown = document.getElementById('region-dropdown');
+  const backdrop = document.getElementById('region-backdrop');
   if (dropdown) {
     dropdown.style.display = 'none';
+  }
+  if (backdrop) {
+    backdrop.classList.remove('active');
   }
 }
 
@@ -551,13 +559,18 @@ function setupEventListeners() {
     });
   });
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside or tapping backdrop
   document.addEventListener('click', (e) => {
     const selector = document.querySelector('.region-selector');
     if (selector && !selector.contains(e.target)) {
       closeRegionDropdown();
     }
   });
+
+  const regionBackdrop = document.getElementById('region-backdrop');
+  if (regionBackdrop) {
+    regionBackdrop.addEventListener('click', closeRegionDropdown);
+  }
 
   // Keyboard navigation
   document.addEventListener('keydown', (e) => {
