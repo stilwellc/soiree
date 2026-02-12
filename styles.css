@@ -262,7 +262,7 @@ body {
 .hero-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: 72px;
-  font-weight: 300;
+  font-weight: 500;
   color: var(--deep);
   letter-spacing: -2px;
   line-height: 1.0;
@@ -277,17 +277,31 @@ body {
   }
 }
 
-/* Soirée logo in place of the brand word */
+/* Soirée logo replacing the brand word */
 .hero-title-logo {
   display: block;
-  height: 72px;
+  height: 44px;
   width: auto;
-  margin-top: 2px;
+  margin-top: 6px;
 }
 
 @media (max-width: 380px) {
   .hero-title-logo {
-    height: 54px;
+    height: 36px;
+  }
+}
+
+/* "Soirée" — italic brand word fallback */
+.hero-title-soiree {
+  font-style: italic;
+  color: var(--dusk);
+  font-weight: 300;
+  font-size: 80px;
+}
+
+@media (max-width: 380px) {
+  .hero-title-soiree {
+    font-size: 64px;
   }
 }
 
