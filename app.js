@@ -1250,15 +1250,10 @@ function initRotatingTitle() {
 function startRotating() {
   stopRotating();
   const words = document.querySelectorAll('.title-word');
-  const footerWords = document.querySelectorAll('.footer-word');
   if (words.length === 0) return;
 
   let current = 0;
   words.forEach((w, i) => {
-    w.classList.remove('active', 'exit');
-    if (i === 0) w.classList.add('active');
-  });
-  footerWords.forEach((w, i) => {
     w.classList.remove('active', 'exit');
     if (i === 0) w.classList.add('active');
   });
@@ -1269,15 +1264,12 @@ function startRotating() {
 
     words[prev].classList.add('exit');
     words[prev].classList.remove('active');
-    if (footerWords[prev]) { footerWords[prev].classList.add('exit'); footerWords[prev].classList.remove('active'); }
 
     setTimeout(() => {
       words[prev].classList.remove('exit');
-      if (footerWords[prev]) footerWords[prev].classList.remove('exit');
     }, 500);
 
     words[current].classList.add('active');
-    if (footerWords[current]) footerWords[current].classList.add('active');
   }, 2000);
 }
 
