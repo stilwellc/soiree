@@ -1299,10 +1299,20 @@ function setFixedTitle(text) {
 // NETWORK GRAPH VISUALIZATION
 // ============================================================================
 
+function lightenHex(hex, amount) {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = Math.min(255, (num >> 16) + amount);
+  const g = Math.min(255, ((num >> 8) & 0xff) + amount);
+  const b = Math.min(255, (num & 0xff) + amount);
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
 
 async function initNetworkGraph() {
   const canvas = document.getElementById('network-graph');
   if (!canvas) return;
+  if (canvas.hasAttribute('data-init')) return;
+  canvas.setAttribute('data-init', 'true');
 
   // Fetch ALL events from API (not filtered by region)
   let allEvents = [];
@@ -1324,176 +1334,332 @@ async function initNetworkGraph() {
 
   // Set canvas size
   const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = 400 * dpr;
+  const width = rect.width;
+  const height = 440;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
   ctx.scale(dpr, dpr);
 
-  const width = rect.width;
-  const height = 400;
+  const cx = width / 2;
+  const cy = height / 2;
 
-  // Create nodes based on actual data sources (without revealing names)
-  // Group events by source to determine region
+  // Color + label maps
+  const NODE_COLORS = {
+    'nyc':          '#4A90E2',
+    'hoboken-jc':   '#6BCB77',
+    'north-nj':     '#9370DB',
+    'central-nj':   '#FFB347',
+    'south-nj':     '#FF6B6B',
+    'jersey-shore': '#00CED1'
+  };
+  const REGION_LABELS = {
+    'nyc':          'NYC',
+    'hoboken-jc':   'HBK/JC',
+    'north-nj':     'N.NJ',
+    'central-nj':   'C.NJ',
+    'south-nj':     'S.NJ',
+    'jersey-shore': 'SHORE'
+  };
+
+  // Group events by source
   const sourceMap = new Map();
   allEvents.forEach(e => {
-    if (!sourceMap.has(e.source)) {
-      sourceMap.set(e.source, []);
-    }
+    if (!sourceMap.has(e.source)) sourceMap.set(e.source, []);
     sourceMap.get(e.source).push(e);
   });
 
-  const nodes = [];
-
-  // Central node
-  nodes.push({
-    x: width / 2,
-    y: height / 2,
-    radius: 12,
-    color: '#D4AF37',
-    vx: 0,
-    vy: 0,
-    fixed: true,
-    label: 'Soirée',
-    region: 'central'
-  });
-
-  // Create nodes for each data source (color-coded by region)
   const sources = Array.from(sourceMap.keys());
-  const angleStep = (Math.PI * 2) / sources.length;
-  const orbitRadius = Math.min(width, height) * 0.3;
+  const orbitRadius = Math.min(width, height) * 0.32;
+
+  function getRegion(events) {
+    const rc = { 'nyc': 0, 'hoboken-jc': 0, 'north-nj': 0, 'central-nj': 0, 'south-nj': 0, 'jersey-shore': 0 };
+    events.forEach(e => {
+      const loc = (e.location || '').toLowerCase();
+      const src = (e.source || '').toLowerCase();
+      if (loc.includes('hoboken') || loc.includes('jersey city')) rc['hoboken-jc']++;
+      else if (loc.includes('shore') || loc.includes('beach') || loc.includes('asbury') || loc.includes('cape may') || loc.includes('wildwood') || loc.includes('ocean')) rc['jersey-shore']++;
+      else if (loc.includes('camden') || loc.includes('cherry hill')) rc['south-nj']++;
+      else if (src.includes('visit nj') || loc.includes('princeton') || loc.includes('trenton') || loc.includes('new brunswick')) rc['central-nj']++;
+      else if (loc.includes('newark') || loc.includes('paterson') || loc.includes('montclair')) rc['north-nj']++;
+      else rc['nyc']++;
+    });
+    let maxRegion = 'nyc', maxCount = -1;
+    for (const [r, c] of Object.entries(rc)) { if (c > maxCount) { maxCount = c; maxRegion = r; } }
+    return maxRegion;
+  }
+
+  // Build nodes
+  const maxEvents = Math.max(...sources.map(s => sourceMap.get(s).length));
+  const nodes = [{
+    x: cx, y: cy,
+    radius: 15,
+    color: '#D4AF37',
+    vx: 0, vy: 0,
+    fixed: true,
+    label: 'SOIRÉE',
+    region: 'central',
+    eventCount: allEvents.length,
+    pulsePhase: 0
+  }];
 
   sources.forEach((source, i) => {
-    const sourceEvents = sourceMap.get(source);
-
-    // Determine region based on majority of events from this source
-    const regionCounts = {
-      'nyc': 0,
-      'hoboken-jc': 0,
-      'north-nj': 0,
-      'central-nj': 0,
-      'south-nj': 0,
-      'jersey-shore': 0
-    };
-
-    sourceEvents.forEach(e => {
-      const loc = (e.location || '').toLowerCase();
-      const addr = (e.address || '').toLowerCase();
-      const src = (e.source || '').toLowerCase();
-
-      // Simple keyword matching (duplicate logic for now to keep it self-contained)
-      if (loc.includes('hoboken') || loc.includes('jersey city')) regionCounts['hoboken-jc']++;
-      else if (loc.includes('shore') || loc.includes('beach') || loc.includes('asbury') || loc.includes('cape may') || loc.includes('wildwood') || loc.includes('ocean')) regionCounts['jersey-shore']++;
-      else if (loc.includes('camden') || loc.includes('cherry hill')) regionCounts['south-nj']++;
-      else if (src.includes('visit nj') || loc.includes('princeton') || loc.includes('trenton') || loc.includes('new brunswick')) regionCounts['central-nj']++;
-      else if (loc.includes('newark') || loc.includes('paterson') || loc.includes('montclair')) regionCounts['north-nj']++;
-      else regionCounts['nyc']++;
-    });
-
-    // Find majority region
-    let maxRegion = 'nyc';
-    let maxCount = -1;
-    for (const [region, count] of Object.entries(regionCounts)) {
-      if (count > maxCount) {
-        maxCount = count;
-        maxRegion = region;
-      }
-    }
-
-    const NODE_COLORS = {
-      'nyc': '#4A90E2',      // Blue
-      'hoboken-jc': '#6B8E23', // Olive
-      'north-nj': '#9370DB',   // Purple
-      'central-nj': '#FFA500', // Orange
-      'south-nj': '#FF6347',   // Red
-      'jersey-shore': '#00CED1' // Turquoise
-    };
-
-    const angle = i * angleStep;
+    const evts = sourceMap.get(source);
+    const region = getRegion(evts);
+    const angle = (i / sources.length) * Math.PI * 2 - Math.PI / 2;
+    const r = 5 + Math.round((evts.length / maxEvents) * 8);
     nodes.push({
-      x: width / 2 + Math.cos(angle) * orbitRadius,
-      y: height / 2 + Math.sin(angle) * orbitRadius,
-      radius: 6,
-      color: NODE_COLORS[maxRegion] || '#4A90E2',
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: (Math.random() - 0.5) * 0.5,
+      x: cx + Math.cos(angle) * orbitRadius,
+      y: cy + Math.sin(angle) * orbitRadius,
+      radius: r,
+      color: NODE_COLORS[region] || '#4A90E2',
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
       fixed: false,
-      label: `Node ${i + 1}`,
-      region: maxRegion
+      label: REGION_LABELS[region] || 'NYC',
+      region,
+      source,
+      eventCount: evts.length,
+      pulsePhase: Math.random() * Math.PI * 2
     });
   });
 
-  // Animation loop
+  // Data packets traveling along edges
+  const packets = [];
+  function spawnPacket() {
+    if (nodes.length < 2) return;
+    const toIdx = 1 + Math.floor(Math.random() * (nodes.length - 1));
+    packets.push({
+      toNode: toIdx,
+      t: 0,
+      speed: 0.004 + Math.random() * 0.005,
+      color: nodes[toIdx].color,
+      size: 2.5 + Math.random() * 1.5
+    });
+  }
+  for (let i = 0; i < Math.min(nodes.length - 1, 6); i++) spawnPacket();
+
+  let frame_t = 0;
+  let lastPacketSpawn = 0;
+
   function animate() {
+    frame_t++;
     ctx.clearRect(0, 0, width, height);
 
-    // Update node positions (simple physics)
+    // Dark background
+    ctx.fillStyle = '#080d18';
+    ctx.fillRect(0, 0, width, height);
+
+    // Subtle radial grid circles
+    ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+    ctx.lineWidth = 1;
+    for (let r = 55; r < Math.max(width, height) * 1.2; r += 55) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Radial spokes
+    ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(a) * width, cy + Math.sin(a) * width);
+      ctx.stroke();
+    }
+
+    // Rotating scanner sweep
+    const scanAngle = (frame_t * 0.007) % (Math.PI * 2);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, Math.min(width, height) * 0.65, scanAngle - 0.35, scanAngle);
+    ctx.closePath();
+    const scanGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(width, height) * 0.65);
+    scanGrad.addColorStop(0, 'rgba(212,175,55,0.14)');
+    scanGrad.addColorStop(1, 'rgba(212,175,55,0)');
+    ctx.fillStyle = scanGrad;
+    ctx.fill();
+    ctx.restore();
+
+    // --- Physics ---
     nodes.forEach((node, i) => {
       if (node.fixed) return;
-
-      // Attract to orbit
-      const dx = width / 2 - node.x;
-      const dy = height / 2 - node.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const targetDist = orbitRadius;
-      const force = (dist - targetDist) * 0.01;
-
+      const dx = cx - node.x;
+      const dy = cy - node.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+      const force = (dist - orbitRadius) * 0.008;
       node.vx += (dx / dist) * force;
       node.vy += (dy / dist) * force;
 
-      // Damping
-      node.vx *= 0.95;
-      node.vy *= 0.95;
+      // Tangential drift for slow orbital rotation
+      node.vx += (-dy / dist) * 0.010;
+      node.vy +=  (dx / dist) * 0.010;
 
-      // Update position
-      node.x += node.vx;
-      node.y += node.vy;
+      node.vx *= 0.92;
+      node.vy *= 0.92;
 
-      // Repel from other nodes
+      // Repulsion between nodes (respects node radius)
       nodes.forEach((other, j) => {
         if (i === j) return;
         const dx2 = other.x - node.x;
         const dy2 = other.y - node.y;
-        const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-        if (dist2 < 50 && dist2 > 0) {
-          const repel = (50 - dist2) * 0.02;
+        const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 0.001;
+        const minDist = node.radius + other.radius + 22;
+        if (dist2 < minDist) {
+          const repel = (minDist - dist2) * 0.045;
           node.vx -= (dx2 / dist2) * repel;
           node.vy -= (dy2 / dist2) * repel;
         }
       });
+
+      node.x += node.vx;
+      node.y += node.vy;
+
+      // Soft boundary
+      const pad = node.radius + 12;
+      if (node.x < pad) node.vx += 0.6;
+      if (node.x > width - pad) node.vx -= 0.6;
+      if (node.y < pad) node.vy += 0.6;
+      if (node.y > height - pad) node.vy -= 0.6;
     });
 
-    // Draw connections
-    ctx.strokeStyle = 'rgba(212, 175, 55, 0.15)';
-    ctx.lineWidth = 1;
+    // --- Connections: hub to source nodes ---
     nodes.forEach((node, i) => {
-      if (i === 0) return; // Skip central node
+      if (i === 0) return;
+      const alpha = 0.22 + 0.10 * Math.sin(frame_t * 0.018 + i * 1.3);
+      const hexAlpha = Math.round(alpha * 255).toString(16).padStart(2, '0');
+      const grad = ctx.createLinearGradient(nodes[0].x, nodes[0].y, node.x, node.y);
+      grad.addColorStop(0, `rgba(212,175,55,${alpha})`);
+      grad.addColorStop(1, node.color + hexAlpha);
       ctx.beginPath();
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1;
       ctx.moveTo(nodes[0].x, nodes[0].y);
       ctx.lineTo(node.x, node.y);
       ctx.stroke();
     });
 
-    // Draw nodes
-    nodes.forEach((node, i) => {
-      // Glow effect
-      const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, node.radius * 2);
-      gradient.addColorStop(0, node.color + '40');
-      gradient.addColorStop(1, node.color + '00');
-      ctx.fillStyle = gradient;
+    // Cross-connections between nearby source nodes (dashed, subtle)
+    nodes.forEach((a, i) => {
+      if (i === 0) return;
+      nodes.forEach((b, j) => {
+        if (j <= i || j === 0) return;
+        const ddx = b.x - a.x;
+        const ddy = b.y - a.y;
+        const d = Math.sqrt(ddx * ddx + ddy * ddy);
+        if (d < 130) {
+          const alpha = (1 - d / 130) * 0.18;
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+          ctx.lineWidth = 0.5;
+          ctx.setLineDash([3, 7]);
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      });
+    });
+
+    // --- Data packets ---
+    for (let idx = packets.length - 1; idx >= 0; idx--) {
+      const pkt = packets[idx];
+      pkt.t += pkt.speed;
+      if (pkt.t >= 1) { packets.splice(idx, 1); continue; }
+      const to = nodes[pkt.toNode];
+      if (!to) continue;
+      const px = nodes[0].x + (to.x - nodes[0].x) * pkt.t;
+      const py = nodes[0].y + (to.y - nodes[0].y) * pkt.t;
+      // Glow halo
+      const halo = ctx.createRadialGradient(px, py, 0, px, py, pkt.size * 3.5);
+      halo.addColorStop(0, pkt.color + 'cc');
+      halo.addColorStop(1, pkt.color + '00');
       ctx.beginPath();
-      ctx.arc(node.x, node.y, node.radius * 2, 0, Math.PI * 2);
+      ctx.fillStyle = halo;
+      ctx.arc(px, py, pkt.size * 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Core
+      ctx.beginPath();
+      ctx.fillStyle = '#ffffff';
+      ctx.arc(px, py, pkt.size * 0.55, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Spawn packets
+    if (frame_t - lastPacketSpawn > 35 + Math.random() * 40) {
+      lastPacketSpawn = frame_t;
+      spawnPacket();
+    }
+
+    // --- Draw nodes ---
+    nodes.forEach((node, i) => {
+      const t = frame_t * 0.028 + node.pulsePhase;
+      const pulse = 1 + 0.18 * Math.sin(t);
+
+      // Outer glow
+      const outerR = node.radius * 2.8 * pulse;
+      const outerGlow = ctx.createRadialGradient(node.x, node.y, node.radius * 0.4, node.x, node.y, outerR);
+      outerGlow.addColorStop(0, node.color + '2a');
+      outerGlow.addColorStop(1, node.color + '00');
+      ctx.beginPath();
+      ctx.fillStyle = outerGlow;
+      ctx.arc(node.x, node.y, outerR, 0, Math.PI * 2);
       ctx.fill();
 
-      // Node circle
-      ctx.fillStyle = node.color;
+      // Pulsing rings for central node
+      if (i === 0) {
+        const ring1R = node.radius + 7 + 3 * Math.sin(t);
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(212,175,55,${0.30 + 0.18 * Math.sin(t)})`;
+        ctx.lineWidth = 1.5;
+        ctx.arc(node.x, node.y, ring1R, 0, Math.PI * 2);
+        ctx.stroke();
+
+        const ring2R = node.radius + 14 + 5 * Math.sin(t * 0.65);
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(212,175,55,${0.10 + 0.08 * Math.sin(t * 0.65)})`;
+        ctx.lineWidth = 1;
+        ctx.arc(node.x, node.y, ring2R, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        // Subtle pulse ring for source nodes
+        const ringR = node.radius + 3 + 1.5 * Math.sin(t);
+        ctx.beginPath();
+        ctx.strokeStyle = node.color + Math.round((0.20 + 0.12 * Math.sin(t)) * 255).toString(16).padStart(2,'0');
+        ctx.lineWidth = 1;
+        ctx.arc(node.x, node.y, ringR, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Node fill with radial gradient (inner highlight)
+      const nodeGrad = ctx.createRadialGradient(
+        node.x - node.radius * 0.3, node.y - node.radius * 0.35, 0,
+        node.x, node.y, node.radius
+      );
+      nodeGrad.addColorStop(0, lightenHex(node.color, 50));
+      nodeGrad.addColorStop(1, node.color);
       ctx.beginPath();
+      ctx.fillStyle = nodeGrad;
       ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Inner highlight
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      // Crisp border
       ctx.beginPath();
-      ctx.arc(node.x - node.radius * 0.3, node.y - node.radius * 0.3, node.radius * 0.4, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.strokeStyle = node.color + 'bb';
+      ctx.lineWidth = 1;
+      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Label
+      ctx.font = 'bold 8px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      if (i === 0) {
+        ctx.fillStyle = 'rgba(212,175,55,0.90)';
+        ctx.fillText('SOIRÉE', node.x, node.y + node.radius + 11);
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.50)';
+        ctx.fillText(node.label, node.x, node.y + node.radius + 10);
+      }
     });
 
     requestAnimationFrame(animate);
@@ -1507,36 +1673,30 @@ async function initNetworkGraph() {
   if (nodesEl) nodesEl.textContent = sources.length;
   if (eventsEl) eventsEl.textContent = allEvents.length;
 
-  // --- Technical Dashboard Logic (v2.1) ---
-
-  // 1. Populate Legend
+  // --- Legend: grouped by region, color-coded ---
   const techLegend = document.getElementById('js-tech-legend');
   if (techLegend) {
     techLegend.innerHTML = '';
-    const sortedSources = sources.sort();
-
-    sortedSources.forEach(source => {
+    const regionData = new Map();
+    nodes.slice(1).forEach(n => {
+      if (!regionData.has(n.region)) regionData.set(n.region, { color: n.color, count: 0, label: REGION_LABELS[n.region] });
+      regionData.get(n.region).count += n.eventCount;
+    });
+    regionData.forEach(({ color, count, label }) => {
       const item = document.createElement('div');
       item.className = 'tech-legend-item';
-      item.innerHTML = `
-        <div class="tech-dot" style="background: var(--gold, #D4AF37);"></div>
-        <span>${source}</span>
-      `;
+      item.innerHTML = `<div class="tech-dot" style="background:${color};box-shadow:0 0 5px ${color}88;"></div><span>${label} <span style="color:#999;font-size:10px">${count}</span></span>`;
       techLegend.appendChild(item);
     });
   }
 
-  // 2. Populate Last Scrape
+  // Last Scrape timestamp
   const scrapeEl = document.getElementById('last-scrape');
-  if (scrapeEl && allEvents.length > 0) {
-    // Find most recent scrape time if available, or just use now
-    // Assuming API returns scraped_at or just use current time roughly
-    // We'll mock it if not present
-    const time = new Date();
-    scrapeEl.textContent = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' EST';
+  if (scrapeEl) {
+    scrapeEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' EST';
   }
 
-  // 3. System Log
+  // Activity Log
   const techLog = document.getElementById('js-tech-log');
   if (techLog && !techLog.hasAttribute('data-init')) {
     techLog.setAttribute('data-init', 'true');
@@ -1545,115 +1705,78 @@ async function initNetworkGraph() {
       { msg: 'Connecting to database...', type: 'info' },
       { msg: 'Fetching event data streams...', type: 'info' },
       { msg: `Parsing JSON payload (${(allEvents.length * 0.5).toFixed(1)} KB)`, type: 'success' },
-      { msg: ' Analyzing geospatial vectors...', type: 'info' },
+      { msg: 'Analyzing geospatial vectors...', type: 'info' },
       { msg: 'Node clustering active', type: 'success' },
       { msg: 'UI Layer mounted', type: 'success' }
     ];
-
-    // Helper must be defined before usage
     const addLog = (msg, type = 'info') => {
       const entry = document.createElement('div');
       entry.className = 'tech-log-entry';
       const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      entry.innerHTML = `
-        <span class="tech-log-ts" style="color:#aaa;">[${time}]</span>
-        <span class="tech-log-msg ${type}" style="color:${type === 'success' ? '#4CAF50' : '#555'}">${msg}</span>
-      `;
+      entry.innerHTML = `<span class="tech-log-ts" style="color:#aaa;">[${time}]</span><span class="tech-log-msg ${type}" style="color:${type === 'success' ? '#4CAF50' : '#555'}">${msg}</span>`;
       techLog.prepend(entry);
       if (techLog.children.length > 20) techLog.lastChild.remove();
     };
-
-    // Initial fill
     logs.forEach(l => addLog(l.msg, l.type));
-
-    // Random activity simulator
     setInterval(() => {
       const verbs = ['Ping', 'Sync', 'Optimizing', 'Calibrating', 'Verifying'];
       const nouns = ['Node', 'Packet', 'Latency', 'Cache', 'Buffer'];
-      const msg = `${verbs[Math.floor(Math.random() * verbs.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]} ${Math.floor(Math.random() * 999)}`;
-      addLog(msg, 'info');
+      addLog(`${verbs[Math.floor(Math.random() * verbs.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]} ${Math.floor(Math.random() * 999)}`, 'info');
     }, 2500);
   }
 
-
-  // 4. Traffic Chart (v2.2)
+  // Traffic Chart
   const trafficCanvas = document.getElementById('traffic-chart');
   if (trafficCanvas && !trafficCanvas.hasAttribute('init')) {
     trafficCanvas.setAttribute('init', 'true');
-    const ctx = trafficCanvas.getContext('2d');
-
-    const dpr = window.devicePixelRatio || 1;
+    const tCtx = trafficCanvas.getContext('2d');
+    const tDpr = window.devicePixelRatio || 1;
     let points = new Array(60).fill(60).map((_, i) => 60 + Math.sin(i * 0.5) * 10 + Math.random() * 10);
 
     function frame() {
-      const rect = trafficCanvas.getBoundingClientRect();
-      if (rect.width === 0) return requestAnimationFrame(frame);
-
-      // Auto-resize
-      if (trafficCanvas.width !== Math.floor(rect.width * dpr)) {
-        trafficCanvas.width = rect.width * dpr;
-        trafficCanvas.height = rect.height * dpr;
-        ctx.scale(dpr, dpr);
+      const r = trafficCanvas.getBoundingClientRect();
+      if (r.width === 0) return requestAnimationFrame(frame);
+      if (trafficCanvas.width !== Math.floor(r.width * tDpr)) {
+        trafficCanvas.width = r.width * tDpr;
+        trafficCanvas.height = r.height * tDpr;
+        tCtx.scale(tDpr, tDpr);
       }
-
-      const w = rect.width;
-      const h = rect.height;
-      ctx.clearRect(0, 0, w, h);
-
-      // Draw Grid
-      ctx.strokeStyle = '#f9f9f9'; // Lighter grid
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      const stepX = w / 10;
-      for (let x = 0; x < w; x += stepX) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
-      ctx.stroke();
-
-      // Draw Area
-      ctx.beginPath();
+      const w = r.width, h = r.height;
+      tCtx.clearRect(0, 0, w, h);
+      tCtx.strokeStyle = '#f9f9f9';
+      tCtx.lineWidth = 1;
+      tCtx.beginPath();
+      for (let x = 0; x < w; x += w / 10) { tCtx.moveTo(x, 0); tCtx.lineTo(x, h); }
+      tCtx.stroke();
+      tCtx.beginPath();
       points.forEach((p, i) => {
         const x = (i / (points.length - 1)) * w;
-        const y = h - ((p / 100) * h);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        const y = h - (p / 100) * h;
+        if (i === 0) tCtx.moveTo(x, y); else tCtx.lineTo(x, y);
       });
-      ctx.lineTo(w, h);
-      ctx.lineTo(0, h);
-      ctx.closePath();
-
-      const grad = ctx.createLinearGradient(0, 0, 0, h);
-      grad.addColorStop(0, 'rgba(76, 175, 80, 0.15)');
-      grad.addColorStop(1, 'rgba(76, 175, 80, 0.0)');
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      // Draw Line
-      ctx.beginPath();
+      tCtx.lineTo(w, h); tCtx.lineTo(0, h); tCtx.closePath();
+      const grad = tCtx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, 'rgba(76,175,80,0.15)');
+      grad.addColorStop(1, 'rgba(76,175,80,0)');
+      tCtx.fillStyle = grad; tCtx.fill();
+      tCtx.beginPath();
       points.forEach((p, i) => {
         const x = (i / (points.length - 1)) * w;
-        const y = h - ((p / 100) * h);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        const y = h - (p / 100) * h;
+        if (i === 0) tCtx.moveTo(x, y); else tCtx.lineTo(x, y);
       });
-      ctx.strokeStyle = '#4CAF50';
-      ctx.lineWidth = 2;
-      ctx.lineJoin = 'round';
-      ctx.stroke();
-
+      tCtx.strokeStyle = '#4CAF50'; tCtx.lineWidth = 2; tCtx.lineJoin = 'round'; tCtx.stroke();
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
 
-    // Update Data
     setInterval(() => {
       points.shift();
       const last = points[points.length - 1] || 50;
-      let next = last + (Math.random() - 0.5) * 15;
-      next = Math.max(20, Math.min(95, next)); // Clamp
+      let next = Math.max(20, Math.min(95, last + (Math.random() - 0.5) * 15));
       points.push(next);
-
       const rpsEl = document.getElementById('traffic-rps');
       if (rpsEl) rpsEl.textContent = Math.floor(next * 2 + 100);
-
       const deltaEl = document.querySelector('.traffic-delta');
       if (deltaEl) {
         const change = ((next - last) / last) * 100;
@@ -1663,14 +1786,12 @@ async function initNetworkGraph() {
     }, 1000);
   }
 
+  // Regions count
   const regions = new Set();
   allEvents.forEach(e => {
     const loc = e.location.toLowerCase();
-    if (loc.includes('hoboken') || loc.includes('jersey city')) {
-      regions.add('Hoboken/JC');
-    } else {
-      regions.add('NYC');
-    }
+    if (loc.includes('hoboken') || loc.includes('jersey city')) regions.add('Hoboken/JC');
+    else regions.add('NYC');
   });
   document.getElementById('network-regions').textContent = regions.size;
 }
