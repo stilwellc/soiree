@@ -312,10 +312,12 @@ body {
 .title-rotating {
   display: inline-block;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   vertical-align: bottom;
   height: 1.05em;
   z-index: 2;
+  /* clip sides + top but let descenders bleed through the bottom */
+  clip-path: inset(0 0 -0.3em 0);
 }
 
 .title-word {
