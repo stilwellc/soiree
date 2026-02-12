@@ -277,12 +277,14 @@ body {
   }
 }
 
-/* Soirée logo replacing the brand word */
+/* Soirée logo replacing the brand word — sits behind the rotating text */
 .hero-title-logo {
   display: block;
   height: 44px;
   width: auto;
-  margin-top: 20px;
+  margin-top: 6px;
+  position: relative;
+  z-index: 0;
 }
 
 @media (max-width: 380px) {
@@ -305,13 +307,14 @@ body {
   }
 }
 
-/* Rotating title text */
+/* Rotating title text — layered above logo */
 .title-rotating {
   display: inline-block;
   position: relative;
   overflow: hidden;
   vertical-align: bottom;
   height: 1.05em;
+  z-index: 1;
 }
 
 .title-word {
