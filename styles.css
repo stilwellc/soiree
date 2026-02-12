@@ -261,8 +261,8 @@ body {
 /* Main title */
 .hero-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 72px;
-  font-weight: 500;
+  font-size: 65px;
+  font-weight: 550;
   color: var(--deep);
   letter-spacing: -2px;
   line-height: 1.0;
@@ -273,7 +273,7 @@ body {
 
 @media (max-width: 380px) {
   .hero-title {
-    font-size: 58px;
+    font-size: 52px;
   }
 }
 
