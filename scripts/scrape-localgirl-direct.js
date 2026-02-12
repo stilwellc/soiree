@@ -70,7 +70,7 @@ async function scrapeTheLocalGirl() {
 
             let currentDateStr = 'Upcoming';
 
-            list.children.forEach(el => {
+            Array.from(list.children).forEach(el => {
                 const cls = el.className || '';
 
                 if (cls.includes('eventsList__list__dateHeader')) {
