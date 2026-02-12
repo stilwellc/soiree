@@ -1388,12 +1388,21 @@ async function initNetworkGraph() {
     return maxRegion;
   }
 
+  // All known sources (including ones that may currently return zero events)
+  const ALL_SOURCES = ['TimeOut NY', 'NYC For Free', 'MoMA', 'AMNH', 'Whitney Museum', 'Guggenheim', 'New Museum', 'The Local Girl'];
+
+  // Build full source list: active sources + any known sources with zero data
+  const allSources = [
+    ...sources,
+    ...ALL_SOURCES.filter(s => !sourceMap.has(s))
+  ];
+
   // Build nodes
-  const maxEvents = Math.max(...sources.map(s => sourceMap.get(s).length));
+  const maxEvents = sources.length > 0 ? Math.max(...sources.map(s => sourceMap.get(s).length)) : 1;
   const nodes = [{
     x: cx, y: cy,
     radius: 15,
-    color: '#D4AF37',
+    color: '#C1694F',
     vx: 0, vy: 0,
     fixed: true,
     label: 'SOIRÉE',
@@ -1402,24 +1411,26 @@ async function initNetworkGraph() {
     pulsePhase: 0
   }];
 
-  sources.forEach((source, i) => {
-    const evts = sourceMap.get(source);
-    const region = getRegion(evts);
-    const angle = (i / sources.length) * Math.PI * 2 - Math.PI / 2;
-    const r = 5 + Math.round((evts.length / maxEvents) * 8);
+  allSources.forEach((source, i) => {
+    const evts = sourceMap.get(source) || [];
+    const isDead = evts.length === 0;
+    const region = isDead ? null : getRegion(evts);
+    const angle = (i / allSources.length) * Math.PI * 2 - Math.PI / 2;
+    const r = isDead ? 5 : 5 + Math.round((evts.length / maxEvents) * 8);
     nodes.push({
       x: cx + Math.cos(angle) * orbitRadius,
       y: cy + Math.sin(angle) * orbitRadius,
       radius: r,
-      color: NODE_COLORS[region] || '#4A90E2',
+      color: isDead ? '#3a3a3a' : (NODE_COLORS[region] || '#4A90E2'),
       vx: (Math.random() - 0.5) * 0.3,
       vy: (Math.random() - 0.5) * 0.3,
       fixed: false,
-      label: REGION_LABELS[region] || 'NYC',
-      region,
+      label: isDead ? source.split(' ')[0].toUpperCase() : (REGION_LABELS[region] || 'NYC'),
+      region: region || 'dead',
       source,
       eventCount: evts.length,
-      pulsePhase: Math.random() * Math.PI * 2
+      pulsePhase: Math.random() * Math.PI * 2,
+      dead: isDead
     });
   });
 
@@ -1466,20 +1477,6 @@ async function initNetworkGraph() {
       ctx.lineTo(cx + Math.cos(a) * width, cy + Math.sin(a) * width);
       ctx.stroke();
     }
-
-    // Rotating scanner sweep
-    const scanAngle = (frame_t * 0.007) % (Math.PI * 2);
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, Math.min(width, height) * 0.65, scanAngle - 0.35, scanAngle);
-    ctx.closePath();
-    const scanGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(width, height) * 0.65);
-    scanGrad.addColorStop(0, 'rgba(212,175,55,0.14)');
-    scanGrad.addColorStop(1, 'rgba(212,175,55,0)');
-    ctx.fillStyle = scanGrad;
-    ctx.fill();
-    ctx.restore();
 
     // --- Physics ---
     nodes.forEach((node, i) => {
@@ -1610,19 +1607,19 @@ async function initNetworkGraph() {
       if (i === 0) {
         const ring1R = node.radius + 7 + 3 * Math.sin(t);
         ctx.beginPath();
-        ctx.strokeStyle = `rgba(212,175,55,${0.30 + 0.18 * Math.sin(t)})`;
+        ctx.strokeStyle = `rgba(193,105,79,${0.35 + 0.18 * Math.sin(t)})`;
         ctx.lineWidth = 1.5;
         ctx.arc(node.x, node.y, ring1R, 0, Math.PI * 2);
         ctx.stroke();
 
         const ring2R = node.radius + 14 + 5 * Math.sin(t * 0.65);
         ctx.beginPath();
-        ctx.strokeStyle = `rgba(212,175,55,${0.10 + 0.08 * Math.sin(t * 0.65)})`;
+        ctx.strokeStyle = `rgba(193,105,79,${0.12 + 0.08 * Math.sin(t * 0.65)})`;
         ctx.lineWidth = 1;
         ctx.arc(node.x, node.y, ring2R, 0, Math.PI * 2);
         ctx.stroke();
-      } else {
-        // Subtle pulse ring for source nodes
+      } else if (!node.dead) {
+        // Subtle pulse ring for active source nodes
         const ringR = node.radius + 3 + 1.5 * Math.sin(t);
         ctx.beginPath();
         ctx.strokeStyle = node.color + Math.round((0.20 + 0.12 * Math.sin(t)) * 255).toString(16).padStart(2,'0');
@@ -1654,8 +1651,11 @@ async function initNetworkGraph() {
       ctx.font = 'bold 8px ui-monospace, monospace';
       ctx.textAlign = 'center';
       if (i === 0) {
-        ctx.fillStyle = 'rgba(212,175,55,0.90)';
+        ctx.fillStyle = 'rgba(193,105,79,0.90)';
         ctx.fillText('SOIRÉE', node.x, node.y + node.radius + 11);
+      } else if (node.dead) {
+        ctx.fillStyle = 'rgba(255,255,255,0.22)';
+        ctx.fillText(node.label, node.x, node.y + node.radius + 10);
       } else {
         ctx.fillStyle = 'rgba(255,255,255,0.50)';
         ctx.fillText(node.label, node.x, node.y + node.radius + 10);
@@ -1673,12 +1673,13 @@ async function initNetworkGraph() {
   if (nodesEl) nodesEl.textContent = sources.length;
   if (eventsEl) eventsEl.textContent = allEvents.length;
 
-  // --- Legend: grouped by region, color-coded ---
+  // --- Legend: grouped by region for active nodes, plus offline indicator ---
   const techLegend = document.getElementById('js-tech-legend');
   if (techLegend) {
     techLegend.innerHTML = '';
     const regionData = new Map();
     nodes.slice(1).forEach(n => {
+      if (n.dead) return;
       if (!regionData.has(n.region)) regionData.set(n.region, { color: n.color, count: 0, label: REGION_LABELS[n.region] });
       regionData.get(n.region).count += n.eventCount;
     });
@@ -1688,6 +1689,14 @@ async function initNetworkGraph() {
       item.innerHTML = `<div class="tech-dot" style="background:${color};box-shadow:0 0 5px ${color}88;"></div><span>${label} <span style="color:#999;font-size:10px">${count}</span></span>`;
       techLegend.appendChild(item);
     });
+    // Offline count
+    const deadCount = nodes.slice(1).filter(n => n.dead).length;
+    if (deadCount > 0) {
+      const item = document.createElement('div');
+      item.className = 'tech-legend-item';
+      item.innerHTML = `<div class="tech-dot" style="background:#3a3a3a;"></div><span style="color:rgba(255,255,255,0.3)">OFFLINE <span style="font-size:10px">${deadCount}</span></span>`;
+      techLegend.appendChild(item);
+    }
   }
 
   // Last Scrape timestamp
