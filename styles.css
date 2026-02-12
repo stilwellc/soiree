@@ -282,7 +282,7 @@ body {
   display: block;
   height: 44px;
   width: auto;
-  margin-top: 14px;
+  margin-top: 20px;
 }
 
 @media (max-width: 380px) {
@@ -342,7 +342,7 @@ body {
   font-size: 17px;
   font-weight: 300;
   font-style: italic;
-  color: var(--accent);
+  color: var(--dusk);
   letter-spacing: 0.2px;
   line-height: 1.5;
   margin-bottom: 24px;
