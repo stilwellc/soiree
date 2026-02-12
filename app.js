@@ -1416,7 +1416,7 @@ async function initNetworkGraph() {
     const isDead = evts.length === 0;
     const region = isDead ? null : getRegion(evts);
     const angle = (i / allSources.length) * Math.PI * 2 - Math.PI / 2;
-    const r = isDead ? 5 : 5 + Math.round((evts.length / maxEvents) * 8);
+    const r = isDead ? 5 : 5 + Math.round((evts.length / maxEvents) * 12);
     nodes.push({
       x: cx + Math.cos(angle) * orbitRadius,
       y: cy + Math.sin(angle) * orbitRadius,
@@ -1434,16 +1434,17 @@ async function initNetworkGraph() {
     });
   });
 
-  // Data packets traveling along edges
+  // Data packets traveling along edges (source → center)
   const packets = [];
   function spawnPacket() {
     if (nodes.length < 2) return;
-    const toIdx = 1 + Math.floor(Math.random() * (nodes.length - 1));
+    const fromIdx = 1 + Math.floor(Math.random() * (nodes.length - 1));
+    if (nodes[fromIdx].dead) return;
     packets.push({
-      toNode: toIdx,
+      fromNode: fromIdx,
       t: 0,
       speed: 0.004 + Math.random() * 0.005,
-      color: nodes[toIdx].color,
+      color: nodes[fromIdx].color,
       size: 2.5 + Math.random() * 1.5
     });
   }
@@ -1563,10 +1564,10 @@ async function initNetworkGraph() {
       const pkt = packets[idx];
       pkt.t += pkt.speed;
       if (pkt.t >= 1) { packets.splice(idx, 1); continue; }
-      const to = nodes[pkt.toNode];
-      if (!to) continue;
-      const px = nodes[0].x + (to.x - nodes[0].x) * pkt.t;
-      const py = nodes[0].y + (to.y - nodes[0].y) * pkt.t;
+      const from = nodes[pkt.fromNode];
+      if (!from) continue;
+      const px = from.x + (nodes[0].x - from.x) * pkt.t;
+      const py = from.y + (nodes[0].y - from.y) * pkt.t;
       // Glow halo
       const halo = ctx.createRadialGradient(px, py, 0, px, py, pkt.size * 3.5);
       halo.addColorStop(0, pkt.color + 'cc');
@@ -1647,7 +1648,17 @@ async function initNetworkGraph() {
       ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Label
+      // Event count inside node (only if radius is large enough to fit it)
+      if (i > 0 && !node.dead && node.radius >= 10) {
+        ctx.font = `bold ${Math.round(node.radius * 0.75)}px ui-monospace, monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'rgba(255,255,255,0.80)';
+        ctx.fillText(node.eventCount, node.x, node.y);
+        ctx.textBaseline = 'alphabetic';
+      }
+
+      // Label below node
       ctx.font = 'bold 8px ui-monospace, monospace';
       ctx.textAlign = 'center';
       if (i === 0) {
