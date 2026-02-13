@@ -104,30 +104,55 @@
 
           <!-- Region picker panel — shown when location toggle is tapped -->
           <div class="hero-region-panel" id="hero-region-panel" aria-hidden="true">
-            <div class="hero-rule" aria-hidden="true"></div>
-            <p class="region-panel-eyebrow">Choose your city</p>
+            <p class="region-panel-eyebrow">Where are you?</p>
             <div class="region-panel-list">
-              <div class="region-panel-option" data-region="auto">Auto-detect</div>
-              <div class="region-panel-option" data-region="nyc">New York City</div>
-              <div class="region-panel-option" data-region="hoboken-jc">Hoboken · Jersey City</div>
-              <div class="region-panel-option" data-region="nj-state">New Jersey</div>
-              <div class="region-panel-option" data-region="north-nj">North NJ</div>
-              <div class="region-panel-option" data-region="central-nj">Central NJ</div>
-              <div class="region-panel-option" data-region="south-nj">South NJ</div>
-              <div class="region-panel-option" data-region="jersey-shore">Jersey Shore</div>
-              <div class="region-panel-option" data-region="philly">Philadelphia</div>
+
+              <div class="region-panel-group">
+                <div class="region-panel-group-label">New York</div>
+                <div class="region-panel-option" data-region="nyc">New York City</div>
+              </div>
+
+              <div class="region-panel-divider"></div>
+
+              <div class="region-panel-group">
+                <div class="region-panel-group-label">New Jersey</div>
+                <div class="region-panel-option" data-region="hoboken-jc">Hoboken · Jersey City</div>
+                <div class="region-panel-option" data-region="nj-state">Statewide</div>
+                <div class="region-panel-option" data-region="north-nj">North NJ</div>
+                <div class="region-panel-option" data-region="central-nj">Central NJ</div>
+                <div class="region-panel-option" data-region="south-nj">South NJ</div>
+                <div class="region-panel-option" data-region="jersey-shore">Jersey Shore</div>
+              </div>
+
+              <div class="region-panel-divider"></div>
+
+              <div class="region-panel-group">
+                <div class="region-panel-group-label">Pennsylvania</div>
+                <div class="region-panel-option" data-region="philly">Philadelphia</div>
+              </div>
+
+              <div class="region-panel-divider"></div>
+
+              <div class="region-panel-option region-panel-option--auto" data-region="auto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="region-panel-auto-icon" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1l2.1-2.1M17 7l2.1-2.1"/>
+                </svg>
+                Auto-detect
+              </div>
+
             </div>
           </div>
 
           <!-- Location toggle — always visible -->
           <div class="hero-location-row">
             <button class="region-toggle" id="region-toggle" aria-label="Change region">
-              <div class="region-toggle-left">
-                <span class="region-toggle-label">Location</span>
-                <span class="region-name" id="current-region-name">New York City</span>
-              </div>
-              <svg class="region-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                <path d="M9 18l6-6-6-6"/>
+              <svg class="region-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span class="region-name" id="current-region-name">NYC</span>
+              <svg class="region-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
             </button>
           </div>

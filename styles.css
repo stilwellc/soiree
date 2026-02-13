@@ -437,9 +437,6 @@ body {
 
 /* Region selector row */
 .hero-location-row {
-  margin-top: 28px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(196, 149, 106, 0.35);
   opacity: 0;
   animation: heroFadeUp 0.9s var(--transition) 0.45s forwards;
 }
@@ -510,26 +507,24 @@ body {
   color: var(--gold);
 }
 
-/* Region toggle — editorial full-width row */
+/* Region toggle pill (original) */
 .region-toggle {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0;
-  background: none;
-  border: none;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 24px;
   cursor: pointer;
-  transition: opacity 0.3s ease;
-  text-align: left;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+  font-family: 'Jost', sans-serif;
 }
 
-.region-toggle:hover .region-name {
-  color: var(--dusk);
-}
-
-.region-toggle:hover .region-chevron {
-  transform: translateX(3px);
+.region-toggle:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .hero--picking .region-toggle {
@@ -537,37 +532,137 @@ body {
   pointer-events: none;
 }
 
-.region-toggle-left {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.region-toggle-label {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 3.5px;
-  text-transform: uppercase;
-  color: var(--gold);
+.region-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .region-name {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 22px;
-  font-weight: 400;
-  font-style: italic;
-  color: var(--deep);
-  line-height: 1.1;
-  transition: color 0.2s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--dark);
 }
 
 .region-chevron {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.hero--picking .region-chevron {
+  transform: rotate(180deg);
+}
+
+/* ── Region picker panel ─────────────────────────────────────── */
+
+.region-panel-eyebrow {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 18px;
+}
+
+.region-panel-list {
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 260px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.region-panel-group {
+  margin-bottom: 2px;
+}
+
+.region-panel-group-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 8px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(196, 149, 106, 0.55);
+  padding: 10px 0 5px;
+}
+
+.region-panel-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(196, 149, 106, 0.22), transparent);
+  margin: 6px 0;
+}
+
+.region-panel-option {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--deep);
+  padding: 3px 0;
+  cursor: pointer;
+  line-height: 1.25;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: color 0.18s ease, padding-left 0.18s ease;
+}
+
+.region-panel-option::after {
+  content: '›';
+  font-family: 'Jost', sans-serif;
+  font-size: 18px;
+  font-weight: 300;
   color: var(--dusk);
-  transition: transform 0.25s ease, opacity 0.3s ease;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.region-panel-option:hover {
+  color: var(--dusk);
+  padding-left: 5px;
+}
+
+.region-panel-option:hover::after {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.region-panel-option.active {
+  color: var(--dusk);
+  font-style: italic;
+}
+
+.region-panel-option.active::after {
+  content: '✓';
+  font-size: 13px;
+  font-style: normal;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Auto-detect row */
+.region-panel-option--auto {
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  font-style: normal;
+  color: var(--accent);
+  gap: 7px;
+  padding: 10px 0 2px;
+}
+
+.region-panel-option--auto::after {
+  display: none;
+}
+
+.region-panel-auto-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.6;
 }
 
 
