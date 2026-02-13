@@ -957,11 +957,141 @@ async function scrapeTheLocalGirl() {
 }
 
 // Main orchestrator - scrapes all sources and merges results
+// ─── Chelsea / NYC Gallery Scrapers ─────────────────────────────────────────
+
+const GALLERY_CONFIGS = [
+  { name: 'Gagosian',         url: 'https://gagosian.com/exhibitions/',                   location: 'Gagosian',             address: '555 W 24th St, New York, NY 10011' },
+  { name: 'Pace Gallery',     url: 'https://www.pacegallery.com/exhibitions/',             location: 'Pace Gallery',         address: '540 W 25th St, New York, NY 10001' },
+  { name: 'Hauser & Wirth',   url: 'https://www.hauserwirth.com/hauser-wirth-exhibitions/',location: 'Hauser & Wirth',       address: '542 W 22nd St, New York, NY 10011' },
+  { name: 'David Zwirner',    url: 'https://www.davidzwirner.com/exhibitions',             location: 'David Zwirner',        address: '519 W 19th St, New York, NY 10011' },
+  { name: 'Gladstone Gallery',url: 'https://gladstonegallery.com/exhibitions/',            location: 'Gladstone Gallery',    address: '130 W 21st St, New York, NY 10011' },
+  { name: 'Lehmann Maupin',   url: 'https://www.lehmannmaupin.com/exhibitions',            location: 'Lehmann Maupin',       address: '501 W 26th St, New York, NY 10001' },
+  { name: 'Marian Goodman',   url: 'https://www.mariangoodman.com/exhibitions',            location: 'Marian Goodman Gallery',address: '24 W 57th St, New York, NY 10019' },
+  { name: 'Lisson Gallery',   url: 'https://www.lissongallery.com/exhibitions',            location: 'Lisson Gallery',       address: '504 W 24th St, New York, NY 10011' }
+];
+
+// Shared Cheerio scraper for gallery exhibition pages.
+// Only emits events where a single specific date can be found
+// (opening reception preferred; exhibition start date as fallback).
+async function scrapeGallery(config) {
+  try {
+    const response = await axios.get(config.url, {
+      timeout: 12000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9'
+      }
+    });
+
+    const $ = cheerio.load(response.data);
+    const events = [];
+    const seen = new Set();
+    const origin = new URL(config.url).origin;
+
+    // Try multiple container selectors common on gallery sites
+    const containerSelectors = [
+      'article', '[class*="exhibition"]', '[class*="exhibit"]',
+      '[class*="listing"]', '[class*="grid-item"]', '[class*="card"]',
+      'li[class*="item"]'
+    ];
+    let $items = $();
+    for (const sel of containerSelectors) {
+      $items = $(sel).filter((_, el) => $(el).find('a').length > 0);
+      if ($items.length > 3) break;
+    }
+
+    $items.each((i, elem) => {
+      if (events.length >= 10) return false;
+      const $elem = $(elem);
+
+      // Title
+      let title = $elem.find('h1,h2,h3,h4,[class*="title"],[class*="name"]').first().text().trim().replace(/\s+/g, ' ');
+      if (!title || title.length < 5) return;
+
+      // Link
+      const href = $elem.find('a').first().attr('href');
+      if (!href) return;
+      const eventUrl = href.startsWith('http') ? href : `${origin}${href.startsWith('/') ? '' : '/'}${href}`;
+      if (seen.has(eventUrl)) return;
+      seen.add(eventUrl);
+
+      const fullText = $elem.text().replace(/\s+/g, ' ');
+
+      // 1. Look for opening reception date (most specific)
+      let dateStr = '';
+      const openingMatch = fullText.match(/opening\s+(?:reception\s+)?(?:on\s+)?(?:date\s*:?\s*)?([A-Za-z]+\s+\d{1,2},?\s*\d{4})/i) ||
+                           fullText.match(/reception[:\s]+([A-Za-z]+\s+\d{1,2},?\s*\d{4})/i);
+      if (openingMatch) {
+        dateStr = openingMatch[1];
+      } else {
+        // 2. Look for a date element and take just the start date
+        const $dateEl = $elem.find('time,[class*="date"],[datetime],[class*="when"]').first();
+        const rawDate = ($dateEl.attr('datetime') || $dateEl.text()).trim();
+        if (rawDate) {
+          // Strip range suffix — "January 15 – March 20, 2026" → "January 15, 2026"
+          // Try to capture "Month Day, Year" at the start
+          const startMatch = rawDate.match(/^([A-Za-z]+\s+\d{1,2}(?:,?\s*\d{4})?)/);
+          if (startMatch) dateStr = startMatch[1];
+          // Or ISO date
+          else if (rawDate.match(/^\d{4}-\d{2}-\d{2}/)) dateStr = rawDate.slice(0, 10);
+        }
+      }
+
+      if (!dateStr) return; // no date → skip (single-day events only)
+
+      const { start_date } = parseDateText(dateStr, '');
+      if (!start_date) return;
+
+      const description = $elem.find('p,[class*="desc"],[class*="artist"]').first().text().trim() || title;
+
+      const event = createNormalizedEvent({
+        name: title.substring(0, 255),
+        category: 'art',
+        date: dateStr,
+        time: 'See details',
+        start_date,
+        end_date: start_date, // single-day event
+        location: config.location,
+        address: config.address,
+        price: 'free',
+        spots: Math.floor(Math.random() * 80) + 20,
+        image: getEventImage(title, 'art'),
+        description: description.substring(0, 500) || `${title} at ${config.name}.`,
+        highlights: [config.name, 'Gallery opening', 'Contemporary art', 'Chelsea'],
+        url: eventUrl,
+        source: config.name
+      });
+
+      if (event) events.push(event);
+    });
+
+    return events;
+  } catch (error) {
+    console.error(`${config.name} scraping failed:`, error.message);
+    return [];
+  }
+}
+
+// Run all gallery scrapers sequentially to avoid hammering concurrent requests
+async function scrapeGalleries() {
+  const allEvents = [];
+  for (const config of GALLERY_CONFIGS) {
+    const events = await scrapeGallery(config);
+    console.log(`  - ${config.name}: ${events.length} events`);
+    allEvents.push(...events);
+  }
+  console.log(`Gallery total: ${allEvents.length} events`);
+  return allEvents;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function scrapeAllEvents() {
   try {
     console.log('Starting multi-source scraping...');
 
-    // Run all scrapers in parallel
+    // Run all scrapers in parallel (galleries run sequentially inside scrapeGalleries)
     const [
       timeoutEvents,
       nycFreeEvents,
@@ -971,18 +1101,17 @@ async function scrapeAllEvents() {
       amnhEvents,
       newMuseumEvents,
       localGirlEvents,
-      visitNJEvents
+      galleryEvents
     ] = await Promise.all([
       scrapeTimeOut(),
       scrapeNYCForFree(),
       scrapeWhitney(),
-      // HTTP scrapers — also run as Puppeteer in GitHub Actions for heavier lifting
       scrapeMoMA(),
       scrapeGuggenheim(),
       scrapeAMNH(),
       scrapeNewMuseum(),
       scrapeTheLocalGirl(),
-      Promise.resolve([])  // visitNJEvents placeholder
+      scrapeGalleries()
     ]);
 
     // Merge all events
@@ -995,7 +1124,7 @@ async function scrapeAllEvents() {
       ...amnhEvents,
       ...newMuseumEvents,
       ...localGirlEvents,
-      ...visitNJEvents
+      ...galleryEvents
     ];
 
     // Filter out permanent/long-running exhibitions
@@ -1021,6 +1150,7 @@ async function scrapeAllEvents() {
     console.log(`  - AMNH: ${amnhEvents.length}`);
     console.log(`  - New Museum: ${newMuseumEvents.length}`);
     console.log(`  - The Local Girl: ${localGirlEvents.length}`);
+    console.log(`  - Galleries (8): ${galleryEvents.length}`);
 
     // If no events found at all, use fallback
     if (allEvents.length === 0) {
