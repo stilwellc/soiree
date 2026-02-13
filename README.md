@@ -1,40 +1,5 @@
 # Soirée - Event Aggregation Platform
 
-## 🎉 Current Status
-
-### Active Data Sources (6)
-1. **NYC For Free** ✅
-   - 50 events
-   - 100% real dates
-   - Status: Excellent
-
-2. **The Local Girl** (Hoboken/JC) ⚠️
-   - 106 events
-   - 35% real dates (37 events)
-   - Status: Partial success, timeouts on detail pages
-
-3. **Time Out NYC** ✅
-   - Up to 20 events
-   - Ongoing/recurring events
-   - Status: Good (recently improved)
-
-4. **MoMA** ⚠️
-   - 15 events
-   - Placeholder dates (shows as "Ongoing")
-   - Status: Blocked from detail pages
-
-5. **Guggenheim** ⚠️
-   - 15 events
-   - Placeholder dates (shows as "Ongoing")
-   - Status: Blocked from detail pages
-
-6. **New Museum** ✅
-   - 1 event
-   - Real date
-   - Status: Good
-
-**Total: ~207 events**
-
 ---
 
 ## ✨ Recent Improvements
