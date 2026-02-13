@@ -43,10 +43,7 @@ function createNormalizedEvent(data) {
 
     if (!name || name.trim().length < 2) return null;
     if (!url || !url.startsWith('http')) return null;
-
-    // Fall back to today's date for events with no parseable date so they
-    // pass the API's `start_date IS NOT NULL` filter and appear in the feed.
-    const today = new Date().toISOString().split('T')[0];
+    if (!start_date) return null;
 
     return {
         name: name.trim().substring(0, 255),
@@ -61,8 +58,8 @@ function createNormalizedEvent(data) {
         description: (description || name).trim().substring(0, 500),
         highlights: Array.isArray(highlights) ? highlights.slice(0, 5) : [],
         url: url.trim().substring(0, 500),
-        start_date: start_date || today,
-        end_date: end_date || today,
+        start_date,
+        end_date: end_date || start_date,
         source
     };
 }

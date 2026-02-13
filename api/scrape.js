@@ -826,231 +826,30 @@ async function scrapeWhitney() {
   }
 }
 
-// Scrape events and exhibitions from Guggenheim via WordPress REST API
+// Scrape events and exhibitions from Guggenheim via Puppeteer (JS-rendered calendar)
 async function scrapeGuggenheim() {
   try {
-    console.log('Fetching events from Guggenheim (WP REST API)...');
-    const events = [];
-    const location = 'Guggenheim';
-    const address = '1071 5th Ave, New York, NY 10128';
-    const seen = new Set();
-
-    // Strategy 1: Try WP REST API (events post type)
-    const wpUrls = [
-      'https://www.guggenheim.org/wp-json/wp/v2/event?per_page=15&orderby=date&order=desc',
-      'https://www.guggenheim.org/wp-json/wp/v2/posts?per_page=15&categories=event&orderby=date'
-    ];
-    for (const wpUrl of wpUrls) {
-      if (events.length >= 15) break;
-      try {
-        const res = await axios.get(wpUrl, {
-          timeout: 8000,
-          headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
-        });
-        if (Array.isArray(res.data) && res.data.length > 0) {
-          for (const item of res.data) {
-            if (events.length >= 15) break;
-            const name = (item.title?.rendered || '').replace(/<[^>]+>/g, '').trim();
-            if (!name || name.length < 5) continue;
-            const eventUrl = item.link || `https://www.guggenheim.org/event/${item.slug || item.id}`;
-            if (seen.has(eventUrl)) continue;
-            seen.add(eventUrl);
-            const description = (item.excerpt?.rendered || '').replace(/<[^>]+>/g, '').trim();
-            const category = categorizeEvent(name, description, location);
-            const { start_date, end_date } = parseDateText('Upcoming', 'See details');
-            const event = createNormalizedEvent({
-              name, category, date: 'Upcoming', time: 'See details',
-              start_date, end_date, location, address,
-              price: 'free', spots: Math.floor(Math.random() * 150) + 50,
-              image: getEventImage(name, category),
-              description: description || `${name} at the Guggenheim.`,
-              highlights: ['Guggenheim', 'Modern art', 'Iconic architecture'],
-              url: eventUrl, source: 'Guggenheim'
-            });
-            if (event) events.push(event);
-          }
-        }
-      } catch (_) { /* try next */ }
-    }
-
-    // Strategy 2: Direct HTML scraping of calendar page
-    if (events.length === 0) {
-      try {
-        const htmlRes = await axios.get('https://www.guggenheim.org/calendar', {
-          timeout: 12000,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml'
-          }
-        });
-        const $ = cheerio.load(htmlRes.data);
-        $('a[href*="/exhibition"], a[href*="/event"], a[href*="/calendar/"]').each((i, elem) => {
-          if (events.length >= 15) return false;
-          const $a = $(elem);
-          const href = $a.attr('href');
-          if (!href || seen.has(href)) return;
-          seen.add(href);
-          let name = $a.find('h2,h3,h4,[class*="title"]').first().text().trim();
-          if (!name) name = ($a.attr('aria-label') || $a.text()).trim().replace(/\s+/g, ' ').slice(0, 100);
-          if (!name || name.length < 5) return;
-          const description = $a.find('p').first().text().trim() || name;
-          const dateText = $a.find('time,[class*="date"]').first().text().trim();
-          let date = 'Upcoming', time = 'See details';
-          if (dateText) {
-            const dm = dateText.match(/([A-Za-z]+ \d{1,2}(?:,?\s*\d{4})?)/);
-            if (dm) date = dm[1];
-          }
-          const category = categorizeEvent(name, description, location);
-          const eventUrl = href.startsWith('http') ? href : `https://www.guggenheim.org${href}`;
-          const { start_date, end_date } = parseDateText(date, time);
-          const event = createNormalizedEvent({
-            name, category, date, time, start_date, end_date,
-            location, address,
-            price: 'free', spots: Math.floor(Math.random() * 150) + 50,
-            image: getEventImage(name, category), description,
-            highlights: ['Guggenheim', 'Modern art', 'Iconic architecture'],
-            url: eventUrl, source: 'Guggenheim'
-          });
-          if (event) events.push(event);
-        });
-      } catch (_) { /* HTML fallback also failed */ }
-    }
-
-    console.log(`Scraped ${events.length} events from Guggenheim`);
-    return events;
+    console.log('Fetching events from Guggenheim (Puppeteer)...');
+    const events = await scrapeWithPuppeteer(CONFIGS.guggenheim);
+    // Only keep events that have a parseable date
+    const dated = events.filter(e => e.start_date !== null);
+    console.log(`Scraped ${dated.length} dated events from Guggenheim (${events.length} total)`);
+    return dated;
   } catch (error) {
     console.error('Guggenheim scraping failed:', error.message);
     return [];
   }
 }
 
-// Scrape events from New Museum (Next.js site with __NEXT_DATA__)
-// NOTE: Event data may be loaded client-side. This scraper extracts
-// whatever is available from the SSR __NEXT_DATA__ JSON payload.
+// Scrape events from New Museum via Puppeteer (Next.js site, client-side rendered)
 async function scrapeNewMuseum() {
   try {
-    console.log('Fetching events from New Museum...');
-    const response = await axios.get('https://www.newmuseum.org/calendar', {
-      timeout: 15000,
-      maxRedirects: 5,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'en-US,en;q=0.9'
-      }
-    });
-
-    const $ = cheerio.load(response.data);
-    const events = [];
-
-    // Try to extract event data from __NEXT_DATA__ JSON
-    const nextDataScript = $('#__NEXT_DATA__').html();
-    if (nextDataScript) {
-      try {
-        const nextData = JSON.parse(nextDataScript);
-        const pageProps = nextData?.props?.pageProps || {};
-        // Try multiple known Next.js data shapes
-        const templateData = pageProps?.__TEMPLATE_QUERY_DATA__ || pageProps?.templateQueryData || {};
-        const eventNodes = (
-          templateData?.events?.nodes ||
-          templateData?.programs?.nodes ||
-          pageProps?.events?.nodes ||
-          pageProps?.programs?.nodes ||
-          pageProps?.entries ||
-          []
-        );
-
-        for (const node of eventNodes) {
-          if (events.length >= 15) break;
-
-          const name = (node.title || '').trim();
-          if (!name || name.length < 5) continue;
-
-          const uri = node.uri || node.slug || '';
-          const description = (node.excerpt || node.content || '').replace(/<[^>]+>/g, '').trim();
-          const startDate = node.startDate || 'Upcoming';
-
-          const location = 'New Museum';
-          const address = '235 Bowery, New York, NY 10002';
-          const category = categorizeEvent(name, description, location);
-          const eventUrl = uri.startsWith('http') ? uri : `https://www.newmuseum.org${uri}`;
-
-          // Parse structured dates
-          const { start_date, end_date } = parseDateText(startDate, 'See details');
-
-          const event = createNormalizedEvent({
-            name,
-            category,
-            date: startDate,
-            time: 'See details',
-            start_date,
-            end_date,
-            location,
-            address,
-            price: 'free',
-            spots: Math.floor(Math.random() * 150) + 50,
-            image: getEventImage(name, category),
-            description: description || `${name} at the New Museum.`,
-            highlights: ['New Museum', 'Contemporary art', 'Cutting-edge exhibitions', 'Free admission'],
-            url: eventUrl,
-            source: 'New Museum'
-          });
-
-          if (event) events.push(event);
-        }
-      } catch (parseError) {
-        console.log('Could not parse New Museum __NEXT_DATA__:', parseError.message);
-      }
-    }
-
-    // Fallback: try standard HTML selectors
-    if (events.length === 0) {
-      $('[class*="event"], article, .card').each((i, elem) => {
-        if (events.length >= 15) return false;
-
-        const $elem = $(elem);
-        let name = $elem.find('h1, h2, h3, h4, [class*="title"]').first().text().trim();
-        if (!name || name.length < 5) return;
-
-        let href = $elem.find('a').first().attr('href') || $elem.attr('href');
-        if (!href) return;
-
-        let description = $elem.find('p, [class*="description"]').first().text().trim();
-        if (!description || description.length < 10) description = name;
-
-        const location = 'New Museum';
-        const address = '235 Bowery, New York, NY 10002';
-        const category = categorizeEvent(name, description, location);
-        const eventUrl = href.startsWith('http') ? href : `https://www.newmuseum.org${href}`;
-
-        const dateStr = 'Upcoming';
-        const timeStr = 'See details';
-        const { start_date, end_date } = parseDateText(dateStr, timeStr);
-
-        const event = createNormalizedEvent({
-          name,
-          category,
-          date: dateStr,
-          time: timeStr,
-          start_date,
-          end_date,
-          location,
-          address,
-          price: 'free',
-          spots: Math.floor(Math.random() * 150) + 50,
-          image: getEventImage(name, category),
-          description,
-          highlights: ['New Museum', 'Contemporary art', 'Cutting-edge exhibitions', 'Free admission'],
-          url: eventUrl,
-          source: 'New Museum'
-        });
-
-        if (event) events.push(event);
-      });
-    }
-
-    console.log(`Scraped ${events.length} events from New Museum`);
-    return events;
+    console.log('Fetching events from New Museum (Puppeteer)...');
+    const events = await scrapeWithPuppeteer(CONFIGS.newMuseum);
+    // Only keep events that have a parseable date
+    const dated = events.filter(e => e.start_date !== null);
+    console.log(`Scraped ${dated.length} dated events from New Museum (${events.length} total)`);
+    return dated;
   } catch (error) {
     console.error('New Museum scraping failed:', error.message);
     return [];

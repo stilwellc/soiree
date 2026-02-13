@@ -276,6 +276,17 @@ const CONFIGS = {
             date: ['.date', '.time', '.event-date'],
             location: ['.location', '.venue']
         }
+    },
+    newMuseum: {
+        name: 'New Museum',
+        url: 'https://www.newmuseum.org/calendar',
+        defaultLocation: 'New Museum, 235 Bowery, New York, NY 10002',
+        selectors: {
+            container: ['article', '[class*="event"]', '[class*="program"]', 'a[href*="/exhibitions/"]', 'a[href*="/events/"]'],
+            title: ['h1', 'h2', 'h3', 'h4', '[class*="title"]'],
+            date: ['time', '[class*="date"]', '[datetime]', '[class*="time"]'],
+            location: ['.location', '.venue', '[class*="location"]']
+        }
     }
 };
 
