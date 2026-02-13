@@ -1194,6 +1194,14 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    // Bump the cumulative total by the number of newly inserted events
+    if (inserted > 0) {
+      await pool.query(`
+        UPDATE stats SET total_events_scraped = total_events_scraped + $1, updated_at = NOW()
+        WHERE id = 1
+      `, [inserted]);
+    }
+
     const result = await pool.query('SELECT COUNT(*) as count FROM events');
 
     return res.status(200).json({

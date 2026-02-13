@@ -20,8 +20,14 @@ module.exports = async function handler(req, res) {
       CREATE TABLE IF NOT EXISTS stats (
         id SERIAL PRIMARY KEY,
         page_views INTEGER DEFAULT 0,
+        total_events_scraped INTEGER DEFAULT 0,
         updated_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    // Add total_events_scraped column to existing tables
+    await pool.query(`
+      ALTER TABLE stats ADD COLUMN IF NOT EXISTS total_events_scraped INTEGER DEFAULT 0
     `);
 
     // Initialize stats if not exists
@@ -41,10 +47,11 @@ module.exports = async function handler(req, res) {
     }
 
     // Get current stats
-    const statsResult = await pool.query('SELECT page_views FROM stats WHERE id = 1');
+    const statsResult = await pool.query('SELECT page_views, total_events_scraped FROM stats WHERE id = 1');
     const pageViews = statsResult.rows[0]?.page_views || 0;
+    const totalEventsScraped = statsResult.rows[0]?.total_events_scraped || 0;
 
-    // Get total event count
+    // Get active event count (currently in DB)
     const eventsResult = await pool.query('SELECT COUNT(*) as count FROM events');
     const eventCount = parseInt(eventsResult.rows[0]?.count || 0);
 
@@ -59,7 +66,8 @@ module.exports = async function handler(req, res) {
       stats: {
         pageViews,
         totalEvents: eventCount,
-        uniqueEvents: uniqueEventCount
+        uniqueEvents: uniqueEventCount,
+        totalEventsScraped
       }
     });
   } catch (error) {

@@ -1136,7 +1136,7 @@ async function loadStats() {
       // Format numbers with commas
       const formatNumber = (num) => num.toLocaleString('en-US');
 
-      document.getElementById('stat-events').textContent = formatNumber(data.stats.totalEvents);
+      document.getElementById('stat-events').textContent = formatNumber(data.stats.totalEventsScraped || data.stats.totalEvents);
       document.getElementById('stat-views').textContent = formatNumber(data.stats.pageViews);
       document.getElementById('stat-unique').textContent = formatNumber(data.stats.uniqueEvents);
     }
