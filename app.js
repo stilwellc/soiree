@@ -1415,68 +1415,158 @@ async function initNetworkGraph() {
     return maxRegion;
   }
 
+  // Category definitions (middle ring)
+  const CATEGORY_COLORS = {
+    art:       '#9B8FE8',
+    music:     '#F07CAD',
+    culinary:  '#F0A050',
+    fashion:   '#C8A0C8',
+    perks:     '#50B8D8',
+    lifestyle: '#70C080',
+    community: '#E88060'
+  };
+  const CATEGORY_LABELS = {
+    art:       'ART',
+    music:     'MUSIC',
+    culinary:  'FOOD',
+    fashion:   'FASHION',
+    perks:     'PERKS',
+    lifestyle: 'LIFE',
+    community: 'COMM.'
+  };
+  const ALL_CATEGORIES = ['art', 'music', 'culinary', 'fashion', 'perks', 'lifestyle', 'community'];
+
+  // Group events by category
+  const categoryMap = new Map();
+  ALL_CATEGORIES.forEach(cat => categoryMap.set(cat, []));
+  allEvents.forEach(e => {
+    if (e.category && categoryMap.has(e.category)) {
+      categoryMap.get(e.category).push(e);
+    }
+  });
+
+  // Track which categories each source feeds
+  const sourceCategories = new Map();
+  allEvents.forEach(e => {
+    if (!sourceCategories.has(e.source)) sourceCategories.set(e.source, new Set());
+    if (e.category) sourceCategories.get(e.source).add(e.category);
+  });
+
   // All known sources (including ones that may currently return zero events)
   const ALL_SOURCES = ['TimeOut NY', 'NYC For Free', 'MoMA', 'AMNH', 'Whitney Museum', 'Guggenheim', 'New Museum', 'The Local Girl'];
-
-  // Build full source list: active sources + any known sources with zero data
   const allSources = [
     ...sources,
     ...ALL_SOURCES.filter(s => !sourceMap.has(s))
   ];
 
-  // Build nodes — scale sizes down on mobile
   const nodeScale = isMobile ? 0.7 : 1;
-  const maxEvents = sources.length > 0 ? Math.max(...sources.map(s => sourceMap.get(s).length)) : 1;
-  const nodes = [{
+  const outerRadius = Math.min(width, height) * 0.40;
+  const innerRadius = Math.min(width, height) * 0.22;
+
+  const maxCatEvents = Math.max(...ALL_CATEGORIES.map(c => categoryMap.get(c).length), 1);
+  const maxSrcEvents = sources.length > 0 ? Math.max(...sources.map(s => sourceMap.get(s).length), 1) : 1;
+
+  // Build node array
+  const nodes = [];
+
+  // Node 0: Soirée center
+  nodes.push({
     x: cx, y: cy,
     radius: Math.round(15 * nodeScale),
     color: '#C1694F',
-    vx: 0, vy: 0,
-    fixed: true,
+    vx: 0, vy: 0, fixed: true,
     label: 'SOIRÉE',
-    region: 'central',
+    type: 'center',
     eventCount: allEvents.length,
-    pulsePhase: 0
-  }];
+    pulsePhase: 0,
+    targetRadius: 0
+  });
 
+  // Nodes 1..7: category nodes (middle ring)
+  const catNodeStart = 1;
+  ALL_CATEGORIES.forEach((cat, i) => {
+    const evts = categoryMap.get(cat) || [];
+    const angle = (i / ALL_CATEGORIES.length) * Math.PI * 2 - Math.PI / 2;
+    const r = Math.max(Math.round((5 + (evts.length / maxCatEvents) * 10) * nodeScale), Math.round(4 * nodeScale));
+    nodes.push({
+      x: cx + Math.cos(angle) * innerRadius,
+      y: cy + Math.sin(angle) * innerRadius,
+      radius: r,
+      color: CATEGORY_COLORS[cat],
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      fixed: false,
+      label: CATEGORY_LABELS[cat],
+      type: 'category',
+      category: cat,
+      eventCount: evts.length,
+      pulsePhase: Math.random() * Math.PI * 2,
+      targetRadius: innerRadius
+    });
+  });
+
+  // Nodes N+: source nodes (outer ring)
+  const srcNodeStart = nodes.length;
   allSources.forEach((source, i) => {
     const evts = sourceMap.get(source) || [];
     const isDead = evts.length === 0;
     const region = isDead ? null : getRegion(evts);
     const angle = (i / allSources.length) * Math.PI * 2 - Math.PI / 2;
-    const r = isDead ? Math.round(5 * nodeScale) : Math.round((5 + (evts.length / maxEvents) * 12) * nodeScale);
+    const r = isDead ? Math.round(4 * nodeScale) : Math.round((5 + (evts.length / maxSrcEvents) * 10) * nodeScale);
     nodes.push({
-      x: cx + Math.cos(angle) * orbitRadius,
-      y: cy + Math.sin(angle) * orbitRadius,
+      x: cx + Math.cos(angle) * outerRadius,
+      y: cy + Math.sin(angle) * outerRadius,
       radius: r,
       color: isDead ? '#3a3a3a' : (NODE_COLORS[region] || '#4A90E2'),
       vx: (Math.random() - 0.5) * 0.3,
       vy: (Math.random() - 0.5) * 0.3,
       fixed: false,
-      label: isDead ? source.split(' ')[0].toUpperCase() : (REGION_LABELS[region] || 'NYC'),
-      region: region || 'dead',
+      label: source.split(' ').slice(0, 2).join(' ').toUpperCase(),
+      type: 'source',
       source,
       eventCount: evts.length,
       pulsePhase: Math.random() * Math.PI * 2,
-      dead: isDead
+      dead: isDead,
+      targetRadius: outerRadius
     });
   });
 
-  // Data packets traveling along edges (source → center)
+  // Two-hop packets: source → category → center
   const packets = [];
-  function spawnPacket() {
-    if (nodes.length < 2) return;
-    const fromIdx = 1 + Math.floor(Math.random() * (nodes.length - 1));
-    if (nodes[fromIdx].dead) return;
+
+  function spawnSourcePacket() {
+    const liveIdxs = [];
+    for (let i = srcNodeStart; i < nodes.length; i++) {
+      if (!nodes[i].dead) liveIdxs.push(i);
+    }
+    if (!liveIdxs.length) return;
+    const srcIdx = liveIdxs[Math.floor(Math.random() * liveIdxs.length)];
+    const srcCats = sourceCategories.get(nodes[srcIdx].source);
+    if (!srcCats || !srcCats.size) return;
+    const catArr = Array.from(srcCats);
+    const targetCat = catArr[Math.floor(Math.random() * catArr.length)];
+    const catIdx = nodes.findIndex(n => n.type === 'category' && n.category === targetCat);
+    if (catIdx === -1) return;
     packets.push({
-      fromNode: fromIdx,
-      t: 0,
-      speed: 0.004 + Math.random() * 0.005,
-      color: nodes[fromIdx].color,
-      size: 2.5 + Math.random() * 1.5
+      fromIdx: srcIdx, toIdx: catIdx,
+      t: 0, speed: 0.005 + Math.random() * 0.004,
+      color: nodes[srcIdx].color,
+      size: 2 + Math.random() * 1.5,
+      phase: 1
     });
   }
-  for (let i = 0; i < Math.min(nodes.length - 1, 6); i++) spawnPacket();
+
+  function spawnCategoryPacket(catIdx) {
+    packets.push({
+      fromIdx: catIdx, toIdx: 0,
+      t: 0, speed: 0.007 + Math.random() * 0.004,
+      color: nodes[catIdx].color,
+      size: 2.5 + Math.random() * 1.5,
+      phase: 2
+    });
+  }
+
+  for (let i = 0; i < Math.min(allSources.length, 6); i++) spawnSourcePacket();
 
   let frame_t = 0;
   let lastPacketSpawn = 0;
@@ -1485,11 +1575,10 @@ async function initNetworkGraph() {
     frame_t++;
     ctx.clearRect(0, 0, width, height);
 
-    // Dark background
     ctx.fillStyle = '#080d18';
     ctx.fillRect(0, 0, width, height);
 
-    // Subtle radial grid circles
+    // Radial grid circles
     ctx.strokeStyle = 'rgba(255,255,255,0.035)';
     ctx.lineWidth = 1;
     for (let r = 55; r < Math.max(width, height) * 1.2; r += 55) {
@@ -1507,30 +1596,29 @@ async function initNetworkGraph() {
       ctx.stroke();
     }
 
-    // --- Physics ---
+    // --- Physics (each node orbits its own target radius) ---
     nodes.forEach((node, i) => {
       if (node.fixed) return;
       const dx = cx - node.x;
       const dy = cy - node.y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
-      const force = (dist - orbitRadius) * 0.008;
+      const force = (dist - node.targetRadius) * 0.008;
       node.vx += (dx / dist) * force;
       node.vy += (dy / dist) * force;
 
-      // Tangential drift for slow orbital rotation
-      node.vx += (-dy / dist) * 0.010;
-      node.vy +=  (dx / dist) * 0.010;
+      node.vx += (-dy / dist) * 0.009;
+      node.vy +=  (dx / dist) * 0.009;
 
       node.vx *= 0.92;
       node.vy *= 0.92;
 
-      // Repulsion between nodes (respects node radius)
+      // Repulsion within same ring type only
       nodes.forEach((other, j) => {
-        if (i === j) return;
+        if (i === j || other.type !== node.type) return;
         const dx2 = other.x - node.x;
         const dy2 = other.y - node.y;
         const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 0.001;
-        const minDist = node.radius + other.radius + 22;
+        const minDist = node.radius + other.radius + 20;
         if (dist2 < minDist) {
           const repel = (minDist - dist2) * 0.045;
           node.vx -= (dx2 / dist2) * repel;
@@ -1541,7 +1629,6 @@ async function initNetworkGraph() {
       node.x += node.vx;
       node.y += node.vy;
 
-      // Soft boundary
       const pad = node.radius + 12;
       if (node.x < pad) node.vx += 0.6;
       if (node.x > width - pad) node.vx -= 0.6;
@@ -1549,54 +1636,55 @@ async function initNetworkGraph() {
       if (node.y > height - pad) node.vy -= 0.6;
     });
 
-    // --- Connections: hub to source nodes ---
-    nodes.forEach((node, i) => {
-      if (i === 0) return;
-      const alpha = 0.22 + 0.10 * Math.sin(frame_t * 0.018 + i * 1.3);
+    // --- Connections: source → category ---
+    for (let i = srcNodeStart; i < nodes.length; i++) {
+      const srcNode = nodes[i];
+      if (srcNode.dead) continue;
+      const srcCats = sourceCategories.get(srcNode.source) || new Set();
+      for (let j = catNodeStart; j < srcNodeStart; j++) {
+        const catNode = nodes[j];
+        if (srcCats.has(catNode.category)) {
+          const alpha = 0.10 + 0.05 * Math.sin(frame_t * 0.015 + i * 0.7 + j * 0.5);
+          ctx.beginPath();
+          ctx.strokeStyle = srcNode.color + Math.round(alpha * 255).toString(16).padStart(2, '0');
+          ctx.lineWidth = 0.7;
+          ctx.moveTo(srcNode.x, srcNode.y);
+          ctx.lineTo(catNode.x, catNode.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // --- Connections: category → center ---
+    for (let i = catNodeStart; i < srcNodeStart; i++) {
+      const catNode = nodes[i];
+      const alpha = 0.28 + 0.10 * Math.sin(frame_t * 0.018 + i * 1.3);
       const hexAlpha = Math.round(alpha * 255).toString(16).padStart(2, '0');
-      const grad = ctx.createLinearGradient(nodes[0].x, nodes[0].y, node.x, node.y);
+      const grad = ctx.createLinearGradient(nodes[0].x, nodes[0].y, catNode.x, catNode.y);
       grad.addColorStop(0, `rgba(212,175,55,${alpha})`);
-      grad.addColorStop(1, node.color + hexAlpha);
+      grad.addColorStop(1, catNode.color + hexAlpha);
       ctx.beginPath();
       ctx.strokeStyle = grad;
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1.2;
       ctx.moveTo(nodes[0].x, nodes[0].y);
-      ctx.lineTo(node.x, node.y);
+      ctx.lineTo(catNode.x, catNode.y);
       ctx.stroke();
-    });
-
-    // Cross-connections between nearby source nodes (dashed, subtle)
-    nodes.forEach((a, i) => {
-      if (i === 0) return;
-      nodes.forEach((b, j) => {
-        if (j <= i || j === 0) return;
-        const ddx = b.x - a.x;
-        const ddy = b.y - a.y;
-        const d = Math.sqrt(ddx * ddx + ddy * ddy);
-        if (d < 130) {
-          const alpha = (1 - d / 130) * 0.18;
-          ctx.beginPath();
-          ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
-          ctx.lineWidth = 0.5;
-          ctx.setLineDash([3, 7]);
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-      });
-    });
+    }
 
     // --- Data packets ---
     for (let idx = packets.length - 1; idx >= 0; idx--) {
       const pkt = packets[idx];
       pkt.t += pkt.speed;
-      if (pkt.t >= 1) { packets.splice(idx, 1); continue; }
-      const from = nodes[pkt.fromNode];
-      if (!from) continue;
-      const px = from.x + (nodes[0].x - from.x) * pkt.t;
-      const py = from.y + (nodes[0].y - from.y) * pkt.t;
-      // Glow halo
+      if (pkt.t >= 1) {
+        if (pkt.phase === 1) spawnCategoryPacket(pkt.toIdx);
+        packets.splice(idx, 1);
+        continue;
+      }
+      const from = nodes[pkt.fromIdx];
+      const to = nodes[pkt.toIdx];
+      if (!from || !to) continue;
+      const px = from.x + (to.x - from.x) * pkt.t;
+      const py = from.y + (to.y - from.y) * pkt.t;
       const halo = ctx.createRadialGradient(px, py, 0, px, py, pkt.size * 3.5);
       halo.addColorStop(0, pkt.color + 'cc');
       halo.addColorStop(1, pkt.color + '00');
@@ -1604,43 +1692,40 @@ async function initNetworkGraph() {
       ctx.fillStyle = halo;
       ctx.arc(px, py, pkt.size * 3.5, 0, Math.PI * 2);
       ctx.fill();
-      // Core
       ctx.beginPath();
       ctx.fillStyle = '#ffffff';
       ctx.arc(px, py, pkt.size * 0.55, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Spawn packets
-    if (frame_t - lastPacketSpawn > 35 + Math.random() * 40) {
+    if (frame_t - lastPacketSpawn > 40 + Math.random() * 40) {
       lastPacketSpawn = frame_t;
-      spawnPacket();
+      spawnSourcePacket();
     }
 
     // --- Draw nodes ---
-    nodes.forEach((node, i) => {
+    nodes.forEach((node) => {
       const t = frame_t * 0.028 + node.pulsePhase;
       const pulse = 1 + 0.18 * Math.sin(t);
 
       // Outer glow
-      const outerR = node.radius * 2.8 * pulse;
-      const outerGlow = ctx.createRadialGradient(node.x, node.y, node.radius * 0.4, node.x, node.y, outerR);
+      const outerGlowR = node.radius * 2.8 * pulse;
+      const outerGlow = ctx.createRadialGradient(node.x, node.y, node.radius * 0.4, node.x, node.y, outerGlowR);
       outerGlow.addColorStop(0, node.color + '2a');
       outerGlow.addColorStop(1, node.color + '00');
       ctx.beginPath();
       ctx.fillStyle = outerGlow;
-      ctx.arc(node.x, node.y, outerR, 0, Math.PI * 2);
+      ctx.arc(node.x, node.y, outerGlowR, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pulsing rings for central node
-      if (i === 0) {
+      // Pulsing rings
+      if (node.type === 'center') {
         const ring1R = node.radius + 7 + 3 * Math.sin(t);
         ctx.beginPath();
         ctx.strokeStyle = `rgba(193,105,79,${0.35 + 0.18 * Math.sin(t)})`;
         ctx.lineWidth = 1.5;
         ctx.arc(node.x, node.y, ring1R, 0, Math.PI * 2);
         ctx.stroke();
-
         const ring2R = node.radius + 14 + 5 * Math.sin(t * 0.65);
         ctx.beginPath();
         ctx.strokeStyle = `rgba(193,105,79,${0.12 + 0.08 * Math.sin(t * 0.65)})`;
@@ -1648,16 +1733,15 @@ async function initNetworkGraph() {
         ctx.arc(node.x, node.y, ring2R, 0, Math.PI * 2);
         ctx.stroke();
       } else if (!node.dead) {
-        // Subtle pulse ring for active source nodes
         const ringR = node.radius + 3 + 1.5 * Math.sin(t);
         ctx.beginPath();
-        ctx.strokeStyle = node.color + Math.round((0.20 + 0.12 * Math.sin(t)) * 255).toString(16).padStart(2,'0');
+        ctx.strokeStyle = node.color + Math.round((0.20 + 0.12 * Math.sin(t)) * 255).toString(16).padStart(2, '0');
         ctx.lineWidth = 1;
         ctx.arc(node.x, node.y, ringR, 0, Math.PI * 2);
         ctx.stroke();
       }
 
-      // Node fill with radial gradient (inner highlight)
+      // Node fill
       const nodeGrad = ctx.createRadialGradient(
         node.x - node.radius * 0.3, node.y - node.radius * 0.35, 0,
         node.x, node.y, node.radius
@@ -1669,34 +1753,37 @@ async function initNetworkGraph() {
       ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Crisp border
       ctx.beginPath();
       ctx.strokeStyle = node.color + 'bb';
       ctx.lineWidth = 1;
       ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Event count inside node (only if radius is large enough to fit it)
-      if (i > 0 && !node.dead && node.radius >= 10) {
+      // Event count inside node
+      if (!node.dead && node.radius >= 9) {
         ctx.font = `bold ${Math.round(node.radius * 0.75)}px ui-monospace, monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'rgba(255,255,255,0.80)';
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
         ctx.fillText(node.eventCount, node.x, node.y);
         ctx.textBaseline = 'alphabetic';
       }
 
       // Label below node
-      ctx.font = `bold ${isMobile ? 7 : 8}px ui-monospace, monospace`;
+      const labelSize = isMobile ? 7 : 8;
+      ctx.font = `bold ${labelSize}px ui-monospace, monospace`;
       ctx.textAlign = 'center';
-      if (i === 0) {
+      if (node.type === 'center') {
         ctx.fillStyle = 'rgba(193,105,79,0.90)';
         ctx.fillText('SOIRÉE', node.x, node.y + node.radius + 11);
       } else if (node.dead) {
         ctx.fillStyle = 'rgba(255,255,255,0.22)';
         ctx.fillText(node.label, node.x, node.y + node.radius + 10);
+      } else if (node.type === 'category') {
+        ctx.fillStyle = node.color + 'cc';
+        ctx.fillText(node.label, node.x, node.y + node.radius + 10);
       } else {
-        ctx.fillStyle = 'rgba(255,255,255,0.50)';
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
         ctx.fillText(node.label, node.x, node.y + node.radius + 10);
       }
     });
