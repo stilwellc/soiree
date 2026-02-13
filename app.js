@@ -1803,20 +1803,15 @@ async function initNetworkGraph() {
   const techLegend = document.getElementById('js-tech-legend');
   if (techLegend) {
     techLegend.innerHTML = '';
-    const regionData = new Map();
-    nodes.slice(1).forEach(n => {
-      if (n.dead) return;
-      if (!regionData.has(n.region)) regionData.set(n.region, { color: n.color, count: 0, label: REGION_LABELS[n.region] });
-      regionData.get(n.region).count += n.eventCount;
-    });
-    regionData.forEach(({ color, count, label }) => {
+    // Show category nodes in legend
+    nodes.filter(n => n.type === 'category').forEach(n => {
       const item = document.createElement('div');
       item.className = 'tech-legend-item';
-      item.innerHTML = `<div class="tech-dot" style="background:${color};box-shadow:0 0 5px ${color}88;"></div><span>${label} <span style="color:#999;font-size:10px">${count}</span></span>`;
+      item.innerHTML = `<div class="tech-dot" style="background:${n.color};box-shadow:0 0 5px ${n.color}88;"></div><span>${n.label} <span style="color:#999;font-size:10px">${n.eventCount}</span></span>`;
       techLegend.appendChild(item);
     });
-    // Offline count
-    const deadCount = nodes.slice(1).filter(n => n.dead).length;
+    // Offline source count
+    const deadCount = nodes.filter(n => n.type === 'source' && n.dead).length;
     if (deadCount > 0) {
       const item = document.createElement('div');
       item.className = 'tech-legend-item';
