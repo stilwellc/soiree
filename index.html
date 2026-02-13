@@ -122,13 +122,12 @@
           <!-- Location toggle — always visible -->
           <div class="hero-location-row">
             <button class="region-toggle" id="region-toggle" aria-label="Change region">
-              <svg class="region-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-              <span class="region-name" id="current-region-name">NYC</span>
-              <svg class="region-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <polyline points="6 9 12 15 18 9"></polyline>
+              <div class="region-toggle-left">
+                <span class="region-toggle-label">Location</span>
+                <span class="region-name" id="current-region-name">New York City</span>
+              </div>
+              <svg class="region-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M9 18l6-6-6-6"/>
               </svg>
             </button>
           </div>

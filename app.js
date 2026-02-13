@@ -415,7 +415,7 @@ function updateRegionUI() {
   const regionData = REGIONS[currentRegion];
 
   if (regionNameEl && regionData) {
-    regionNameEl.textContent = regionData.shortName;
+    regionNameEl.textContent = regionData.name;
   }
 
   // Update header location text
