@@ -645,24 +645,38 @@ body {
 
 /* Auto-detect row */
 .region-panel-option--auto {
-  font-family: 'Jost', sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  font-style: normal;
-  color: var(--accent);
-  gap: 7px;
-  padding: 10px 0 2px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--dusk);
+  gap: 10px;
+  padding: 3px 0 4px;
 }
 
 .region-panel-option--auto::after {
-  display: none;
+  content: '›';
+  font-family: 'Jost', sans-serif;
+  font-size: 18px;
+  font-weight: 300;
+  font-style: normal;
+  color: var(--dusk);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.region-panel-option--auto:hover::after {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .region-panel-auto-icon {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
-  opacity: 0.6;
+  color: var(--dusk);
+  opacity: 0.75;
 }
 
 
