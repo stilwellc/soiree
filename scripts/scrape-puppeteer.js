@@ -287,6 +287,72 @@ const CONFIGS = {
             date: ['time', '[class*="date"]', '[datetime]', '[class*="time"]'],
             location: ['.location', '.venue', '[class*="location"]']
         }
+    },
+    gagosian: {
+        name: 'Gagosian',
+        url: 'https://gagosian.com/exhibitions/',
+        defaultLocation: 'Gagosian, 555 W 24th St, New York, NY 10011',
+        selectors: {
+            container: ['article', '[class*="exhibition"]', '[class*="exhibit"]', 'li[class*="item"]'],
+            title: ['h2', 'h3', 'h4', '[class*="title"]', '[class*="artist"]'],
+            date: ['time', '[class*="date"]', '[datetime]'],
+            location: ['.location', '.venue']
+        }
+    },
+    hauserWirth: {
+        name: 'Hauser & Wirth',
+        url: 'https://www.hauserwirth.com/hauser-wirth-exhibitions/',
+        defaultLocation: 'Hauser & Wirth, 542 W 22nd St, New York, NY 10011',
+        selectors: {
+            container: ['article', '[class*="exhibition"]', '[class*="card"]', '[class*="item"]'],
+            title: ['h2', 'h3', '[class*="title"]', '[class*="artist"]'],
+            date: ['time', '[class*="date"]', '[datetime]'],
+            location: ['.location', '.venue']
+        }
+    },
+    davidZwirner: {
+        name: 'David Zwirner',
+        url: 'https://www.davidzwirner.com/exhibitions',
+        defaultLocation: 'David Zwirner, 519 W 19th St, New York, NY 10011',
+        selectors: {
+            container: ['article', '[class*="exhibition"]', '[class*="listing"]', '[class*="card"]'],
+            title: ['h2', 'h3', '[class*="title"]', '[class*="artist"]'],
+            date: ['time', '[class*="date"]', '[datetime]'],
+            location: ['.location', '.venue']
+        }
+    },
+    lehmannMaupin: {
+        name: 'Lehmann Maupin',
+        url: 'https://www.lehmannmaupin.com/exhibitions',
+        defaultLocation: 'Lehmann Maupin, 501 W 26th St, New York, NY 10001',
+        selectors: {
+            container: ['article', '[class*="exhibition"]', '[class*="card"]', '[class*="item"]'],
+            title: ['h2', 'h3', '[class*="title"]', '[class*="artist"]'],
+            date: ['time', '[class*="date"]', '[datetime]'],
+            location: ['.location', '.venue']
+        }
+    },
+    marianGoodman: {
+        name: 'Marian Goodman',
+        url: 'https://www.mariangoodman.com/exhibitions',
+        defaultLocation: 'Marian Goodman Gallery, 24 W 57th St, New York, NY 10019',
+        selectors: {
+            container: ['article', '[class*="exhibition"]', '[class*="card"]', '[class*="item"]'],
+            title: ['h2', 'h3', '[class*="title"]', '[class*="artist"]'],
+            date: ['time', '[class*="date"]', '[datetime]'],
+            location: ['.location', '.venue']
+        }
+    },
+    lissonGallery: {
+        name: 'Lisson Gallery',
+        url: 'https://www.lissongallery.com/exhibitions',
+        defaultLocation: 'Lisson Gallery, 504 W 24th St, New York, NY 10011',
+        selectors: {
+            container: ['article', '[class*="exhibition"]', '[class*="card"]', '[class*="item"]'],
+            title: ['h2', 'h3', '[class*="title"]', '[class*="artist"]'],
+            date: ['time', '[class*="date"]', '[datetime]'],
+            location: ['.location', '.venue']
+        }
     }
 };
 

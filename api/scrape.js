@@ -960,14 +960,14 @@ async function scrapeTheLocalGirl() {
 // ─── Chelsea / NYC Gallery Scrapers ─────────────────────────────────────────
 
 const GALLERY_CONFIGS = [
-  { name: 'Gagosian',         url: 'https://gagosian.com/exhibitions/',                   location: 'Gagosian',             address: '555 W 24th St, New York, NY 10011' },
-  { name: 'Pace Gallery',     url: 'https://www.pacegallery.com/exhibitions/',             location: 'Pace Gallery',         address: '540 W 25th St, New York, NY 10001' },
-  { name: 'Hauser & Wirth',   url: 'https://www.hauserwirth.com/hauser-wirth-exhibitions/',location: 'Hauser & Wirth',       address: '542 W 22nd St, New York, NY 10011' },
-  { name: 'David Zwirner',    url: 'https://www.davidzwirner.com/exhibitions',             location: 'David Zwirner',        address: '519 W 19th St, New York, NY 10011' },
-  { name: 'Gladstone Gallery',url: 'https://gladstonegallery.com/exhibitions/',            location: 'Gladstone Gallery',    address: '130 W 21st St, New York, NY 10011' },
-  { name: 'Lehmann Maupin',   url: 'https://www.lehmannmaupin.com/exhibitions',            location: 'Lehmann Maupin',       address: '501 W 26th St, New York, NY 10001' },
-  { name: 'Marian Goodman',   url: 'https://www.mariangoodman.com/exhibitions',            location: 'Marian Goodman Gallery',address: '24 W 57th St, New York, NY 10019' },
-  { name: 'Lisson Gallery',   url: 'https://www.lissongallery.com/exhibitions',            location: 'Lisson Gallery',       address: '504 W 24th St, New York, NY 10011' }
+  { name: 'Gagosian',         url: 'https://gagosian.com/exhibitions/',                    location: 'Gagosian',              address: '555 W 24th St, New York, NY 10011',  puppeteerKey: 'gagosian' },
+  { name: 'Pace Gallery',     url: 'https://www.pacegallery.com/exhibitions/',              location: 'Pace Gallery',          address: '540 W 25th St, New York, NY 10001',  puppeteerKey: null },
+  { name: 'Hauser & Wirth',   url: 'https://www.hauserwirth.com/hauser-wirth-exhibitions/', location: 'Hauser & Wirth',        address: '542 W 22nd St, New York, NY 10011',  puppeteerKey: 'hauserWirth' },
+  { name: 'David Zwirner',    url: 'https://www.davidzwirner.com/exhibitions',              location: 'David Zwirner',         address: '519 W 19th St, New York, NY 10011',  puppeteerKey: 'davidZwirner' },
+  { name: 'Gladstone Gallery',url: 'https://gladstonegallery.com/exhibitions/',             location: 'Gladstone Gallery',     address: '130 W 21st St, New York, NY 10011',  puppeteerKey: null },
+  { name: 'Lehmann Maupin',   url: 'https://www.lehmannmaupin.com/exhibitions',             location: 'Lehmann Maupin',        address: '501 W 26th St, New York, NY 10001',  puppeteerKey: 'lehmannMaupin' },
+  { name: 'Marian Goodman',   url: 'https://www.mariangoodman.com/exhibitions',             location: 'Marian Goodman Gallery',address: '24 W 57th St, New York, NY 10019',   puppeteerKey: 'marianGoodman' },
+  { name: 'Lisson Gallery',   url: 'https://www.lissongallery.com/exhibitions',             location: 'Lisson Gallery',        address: '504 W 24th St, New York, NY 10011',  puppeteerKey: 'lissonGallery' }
 ];
 
 // Shared Cheerio scraper for gallery exhibition pages.
@@ -1007,7 +1007,9 @@ async function scrapeGallery(config) {
 
       // Title
       let title = $elem.find('h1,h2,h3,h4,[class*="title"],[class*="name"]').first().text().trim().replace(/\s+/g, ' ');
-      if (!title || title.length < 5) return;
+      if (!title || title.length < 10) return;
+      // Skip navigation / location labels (city names, section headers)
+      if (/^(tokyo|berlin|seoul|london|paris|los angeles|new york|geneva|hong kong|exhibitions|upcoming|current|past|artists|home|about|contact|visit|news)$/i.test(title.trim())) return;
 
       // Link
       const href = $elem.find('a').first().attr('href');
@@ -1065,6 +1067,14 @@ async function scrapeGallery(config) {
 
       if (event) events.push(event);
     });
+
+    // Puppeteer fallback for JS-rendered gallery sites
+    if (events.length === 0 && config.puppeteerKey && CONFIGS[config.puppeteerKey]) {
+      console.log(`  ${config.name}: Cheerio got 0, falling back to Puppeteer...`);
+      const puppeteerEvents = await scrapeWithPuppeteer(CONFIGS[config.puppeteerKey]);
+      // Filter: must have a parseable date
+      return puppeteerEvents.filter(e => e.start_date !== null);
+    }
 
     return events;
   } catch (error) {
