@@ -1338,7 +1338,13 @@ async function initNetworkGraph() {
   const canvas = document.getElementById('network-graph');
   if (!canvas) return;
   if (canvas.hasAttribute('data-init')) return;
-  canvas.setAttribute('data-init', 'true');
+
+  // Read canvas dimensions before the async fetch — getBoundingClientRect forces
+  // a synchronous layout reflow so we get the real width even right after unhide.
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width || 360; // fallback if layout hasn't settled
+  const isMobile = width < 480;
+  const height = isMobile ? Math.round(width * 0.85) : 440;
 
   // Fetch ALL events from API (not filtered by region)
   let allEvents = [];
@@ -1355,14 +1361,13 @@ async function initNetworkGraph() {
 
   if (allEvents.length === 0) return;
 
+  // Mark initialized only after we have events and valid dimensions
+  canvas.setAttribute('data-init', 'true');
+
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
 
   // Set canvas size — responsive height for mobile
-  const rect = canvas.getBoundingClientRect();
-  const width = rect.width;
-  const isMobile = width < 480;
-  const height = isMobile ? Math.round(width * 0.85) : 440;
   canvas.width = width * dpr;
   canvas.height = height * dpr;
   ctx.scale(dpr, dpr);
@@ -1946,8 +1951,8 @@ if (document.readyState === 'loading') {
     const aboutView = document.getElementById('about-view');
     const observer = new MutationObserver(() => {
       if (!aboutView.classList.contains('hidden')) {
-        initNetworkGraph();
         observer.disconnect();
+        requestAnimationFrame(() => initNetworkGraph());
       }
     });
     observer.observe(aboutView, { attributes: true, attributeFilter: ['class'] });
