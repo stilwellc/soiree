@@ -1192,18 +1192,6 @@ async function scrapeGalleries() {
   return allEvents;
 }
 
-// Run all gallery scrapers sequentially to avoid hammering concurrent requests
-async function scrapeGalleries() {
-  const allEvents = [];
-  for (const config of GALLERY_CONFIGS) {
-    const events = await scrapeGallery(config);
-    console.log(`  - ${config.name}: ${events.length} events`);
-    allEvents.push(...events);
-  }
-  console.log(`Gallery total: ${allEvents.length} events`);
-  return allEvents;
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function scrapeAllEvents() {
