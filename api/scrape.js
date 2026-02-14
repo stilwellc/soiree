@@ -966,13 +966,19 @@ const GALLERY_HEADERS = {
 };
 
 // Extract exhibition start date from a date range string like "Jan 16 – Feb 28, 2026"
+// Also handles British "DD Month" format like "11 February – 11 April 2026".
 // Attaches the year from the range end if the start doesn't include one.
 function galleryStartDate(rangeText) {
   if (!rangeText) return null;
   const yearMatch = rangeText.match(/\b(20\d{2})\b/);
-  const startPart = rangeText.split(/\s*[–—-]\s*/)[0].trim();
+  const startPart = rangeText.split(/\s*[–—\-]\s*/)[0].trim();
   const withYear = yearMatch && !startPart.match(/\d{4}/) ? `${startPart}, ${yearMatch[1]}` : startPart;
-  const { start_date } = parseDateText(withYear, '');
+  // Normalize British "DD Month" → "Month DD" for parseDateText
+  const normalized = withYear.replace(
+    /^(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i,
+    '$2 $1'
+  );
+  const { start_date } = parseDateText(normalized, '');
   return start_date || null;
 }
 
@@ -1112,32 +1118,66 @@ async function scrapeLehmannMaupin() {
   } catch (e) { console.error('Lehmann Maupin failed:', e.message); return []; }
 }
 
-// Lisson Gallery: <a href="/exhibitions/slug"> — text = "Artist Name  DD Month – DD Month YYYY"
+// Lisson Gallery: each exhibition has two <a> tags (image + text). Use a.link-discreet to
+// skip the image-only anchor so we don't exhaust `seen` before reaching the text link.
+// Text format: "Artist Name  DD Month – DD Month YYYY  Location"
 async function scrapeLissonGallery() {
   try {
     const res = await axios.get('https://www.lissongallery.com/exhibitions', { timeout: 12000, headers: GALLERY_HEADERS });
     const $ = cheerio.load(res.data);
     const events = [], seen = new Set();
-    $('a[href*="/exhibitions/"]').each((_, el) => {
+    $('a.link-discreet[href*="/exhibitions/"]').each((_, el) => {
       if (events.length >= 10) return false;
       const href = $(el).attr('href');
-      if (!href || href === '/exhibitions/' || seen.has(href)) return;
+      if (!href || seen.has(href)) return;
       seen.add(href);
       const text = $(el).text().replace(/\s+/g, ' ').trim();
       if (text.length < 10) return;
+      // Only take New York exhibitions
+      if (!/new york/i.test(text)) return;
       const dateMatch = text.match(/(\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec))\b/i);
       if (!dateMatch) return;
       const yearMatch = text.match(/\b(20\d{2})\b/);
-      const startStr = yearMatch ? `${dateMatch[1]}, ${yearMatch[1]}` : dateMatch[1];
-      const { start_date } = parseDateText(startStr, '');
+      const dateRaw = yearMatch ? `${dateMatch[1]}, ${yearMatch[1]}` : dateMatch[1];
+      const start_date = galleryStartDate(dateRaw);
       if (!start_date) return;
-      const nameRaw = text.slice(0, text.indexOf(dateMatch[0])).replace(/[:–—-]+$/, '').trim();
+      const nameRaw = text.slice(0, text.indexOf(dateMatch[0])).replace(/[:–—\-]+$/, '').trim();
       if (!nameRaw || nameRaw.length < 5) return;
-      const event = galleryEvent(nameRaw, startStr, start_date, `https://www.lissongallery.com${href}`, 'Lisson Gallery', '504 W 24th St, New York, NY 10011', 'Lisson Gallery');
+      const event = galleryEvent(nameRaw, dateRaw, start_date, `https://www.lissongallery.com${href}`, 'Lisson Gallery', '504 W 24th St, New York, NY 10011', 'Lisson Gallery');
       if (event) events.push(event);
     });
     return events;
   } catch (e) { console.error('Lisson Gallery failed:', e.message); return []; }
+}
+
+// Marian Goodman: div.area → a (link+location) + h2 span.heading_title (artist)
+//                 + div.subheading (show title) + div.bottom (date range "DD Month – DD Month YYYY")
+// Fetches /exhibitions/new-york/ directly to stay NYC-only.
+async function scrapeMarianGoodman() {
+  try {
+    const res = await axios.get('https://www.mariangoodman.com/exhibitions/new-york/', { timeout: 12000, headers: GALLERY_HEADERS });
+    const $ = cheerio.load(res.data);
+    const events = [], seen = new Set();
+    $('div.area').each((_, el) => {
+      if (events.length >= 10) return false;
+      const $e = $(el);
+      const href = $e.find('a').first().attr('href');
+      if (!href) return;
+      const url = href.startsWith('http') ? href : `https://www.mariangoodman.com${href}`;
+      if (seen.has(url)) return;
+      seen.add(url);
+      const artist = $e.find('span.heading_title').first().text().trim();
+      const subtitle = $e.find('div.subheading').first().text().trim();
+      const dateRaw = $e.find('div.bottom').first().text().trim();
+      const name = artist && subtitle ? `${artist}: ${subtitle}` : (artist || subtitle);
+      if (!name || name.length < 5 || !dateRaw) return;
+      const start_date = galleryStartDate(dateRaw);
+      if (!start_date) return;
+      const event = galleryEvent(name, dateRaw, start_date, url, 'Marian Goodman', '24 W 57th St, New York, NY 10019', 'Marian Goodman');
+      if (event) events.push(event);
+    });
+    return events;
+  } catch (e) { console.error('Marian Goodman failed:', e.message); return []; }
 }
 
 // Gladstone Gallery: already working via generic approach — keep as dedicated function
@@ -1180,8 +1220,8 @@ async function scrapeGladstoneGallery() {
 // Run all gallery scrapers sequentially
 async function scrapeGalleries() {
   console.log('Scraping galleries...');
-  const scrapers = [scrapeGagosian, scrapePaceGallery, scrapeDavidZwirner, scrapeLehmannMaupin, scrapeLissonGallery, scrapeGladstoneGallery];
-  const names =   ['Gagosian',     'Pace Gallery',    'David Zwirner',    'Lehmann Maupin',    'Lisson Gallery',    'Gladstone Gallery'];
+  const scrapers = [scrapeGagosian, scrapePaceGallery, scrapeDavidZwirner, scrapeLehmannMaupin, scrapeLissonGallery, scrapeMarianGoodman, scrapeGladstoneGallery];
+  const names =   ['Gagosian',     'Pace Gallery',    'David Zwirner',    'Lehmann Maupin',    'Lisson Gallery',    'Marian Goodman',    'Gladstone Gallery'];
   const allEvents = [];
   for (let i = 0; i < scrapers.length; i++) {
     const events = await scrapers[i]();
