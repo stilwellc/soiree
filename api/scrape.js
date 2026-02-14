@@ -961,7 +961,7 @@ async function scrapeTheLocalGirl() {
 
 const GALLERY_CONFIGS = [
   { name: 'Gagosian',         url: 'https://gagosian.com/exhibitions/',                    location: 'Gagosian',              address: '555 W 24th St, New York, NY 10011',  puppeteerKey: 'gagosian' },
-  { name: 'Pace Gallery',     url: 'https://www.pacegallery.com/exhibitions/',              location: 'Pace Gallery',          address: '540 W 25th St, New York, NY 10001',  puppeteerKey: null },
+  { name: 'Pace Gallery',     url: 'https://www.pacegallery.com/exhibitions/',              location: 'Pace Gallery',          address: '540 W 25th St, New York, NY 10001',  puppeteerKey: 'paceGallery',  forcePuppeteer: true },
   { name: 'Hauser & Wirth',   url: 'https://www.hauserwirth.com/hauser-wirth-exhibitions/', location: 'Hauser & Wirth',        address: '542 W 22nd St, New York, NY 10011',  puppeteerKey: 'hauserWirth' },
   { name: 'David Zwirner',    url: 'https://www.davidzwirner.com/exhibitions',              location: 'David Zwirner',         address: '519 W 19th St, New York, NY 10011',  puppeteerKey: 'davidZwirner' },
   { name: 'Gladstone Gallery',url: 'https://gladstonegallery.com/exhibitions/',             location: 'Gladstone Gallery',     address: '130 W 21st St, New York, NY 10011',  puppeteerKey: null },
@@ -974,6 +974,12 @@ const GALLERY_CONFIGS = [
 // Only emits events where a single specific date can be found
 // (opening reception preferred; exhibition start date as fallback).
 async function scrapeGallery(config) {
+  // Skip Cheerio entirely for sites known to be JS-rendered
+  if (config.forcePuppeteer && config.puppeteerKey && CONFIGS[config.puppeteerKey]) {
+    const puppeteerEvents = await scrapeWithPuppeteer(CONFIGS[config.puppeteerKey]);
+    return puppeteerEvents.filter(e => e.start_date !== null);
+  }
+
   try {
     const response = await axios.get(config.url, {
       timeout: 12000,
@@ -1008,8 +1014,10 @@ async function scrapeGallery(config) {
       // Title
       let title = $elem.find('h1,h2,h3,h4,[class*="title"],[class*="name"]').first().text().trim().replace(/\s+/g, ' ');
       if (!title || title.length < 10) return;
-      // Skip navigation / location labels (city names, section headers)
-      if (/^(tokyo|berlin|seoul|london|paris|los angeles|new york|geneva|hong kong|exhibitions|upcoming|current|past|artists|home|about|contact|visit|news)$/i.test(title.trim())) return;
+      // Skip navigation / location labels (city names, section headers, office locations)
+      if (/^(tokyo|berlin|seoul|london|paris|los angeles|new york|new york[^a-z]|geneva|hong kong|exhibitions|upcoming|current|past|artists|home|about|contact|visit|news|all locations|all exhibitions)$/i.test(title.trim())) return;
+      // Skip "City – [branch name]" patterns (gallery location navigation items)
+      if (/^(new york|los angeles|london|paris|hong kong|tokyo|berlin|seoul|geneva)\s*[–—-]/i.test(title)) return;
 
       // Link
       const href = $elem.find('a').first().attr('href');
@@ -1235,6 +1243,18 @@ module.exports = async function handler(req, res) {
     // First, remove events with NULL or empty URLs (old fallback data)
     await pool.query(`
       DELETE FROM events WHERE url IS NULL OR url = ''
+    `);
+
+    // Remove gallery events that were incorrectly scraped as location/nav labels
+    await pool.query(`
+      DELETE FROM events
+      WHERE source IN ('Pace Gallery','Gagosian','Hauser & Wirth','David Zwirner','Lehmann Maupin','Marian Goodman','Lisson Gallery')
+        AND name ~* '^(tokyo|berlin|seoul|london|paris|los angeles|new york|geneva|hong kong|exhibitions|upcoming|current|past)$'
+    `);
+    await pool.query(`
+      DELETE FROM events
+      WHERE source IN ('Pace Gallery','Gagosian','Hauser & Wirth','David Zwirner','Lehmann Maupin','Marian Goodman','Lisson Gallery')
+        AND name ~* '^(new york|los angeles|london|paris|hong kong|tokyo|berlin|seoul|geneva)\\s*[–—-]'
     `);
 
     // Then keep only the most recent event for each URL

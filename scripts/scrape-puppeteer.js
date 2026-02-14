@@ -288,6 +288,17 @@ const CONFIGS = {
             location: ['.location', '.venue', '[class*="location"]']
         }
     },
+    paceGallery: {
+        name: 'Pace Gallery',
+        url: 'https://www.pacegallery.com/exhibitions/',
+        defaultLocation: 'Pace Gallery, 540 W 25th St, New York, NY 10001',
+        selectors: {
+            container: ['article', '[class*="exhibition"]', '[class*="ExhibitionCard"]', '[class*="card"]', '[class*="listing"]'],
+            title: ['h2', 'h3', 'h4', '[class*="title"]', '[class*="artist"]'],
+            date: ['time', '[class*="date"]', '[datetime]'],
+            location: ['.location', '.venue']
+        }
+    },
     gagosian: {
         name: 'Gagosian',
         url: 'https://gagosian.com/exhibitions/',
