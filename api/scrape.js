@@ -959,136 +959,237 @@ async function scrapeTheLocalGirl() {
 // Main orchestrator - scrapes all sources and merges results
 // ─── Chelsea / NYC Gallery Scrapers ─────────────────────────────────────────
 
-const GALLERY_CONFIGS = [
-  { name: 'Gagosian',         url: 'https://gagosian.com/exhibitions/',                    location: 'Gagosian',              address: '555 W 24th St, New York, NY 10011',  puppeteerKey: 'gagosian' },
-  { name: 'Pace Gallery',     url: 'https://www.pacegallery.com/exhibitions/',              location: 'Pace Gallery',          address: '540 W 25th St, New York, NY 10001',  puppeteerKey: 'paceGallery',  forcePuppeteer: true },
-  { name: 'Hauser & Wirth',   url: 'https://www.hauserwirth.com/hauser-wirth-exhibitions/', location: 'Hauser & Wirth',        address: '542 W 22nd St, New York, NY 10011',  puppeteerKey: 'hauserWirth' },
-  { name: 'David Zwirner',    url: 'https://www.davidzwirner.com/exhibitions',              location: 'David Zwirner',         address: '519 W 19th St, New York, NY 10011',  puppeteerKey: 'davidZwirner' },
-  { name: 'Gladstone Gallery',url: 'https://gladstonegallery.com/exhibitions/',             location: 'Gladstone Gallery',     address: '130 W 21st St, New York, NY 10011',  puppeteerKey: null },
-  { name: 'Lehmann Maupin',   url: 'https://www.lehmannmaupin.com/exhibitions',             location: 'Lehmann Maupin',        address: '501 W 26th St, New York, NY 10001',  puppeteerKey: 'lehmannMaupin' },
-  { name: 'Marian Goodman',   url: 'https://www.mariangoodman.com/exhibitions',             location: 'Marian Goodman Gallery',address: '24 W 57th St, New York, NY 10019',   puppeteerKey: 'marianGoodman' },
-  { name: 'Lisson Gallery',   url: 'https://www.lissongallery.com/exhibitions',             location: 'Lisson Gallery',        address: '504 W 24th St, New York, NY 10011',  puppeteerKey: 'lissonGallery' }
-];
+const GALLERY_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml',
+  'Accept-Language': 'en-US,en;q=0.9'
+};
 
-// Shared Cheerio scraper for gallery exhibition pages.
-// Only emits events where a single specific date can be found
-// (opening reception preferred; exhibition start date as fallback).
-async function scrapeGallery(config) {
-  // Skip Cheerio entirely for sites known to be JS-rendered
-  if (config.forcePuppeteer && config.puppeteerKey && CONFIGS[config.puppeteerKey]) {
-    const puppeteerEvents = await scrapeWithPuppeteer(CONFIGS[config.puppeteerKey]);
-    return puppeteerEvents.filter(e => e.start_date !== null);
-  }
+// Extract exhibition start date from a date range string like "Jan 16 – Feb 28, 2026"
+// Attaches the year from the range end if the start doesn't include one.
+function galleryStartDate(rangeText) {
+  if (!rangeText) return null;
+  const yearMatch = rangeText.match(/\b(20\d{2})\b/);
+  const startPart = rangeText.split(/\s*[–—-]\s*/)[0].trim();
+  const withYear = yearMatch && !startPart.match(/\d{4}/) ? `${startPart}, ${yearMatch[1]}` : startPart;
+  const { start_date } = parseDateText(withYear, '');
+  return start_date || null;
+}
 
+function galleryEvent(name, dateRaw, start_date, url, locationName, address, sourceName) {
+  return createNormalizedEvent({
+    name: name.trim().substring(0, 255),
+    category: 'art',
+    date: dateRaw,
+    time: 'See details',
+    start_date,
+    end_date: start_date,
+    location: locationName,
+    address,
+    price: 'free',
+    spots: Math.floor(Math.random() * 80) + 20,
+    image: getEventImage(name, 'art'),
+    description: `${name.trim()} at ${sourceName}.`,
+    highlights: [sourceName, 'Gallery opening', 'Contemporary art', 'Chelsea'],
+    url,
+    source: sourceName
+  });
+}
+
+// Gagosian: <a href="/exhibitions/YEAR/slug"> — text = ArtistName + Title + DateRange
+async function scrapeGagosian() {
   try {
-    const response = await axios.get(config.url, {
-      timeout: 12000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'en-US,en;q=0.9'
-      }
+    const res = await axios.get('https://gagosian.com/exhibitions/', { timeout: 12000, headers: GALLERY_HEADERS });
+    const $ = cheerio.load(res.data);
+    const events = [], seen = new Set();
+    $('a[href*="/exhibitions/20"]').each((_, el) => {
+      if (events.length >= 10) return false;
+      const href = $(el).attr('href');
+      if (!href || seen.has(href)) return;
+      seen.add(href);
+      const text = $(el).text().replace(/\s+/g, ' ').trim();
+      // Date range is at the end: "Month Day–Month Day" or "Month Day, Year"
+      const dateMatch = text.match(/((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:[–—,\s\w]*)?)$/i);
+      if (!dateMatch) return;
+      const dateRaw = dateMatch[1].trim();
+      const start_date = galleryStartDate(dateRaw);
+      if (!start_date) return;
+      const name = text.slice(0, text.length - dateMatch[0].length).trim();
+      if (!name || name.length < 5) return;
+      const event = galleryEvent(name, dateRaw, start_date, `https://gagosian.com${href}`, 'Gagosian', '555 W 24th St, New York, NY 10011', 'Gagosian');
+      if (event) events.push(event);
     });
+    return events;
+  } catch (e) { console.error('Gagosian failed:', e.message); return []; }
+}
 
-    const $ = cheerio.load(response.data);
-    const events = [];
-    const seen = new Set();
-    const origin = new URL(config.url).origin;
+// Pace Gallery: li[class*="index-grid__list-item"] → h3 artist + p[class*="text-date"] date
+// Filter to New York location only
+async function scrapePaceGallery() {
+  try {
+    const res = await axios.get('https://www.pacegallery.com/exhibitions/', { timeout: 12000, headers: GALLERY_HEADERS });
+    const $ = cheerio.load(res.data);
+    const events = [], seen = new Set();
+    $('li[class*="index-grid__list-item"]').each((_, el) => {
+      if (events.length >= 10) return false;
+      const $e = $(el);
+      const href = $e.find('a').first().attr('href');
+      if (!href) return;
+      const url = href.startsWith('http') ? href : `https://www.pacegallery.com${href}`;
+      if (seen.has(url)) return;
+      seen.add(url);
+      const locationText = $e.find('[class*="text-location"]').first().text().trim();
+      if (locationText && !/new york/i.test(locationText)) return;
+      const artist = $e.find('[class*="text-title"]').first().text().trim();
+      const subtitle = $e.find('[class*="text-subtitle"]').first().text().trim();
+      const dateRaw = $e.find('[class*="text-date"]').first().text().trim();
+      if (!artist || !dateRaw) return;
+      const start_date = galleryStartDate(dateRaw);
+      if (!start_date) return;
+      const name = subtitle ? `${artist}: ${subtitle}` : artist;
+      const event = galleryEvent(name, dateRaw, start_date, url, 'Pace Gallery', '540 W 25th St, New York, NY 10001', 'Pace Gallery');
+      if (event) events.push(event);
+    });
+    return events;
+  } catch (e) { console.error('Pace Gallery failed:', e.message); return []; }
+}
 
-    // Try multiple container selectors common on gallery sites
-    const containerSelectors = [
-      'article', '[class*="exhibition"]', '[class*="exhibit"]',
-      '[class*="listing"]', '[class*="grid-item"]', '[class*="card"]',
-      'li[class*="item"]'
-    ];
+// David Zwirner: JSON-LD ExhibitionEvent schema embedded in page — cleanest data
+async function scrapeDavidZwirner() {
+  try {
+    const res = await axios.get('https://www.davidzwirner.com/exhibitions', { timeout: 12000, headers: GALLERY_HEADERS });
+    const $ = cheerio.load(res.data);
+    const events = [], seen = new Set();
+    $('script[type="application/ld+json"]').each((_, el) => {
+      try {
+        const raw = JSON.parse($(el).html() || '{}');
+        const items = Array.isArray(raw) ? raw : (raw['@graph'] ? raw['@graph'] : [raw]);
+        for (const item of items) {
+          if (events.length >= 10) break;
+          if (item['@type'] !== 'ExhibitionEvent') continue;
+          const name = (item.name || '').trim();
+          if (!name || name.length < 5) continue;
+          const url = (item.url || '').trim();
+          if (!url || seen.has(url)) continue;
+          seen.add(url);
+          if (item.location?.name && !/new york/i.test(item.location.name)) continue;
+          const { start_date } = parseDateText(item.startDate || '', '');
+          if (!start_date) continue;
+          const event = galleryEvent(name, item.startDate || '', start_date, url, 'David Zwirner', '519 W 19th St, New York, NY 10011', 'David Zwirner');
+          if (event) events.push(event);
+        }
+      } catch (_) {}
+    });
+    return events;
+  } catch (e) { console.error('David Zwirner failed:', e.message); return []; }
+}
+
+// Lehmann Maupin: div.entry → h1 (exhibition title) + h3 (date range)
+async function scrapeLehmannMaupin() {
+  try {
+    const res = await axios.get('https://www.lehmannmaupin.com/exhibitions', { timeout: 12000, headers: GALLERY_HEADERS });
+    const $ = cheerio.load(res.data);
+    const events = [], seen = new Set();
+    $('div.entry, div[class*="entry"]').each((_, el) => {
+      if (events.length >= 10) return false;
+      const $e = $(el);
+      const href = $e.find('a').first().attr('href');
+      if (!href) return;
+      const url = href.startsWith('http') ? href : `https://www.lehmannmaupin.com${href}`;
+      if (seen.has(url)) return;
+      seen.add(url);
+      const title = $e.find('h1').first().text().trim();
+      const artists = $e.find('h2').not('[class*="subtitle"]').first().text().trim();
+      const dateRaw = $e.find('h3').first().text().trim();
+      const name = title || artists;
+      if (!name || name.length < 5 || !dateRaw) return;
+      const start_date = galleryStartDate(dateRaw);
+      if (!start_date) return;
+      const event = galleryEvent(name, dateRaw, start_date, url, 'Lehmann Maupin', '501 W 26th St, New York, NY 10001', 'Lehmann Maupin');
+      if (event) events.push(event);
+    });
+    return events;
+  } catch (e) { console.error('Lehmann Maupin failed:', e.message); return []; }
+}
+
+// Lisson Gallery: <a href="/exhibitions/slug"> — text = "Artist Name  DD Month – DD Month YYYY"
+async function scrapeLissonGallery() {
+  try {
+    const res = await axios.get('https://www.lissongallery.com/exhibitions', { timeout: 12000, headers: GALLERY_HEADERS });
+    const $ = cheerio.load(res.data);
+    const events = [], seen = new Set();
+    $('a[href*="/exhibitions/"]').each((_, el) => {
+      if (events.length >= 10) return false;
+      const href = $(el).attr('href');
+      if (!href || href === '/exhibitions/' || seen.has(href)) return;
+      seen.add(href);
+      const text = $(el).text().replace(/\s+/g, ' ').trim();
+      if (text.length < 10) return;
+      const dateMatch = text.match(/(\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec))\b/i);
+      if (!dateMatch) return;
+      const yearMatch = text.match(/\b(20\d{2})\b/);
+      const startStr = yearMatch ? `${dateMatch[1]}, ${yearMatch[1]}` : dateMatch[1];
+      const { start_date } = parseDateText(startStr, '');
+      if (!start_date) return;
+      const nameRaw = text.slice(0, text.indexOf(dateMatch[0])).replace(/[:–—-]+$/, '').trim();
+      if (!nameRaw || nameRaw.length < 5) return;
+      const event = galleryEvent(nameRaw, startStr, start_date, `https://www.lissongallery.com${href}`, 'Lisson Gallery', '504 W 24th St, New York, NY 10011', 'Lisson Gallery');
+      if (event) events.push(event);
+    });
+    return events;
+  } catch (e) { console.error('Lisson Gallery failed:', e.message); return []; }
+}
+
+// Gladstone Gallery: already working via generic approach — keep as dedicated function
+async function scrapeGladstoneGallery() {
+  try {
+    const res = await axios.get('https://gladstonegallery.com/exhibitions/', { timeout: 12000, headers: GALLERY_HEADERS });
+    const $ = cheerio.load(res.data);
+    const events = [], seen = new Set();
+    const containerSelectors = ['article', '[class*="exhibition"]', '[class*="exhibit"]', '[class*="listing"]', '[class*="grid-item"]', '[class*="card"]', 'li[class*="item"]'];
     let $items = $();
     for (const sel of containerSelectors) {
       $items = $(sel).filter((_, el) => $(el).find('a').length > 0);
       if ($items.length > 3) break;
     }
-
-    $items.each((i, elem) => {
+    $items.each((_, el) => {
       if (events.length >= 10) return false;
-      const $elem = $(elem);
-
-      // Title
-      let title = $elem.find('h1,h2,h3,h4,[class*="title"],[class*="name"]').first().text().trim().replace(/\s+/g, ' ');
+      const $e = $(el);
+      const title = $e.find('h1,h2,h3,h4,[class*="title"]').first().text().trim().replace(/\s+/g, ' ');
       if (!title || title.length < 10) return;
-      // Skip navigation / location labels (city names, section headers, office locations)
-      if (/^(tokyo|berlin|seoul|london|paris|los angeles|new york|new york[^a-z]|geneva|hong kong|exhibitions|upcoming|current|past|artists|home|about|contact|visit|news|all locations|all exhibitions)$/i.test(title.trim())) return;
-      // Skip "City – [branch name]" patterns (gallery location navigation items)
-      if (/^(new york|los angeles|london|paris|hong kong|tokyo|berlin|seoul|geneva)\s*[–—-]/i.test(title)) return;
-
-      // Link
-      const href = $elem.find('a').first().attr('href');
+      const href = $e.find('a').first().attr('href');
       if (!href) return;
-      const eventUrl = href.startsWith('http') ? href : `${origin}${href.startsWith('/') ? '' : '/'}${href}`;
-      if (seen.has(eventUrl)) return;
-      seen.add(eventUrl);
-
-      const fullText = $elem.text().replace(/\s+/g, ' ');
-
-      // 1. Look for opening reception date (most specific)
-      let dateStr = '';
-      const openingMatch = fullText.match(/opening\s+(?:reception\s+)?(?:on\s+)?(?:date\s*:?\s*)?([A-Za-z]+\s+\d{1,2},?\s*\d{4})/i) ||
-                           fullText.match(/reception[:\s]+([A-Za-z]+\s+\d{1,2},?\s*\d{4})/i);
-      if (openingMatch) {
-        dateStr = openingMatch[1];
-      } else {
-        // 2. Look for a date element and take just the start date
-        const $dateEl = $elem.find('time,[class*="date"],[datetime],[class*="when"]').first();
-        const rawDate = ($dateEl.attr('datetime') || $dateEl.text()).trim();
-        if (rawDate) {
-          // Strip range suffix — "January 15 – March 20, 2026" → "January 15, 2026"
-          // Try to capture "Month Day, Year" at the start
-          const startMatch = rawDate.match(/^([A-Za-z]+\s+\d{1,2}(?:,?\s*\d{4})?)/);
-          if (startMatch) dateStr = startMatch[1];
-          // Or ISO date
-          else if (rawDate.match(/^\d{4}-\d{2}-\d{2}/)) dateStr = rawDate.slice(0, 10);
-        }
-      }
-
-      if (!dateStr) return; // no date → skip (single-day events only)
-
+      const url = href.startsWith('http') ? href : `https://gladstonegallery.com${href}`;
+      if (seen.has(url)) return;
+      seen.add(url);
+      const $dateEl = $e.find('time,[class*="date"],[datetime]').first();
+      const rawDate = ($dateEl.attr('datetime') || $dateEl.text()).trim();
+      if (!rawDate) return;
+      const startMatch = rawDate.match(/^([A-Za-z]+\s+\d{1,2}(?:,?\s*\d{4})?)/);
+      const dateStr = startMatch ? startMatch[1] : (rawDate.match(/^\d{4}-\d{2}-\d{2}/) ? rawDate.slice(0, 10) : '');
+      if (!dateStr) return;
       const { start_date } = parseDateText(dateStr, '');
       if (!start_date) return;
-
-      const description = $elem.find('p,[class*="desc"],[class*="artist"]').first().text().trim() || title;
-
-      const event = createNormalizedEvent({
-        name: title.substring(0, 255),
-        category: 'art',
-        date: dateStr,
-        time: 'See details',
-        start_date,
-        end_date: start_date, // single-day event
-        location: config.location,
-        address: config.address,
-        price: 'free',
-        spots: Math.floor(Math.random() * 80) + 20,
-        image: getEventImage(title, 'art'),
-        description: description.substring(0, 500) || `${title} at ${config.name}.`,
-        highlights: [config.name, 'Gallery opening', 'Contemporary art', 'Chelsea'],
-        url: eventUrl,
-        source: config.name
-      });
-
+      const event = galleryEvent(title, dateStr, start_date, url, 'Gladstone Gallery', '130 W 21st St, New York, NY 10011', 'Gladstone Gallery');
       if (event) events.push(event);
     });
-
-    // Puppeteer fallback for JS-rendered gallery sites
-    if (events.length === 0 && config.puppeteerKey && CONFIGS[config.puppeteerKey]) {
-      console.log(`  ${config.name}: Cheerio got 0, falling back to Puppeteer...`);
-      const puppeteerEvents = await scrapeWithPuppeteer(CONFIGS[config.puppeteerKey]);
-      // Filter: must have a parseable date
-      return puppeteerEvents.filter(e => e.start_date !== null);
-    }
-
     return events;
-  } catch (error) {
-    console.error(`${config.name} scraping failed:`, error.message);
-    return [];
+  } catch (e) { console.error('Gladstone Gallery failed:', e.message); return []; }
+}
+
+// Run all gallery scrapers sequentially
+async function scrapeGalleries() {
+  console.log('Scraping galleries...');
+  const scrapers = [scrapeGagosian, scrapePaceGallery, scrapeDavidZwirner, scrapeLehmannMaupin, scrapeLissonGallery, scrapeGladstoneGallery];
+  const names =   ['Gagosian',     'Pace Gallery',    'David Zwirner',    'Lehmann Maupin',    'Lisson Gallery',    'Gladstone Gallery'];
+  const allEvents = [];
+  for (let i = 0; i < scrapers.length; i++) {
+    const events = await scrapers[i]();
+    console.log(`  - ${names[i]}: ${events.length} events`);
+    allEvents.push(...events);
   }
+  console.log(`Gallery total: ${allEvents.length} events`);
+  return allEvents;
 }
 
 // Run all gallery scrapers sequentially to avoid hammering concurrent requests
@@ -1245,17 +1346,6 @@ module.exports = async function handler(req, res) {
       DELETE FROM events WHERE url IS NULL OR url = ''
     `);
 
-    // Remove gallery events that were incorrectly scraped as location/nav labels
-    await pool.query(`
-      DELETE FROM events
-      WHERE source IN ('Pace Gallery','Gagosian','Hauser & Wirth','David Zwirner','Lehmann Maupin','Marian Goodman','Lisson Gallery')
-        AND name ~* '^(tokyo|berlin|seoul|london|paris|los angeles|new york|geneva|hong kong|exhibitions|upcoming|current|past)$'
-    `);
-    await pool.query(`
-      DELETE FROM events
-      WHERE source IN ('Pace Gallery','Gagosian','Hauser & Wirth','David Zwirner','Lehmann Maupin','Marian Goodman','Lisson Gallery')
-        AND name ~* '^(new york|los angeles|london|paris|hong kong|tokyo|berlin|seoul|geneva)\\s*[–—-]'
-    `);
 
     // Then keep only the most recent event for each URL
     await pool.query(`
