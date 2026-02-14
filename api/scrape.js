@@ -961,8 +961,11 @@ async function scrapeTheLocalGirl() {
 
 const GALLERY_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml',
-  'Accept-Language': 'en-US,en;q=0.9'
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Accept-Encoding': 'gzip, deflate, br',
+  'Connection': 'keep-alive',
+  'Upgrade-Insecure-Requests': '1'
 };
 
 // Extract exhibition start date from a date range string like "Jan 16 – Feb 28, 2026"
@@ -1217,19 +1220,21 @@ async function scrapeGladstoneGallery() {
   } catch (e) { console.error('Gladstone Gallery failed:', e.message); return []; }
 }
 
-// Run all gallery scrapers sequentially
+// Run all gallery scrapers sequentially; returns { events, counts }
 async function scrapeGalleries() {
   console.log('Scraping galleries...');
   const scrapers = [scrapeGagosian, scrapePaceGallery, scrapeDavidZwirner, scrapeLehmannMaupin, scrapeLissonGallery, scrapeMarianGoodman, scrapeGladstoneGallery];
   const names =   ['Gagosian',     'Pace Gallery',    'David Zwirner',    'Lehmann Maupin',    'Lisson Gallery',    'Marian Goodman',    'Gladstone Gallery'];
   const allEvents = [];
+  const counts = {};
   for (let i = 0; i < scrapers.length; i++) {
     const events = await scrapers[i]();
     console.log(`  - ${names[i]}: ${events.length} events`);
+    counts[names[i]] = events.length;
     allEvents.push(...events);
   }
   console.log(`Gallery total: ${allEvents.length} events`);
-  return allEvents;
+  return { events: allEvents, counts };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1248,7 +1253,7 @@ async function scrapeAllEvents() {
       amnhEvents,
       newMuseumEvents,
       localGirlEvents,
-      galleryEvents
+      galleriesResult
     ] = await Promise.all([
       scrapeTimeOut(),
       scrapeNYCForFree(),
@@ -1260,6 +1265,9 @@ async function scrapeAllEvents() {
       scrapeTheLocalGirl(),
       scrapeGalleries()
     ]);
+
+    const galleryEvents = galleriesResult.events;
+    const galleryCounts = galleriesResult.counts;
 
     // Merge all events
     const merged = [
@@ -1287,6 +1295,9 @@ async function scrapeAllEvents() {
       return true;
     });
 
+    // Attach gallery counts for the API response
+    allEvents._galleryCounts = galleryCounts;
+
     console.log(`Total events scraped: ${merged.length}, after filtering: ${allEvents.length}`);
 
     console.log(`  - TimeOut NY: ${timeoutEvents.length}`);
@@ -1297,7 +1308,7 @@ async function scrapeAllEvents() {
     console.log(`  - AMNH: ${amnhEvents.length}`);
     console.log(`  - New Museum: ${newMuseumEvents.length}`);
     console.log(`  - The Local Girl: ${localGirlEvents.length}`);
-    console.log(`  - Galleries (8): ${galleryEvents.length}`);
+    console.log(`  - Galleries: ${galleryEvents.length}`, galleryCounts);
 
     // If no events found at all, use fallback
     if (allEvents.length === 0) {
@@ -1491,6 +1502,7 @@ module.exports = async function handler(req, res) {
       updated: updated,
       markedPast: markedPast,
       totalEvents: parseInt(result.rows[0].count),
+      galleryCounts: events._galleryCounts || {},
       timestamp: new Date().toISOString()
     });
   } catch (error) {
