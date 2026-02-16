@@ -1074,7 +1074,7 @@ body {
 
 .event-card {
   background: #1C1C1E;
-  border-radius: 24px;
+  border-radius: 36px;
   overflow: hidden;
   margin-bottom: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
@@ -1082,7 +1082,7 @@ body {
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
   position: relative;
   animation: cardAppear 0.7s var(--transition) both;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 3px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
 }
