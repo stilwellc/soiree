@@ -665,7 +665,6 @@ function handleNavClick(item) {
     favoritesView.classList.add('hidden');
     aboutView.classList.remove('hidden');
     loadStats();
-    initAboutReveals();
   }
 }
 
@@ -1955,16 +1954,6 @@ function toggleFreeMode() {
   const checkbox = document.getElementById('free-mode-toggle');
   freeMode = checkbox ? checkbox.checked : !freeMode;
   renderEvents();
-}
-
-/* Scroll-reveal for About page sections */
-function initAboutReveals() {
-  const els = document.querySelectorAll('.ap-reveal');
-  if (!els.length) return;
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
-  }, { threshold: 0.15 });
-  els.forEach(el => { el.classList.remove('visible'); io.observe(el); });
 }
 
 // Initialize when DOM is ready
