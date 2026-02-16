@@ -665,6 +665,7 @@ function handleNavClick(item) {
     favoritesView.classList.add('hidden');
     aboutView.classList.remove('hidden');
     loadStats();
+    initAboutReveals();
   }
 }
 
@@ -1171,9 +1172,10 @@ async function loadTechStats() {
     const endTime = performance.now();
     const data = await response.json();
 
-    // Update API speed
+    // Update API speed (element may not exist in current layout)
     const apiSpeed = Math.round(endTime - startTime);
-    document.getElementById('api-speed').textContent = `~${apiSpeed}ms`;
+    const apiSpeedEl = document.getElementById('api-speed');
+    if (apiSpeedEl) apiSpeedEl.textContent = `~${apiSpeed}ms`;
 
     // Get last scrape time from most recent event
     if (data.success && data.events && data.events.length > 0) {
@@ -1211,14 +1213,17 @@ async function loadTechStats() {
         }
       });
 
-      if (sources.size > 0) {
-        document.getElementById('source-count').textContent = `${sources.size} curated sources`;
+      const sourceCountEl = document.getElementById('source-count');
+      if (sources.size > 0 && sourceCountEl) {
+        sourceCountEl.textContent = `${sources.size} curated sources`;
       }
     }
   } catch (error) {
     console.error('Error loading tech stats:', error);
-    document.getElementById('last-scrape').textContent = 'Recently';
-    document.getElementById('api-speed').textContent = '~200ms';
+    const lastScrapeEl = document.getElementById('last-scrape');
+    if (lastScrapeEl) lastScrapeEl.textContent = 'Recently';
+    const apiSpeedFallback = document.getElementById('api-speed');
+    if (apiSpeedFallback) apiSpeedFallback.textContent = '~200ms';
   }
 }
 
@@ -1941,7 +1946,8 @@ async function initNetworkGraph() {
     if (loc.includes('hoboken') || loc.includes('jersey city')) regions.add('Hoboken/JC');
     else regions.add('NYC');
   });
-  document.getElementById('network-regions').textContent = regions.size;
+  const regionsEl = document.getElementById('network-regions');
+  if (regionsEl) regionsEl.textContent = regions.size;
 }
 
 /* Free Mode Logic */
@@ -1949,6 +1955,16 @@ function toggleFreeMode() {
   const checkbox = document.getElementById('free-mode-toggle');
   freeMode = checkbox ? checkbox.checked : !freeMode;
   renderEvents();
+}
+
+/* Scroll-reveal for About page sections */
+function initAboutReveals() {
+  const els = document.querySelectorAll('.ap-reveal');
+  if (!els.length) return;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  els.forEach(el => { el.classList.remove('visible'); io.observe(el); });
 }
 
 // Initialize when DOM is ready
