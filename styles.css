@@ -2157,189 +2157,83 @@ button:focus-visible,
   outline-offset: 2px;
 }
 
-/* About Page — High Design */
-.about-hero {
-  background: #1C1C1E;
-  padding: 48px 28px 40px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.about-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.about-hero-eyebrow {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 16px;
-  opacity: 0.8;
-}
-
-.about-hero-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 52px;
-  font-weight: 300;
-  color: white;
-  letter-spacing: -1px;
-  line-height: 1;
-  margin-bottom: 14px;
-}
-
-.about-hero-sub {
-  font-family: 'Jost', sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.45);
-  line-height: 1.6;
-}
-
+/* About Page */
 .about-content {
-  padding: 24px 20px 40px;
+  padding: 20px;
   max-width: 600px;
   margin: 0 auto;
 }
 
-/* About cards — dark rounded cards */
-.about-card {
-  background: #1C1C1E;
-  border-radius: 24px;
-  padding: 24px;
-  margin-bottom: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.about-card-label {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 12px;
-}
-
-.about-card-text {
-  font-family: 'Jost', sans-serif;
-  font-size: 15px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.6);
-  line-height: 1.7;
-}
-
-/* Impact stats — horizontal row of dark cards */
-.about-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.about-stat {
-  background: #1C1C1E;
-  border-radius: 20px;
-  padding: 24px 16px;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.about-stat:hover {
-  transform: translateY(-2px);
-  border-color: rgba(212, 175, 55, 0.2);
-}
-
-.about-stat-number {
-  font-family: 'Jost', sans-serif;
-  font-size: 28px;
-  font-weight: 300;
-  color: white;
-  line-height: 1;
-  margin-bottom: 6px;
-}
-
-.about-stat-label {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 9px;
-  color: rgba(255, 255, 255, 0.35);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  font-weight: 500;
-}
-
-/* Legacy about-section / about-heading for tech dashboard */
 .about-section {
-  margin-bottom: 24px;
+  margin-bottom: 40px;
 }
 
 .about-heading {
-  font-family: 'Jost', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 500;
   color: var(--dark);
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  letter-spacing: 0.5px;
 }
 
 .about-text {
   color: var(--accent);
   line-height: 1.7;
-  font-size: 14px;
-  margin-bottom: 10px;
+  font-size: 15px;
+  margin-bottom: 12px;
 }
 
-/* GitHub CTA button */
-.about-github-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 14px;
-  padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 28px;
-  color: white;
-  text-decoration: none;
-  font-family: 'Jost', sans-serif;
-  font-size: 13px;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, var(--cream) 0%, #fff9f0 100%);
+  border: 1px solid var(--gold);
+  border-radius: 16px;
+  padding: 24px 16px;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.15);
+  border-color: var(--gold-dark);
+}
+
+.stat-number {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--gold-dark);
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
   font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.about-github-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
 }
 
 @media (max-width: 480px) {
-  .about-hero-title {
-    font-size: 40px;
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
 
-  .about-stats {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+  .stat-card {
+    padding: 20px 16px;
   }
 
-  .about-stat {
-    padding: 18px 10px;
-  }
-
-  .about-stat-number {
-    font-size: 22px;
-  }
-
-  .about-stat-label {
-    font-size: 8px;
+  .stat-number {
+    font-size: 32px;
   }
 }
 
@@ -2524,9 +2418,9 @@ button:focus-visible,
 
 /* High-End Technical Dashboard (About Page) */
 .technical-dashboard {
-  margin-top: 16px;
-  border-top: none;
-  padding-top: 0;
+  margin-top: 40px;
+  border-top: 1px solid #eaeaea;
+  padding-top: 40px;
 }
 
 .tech-header-controls {
@@ -2538,11 +2432,11 @@ button:focus-visible,
 
 .version-tag {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
-  background: rgba(212, 175, 55, 0.1);
-  padding: 2px 8px;
-  border-radius: 10px;
-  color: var(--gold);
+  font-size: 12px;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #666;
   margin-left: 10px;
   font-weight: normal;
 }
@@ -2597,19 +2491,19 @@ button:focus-visible,
 }
 
 .tech-card {
-  background: #1C1C1E;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .graph-module {
   min-height: 480px;
   display: flex;
   flex-direction: column;
-  background: #0a0a0c;
-  border-color: rgba(255, 255, 255, 0.06);
+  background: #080d18;
+  border-color: #1a2035;
 }
 
 @media (max-width: 480px) {
@@ -2620,8 +2514,8 @@ button:focus-visible,
 
 .module-header {
   padding: 10px 16px;
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: #0c1220;
+  border-bottom: 1px solid #1a2035;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.45);
@@ -2632,7 +2526,7 @@ button:focus-visible,
 
 .graph-module .module-header {
   color: rgba(212, 175, 55, 0.70);
-  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: #1a2035;
 }
 
 .module-id {
@@ -2642,8 +2536,8 @@ button:focus-visible,
 .graph-wrapper-refined {
   position: relative;
   flex: 1;
-  background: #0a0a0c;
-  border-radius: 0 0 12px 12px;
+  background: #080d18;
+  border-radius: 0 0 4px 4px;
 }
 
 .graph-overlay {
@@ -2688,7 +2582,7 @@ button:focus-visible,
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid #f5f5f5;
   font-size: 13px;
 }
 
@@ -2697,26 +2591,26 @@ button:focus-visible,
 }
 
 .spec-key {
-  color: rgba(255, 255, 255, 0.4);
+  color: #666;
 }
 
 .spec-val {
   font-family: ui-monospace, monospace;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
 }
 
 .tech-log-refined {
   height: 150px;
   overflow-y: hidden;
+  /* Or auto */
   padding: 12px;
   font-family: ui-monospace, monospace;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #666;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  background: rgba(0, 0, 0, 0.15);
+  background: #fafafa;
 }
 
 .tech-log-entry {
@@ -2725,7 +2619,7 @@ button:focus-visible,
 }
 
 .tech-log-ts {
-  color: rgba(255, 255, 255, 0.2);
+  color: #bbb;
 }
 
 .tech-log-msg.success {
@@ -2733,7 +2627,7 @@ button:focus-visible,
 }
 
 .tech-log-msg.info {
-  color: rgba(255, 255, 255, 0.5);
+  color: #555;
 }
 
 .tech-legend-refined {
@@ -2741,8 +2635,8 @@ button:focus-visible,
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid #1a2035;
+  background: #0c1220;
 }
 
 .tech-legend-item {
@@ -2765,7 +2659,22 @@ button:focus-visible,
 }
 
 .github-button-refined {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid #eaeaea;
+  border-radius: 6px;
+  color: #333;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.github-button-refined:hover {
+  background: #f5f5f5;
+  border-color: #ddd;
 }
 
 /* Footer */
