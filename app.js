@@ -1337,7 +1337,6 @@ function lightenHex(hex, amount) {
 async function initNetworkGraph() {
   const canvas = document.getElementById('network-graph');
   if (!canvas) return;
-  if (canvas.hasAttribute('data-init')) return;
 
   // Read canvas dimensions before the async fetch — getBoundingClientRect forces
   // a synchronous layout reflow so we get the real width even right after unhide.
@@ -1356,12 +1355,110 @@ async function initNetworkGraph() {
     }
   } catch (error) {
     console.error('Failed to fetch events for network graph:', error);
-    return;
+    // continue — dashboard elements still need to initialize
   }
 
-  if (allEvents.length === 0) return;
+  // ── Dashboard elements: always initialize (each guards itself) ─────────────
 
-  // Mark initialized only after we have events and valid dimensions
+  // Last Scrape timestamp
+  const scrapeEl = document.getElementById('last-scrape');
+  if (scrapeEl && !scrapeEl.hasAttribute('data-init')) {
+    scrapeEl.setAttribute('data-init', 'true');
+    scrapeEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' EST';
+  }
+
+  // Activity Log
+  const techLog = document.getElementById('js-tech-log');
+  if (techLog && !techLog.hasAttribute('data-init')) {
+    techLog.setAttribute('data-init', 'true');
+    const logs = [
+      { msg: 'System initialized', type: 'success' },
+      { msg: 'Connecting to database...', type: 'info' },
+      { msg: 'Fetching event data streams...', type: 'info' },
+      { msg: `Parsing JSON payload (${(allEvents.length * 0.5).toFixed(1)} KB)`, type: 'success' },
+      { msg: 'Analyzing geospatial vectors...', type: 'info' },
+      { msg: 'Node clustering active', type: 'success' },
+      { msg: 'UI Layer mounted', type: 'success' }
+    ];
+    const addLog = (msg, type = 'info') => {
+      const entry = document.createElement('div');
+      entry.className = 'tech-log-entry';
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      entry.innerHTML = `<span class="tech-log-ts" style="color:#aaa;">[${time}]</span><span class="tech-log-msg ${type}" style="color:${type === 'success' ? '#4CAF50' : '#555'}">${msg}</span>`;
+      techLog.prepend(entry);
+      if (techLog.children.length > 20) techLog.lastChild.remove();
+    };
+    logs.forEach(l => addLog(l.msg, l.type));
+    setInterval(() => {
+      const verbs = ['Ping', 'Sync', 'Optimizing', 'Calibrating', 'Verifying'];
+      const nouns = ['Node', 'Packet', 'Latency', 'Cache', 'Buffer'];
+      addLog(`${verbs[Math.floor(Math.random() * verbs.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]} ${Math.floor(Math.random() * 999)}`, 'info');
+    }, 2500);
+  }
+
+  // Traffic Chart
+  const trafficCanvas = document.getElementById('traffic-chart');
+  if (trafficCanvas && !trafficCanvas.hasAttribute('init')) {
+    trafficCanvas.setAttribute('init', 'true');
+    const tCtx = trafficCanvas.getContext('2d');
+    const tDpr = window.devicePixelRatio || 1;
+    let points = new Array(60).fill(60).map((_, i) => 60 + Math.sin(i * 0.5) * 10 + Math.random() * 10);
+
+    function frame() {
+      const r = trafficCanvas.getBoundingClientRect();
+      if (r.width === 0) return requestAnimationFrame(frame);
+      if (trafficCanvas.width !== Math.floor(r.width * tDpr)) {
+        trafficCanvas.width = r.width * tDpr;
+        trafficCanvas.height = r.height * tDpr;
+        tCtx.scale(tDpr, tDpr);
+      }
+      const w = r.width, h = r.height;
+      tCtx.clearRect(0, 0, w, h);
+      tCtx.strokeStyle = '#f9f9f9';
+      tCtx.lineWidth = 1;
+      tCtx.beginPath();
+      for (let x = 0; x < w; x += w / 10) { tCtx.moveTo(x, 0); tCtx.lineTo(x, h); }
+      tCtx.stroke();
+      tCtx.beginPath();
+      points.forEach((p, i) => {
+        const x = (i / (points.length - 1)) * w;
+        const y = h - (p / 100) * h;
+        if (i === 0) tCtx.moveTo(x, y); else tCtx.lineTo(x, y);
+      });
+      tCtx.lineTo(w, h); tCtx.lineTo(0, h); tCtx.closePath();
+      const grad = tCtx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, 'rgba(76,175,80,0.15)');
+      grad.addColorStop(1, 'rgba(76,175,80,0)');
+      tCtx.fillStyle = grad; tCtx.fill();
+      tCtx.beginPath();
+      points.forEach((p, i) => {
+        const x = (i / (points.length - 1)) * w;
+        const y = h - (p / 100) * h;
+        if (i === 0) tCtx.moveTo(x, y); else tCtx.lineTo(x, y);
+      });
+      tCtx.strokeStyle = '#4CAF50'; tCtx.lineWidth = 2; tCtx.lineJoin = 'round'; tCtx.stroke();
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    setInterval(() => {
+      points.shift();
+      const last = points[points.length - 1] || 50;
+      let next = Math.max(20, Math.min(95, last + (Math.random() - 0.5) * 15));
+      points.push(next);
+      const rpsEl = document.getElementById('traffic-rps');
+      if (rpsEl) rpsEl.textContent = Math.floor(next * 2 + 100);
+      const deltaEl = document.querySelector('.traffic-delta');
+      if (deltaEl) {
+        const change = ((next - last) / last) * 100;
+        deltaEl.textContent = (change > 0 ? '▲' : '▼') + Math.abs(change).toFixed(1) + '%';
+        deltaEl.style.color = change > 0 ? '#4CAF50' : '#FF9800';
+      }
+    }, 1000);
+  }
+
+  // ── Topology canvas: only if events available and not already drawn ─────────
+  if (allEvents.length === 0 || canvas.hasAttribute('data-init')) return;
   canvas.setAttribute('data-init', 'true');
 
   const ctx = canvas.getContext('2d');
@@ -1823,102 +1920,6 @@ async function initNetworkGraph() {
       item.innerHTML = `<div class="tech-dot" style="background:#3a3a3a;"></div><span style="color:rgba(255,255,255,0.3)">OFFLINE <span style="font-size:10px">${deadCount}</span></span>`;
       techLegend.appendChild(item);
     }
-  }
-
-  // Last Scrape timestamp
-  const scrapeEl = document.getElementById('last-scrape');
-  if (scrapeEl) {
-    scrapeEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' EST';
-  }
-
-  // Activity Log
-  const techLog = document.getElementById('js-tech-log');
-  if (techLog && !techLog.hasAttribute('data-init')) {
-    techLog.setAttribute('data-init', 'true');
-    const logs = [
-      { msg: 'System initialized', type: 'success' },
-      { msg: 'Connecting to database...', type: 'info' },
-      { msg: 'Fetching event data streams...', type: 'info' },
-      { msg: `Parsing JSON payload (${(allEvents.length * 0.5).toFixed(1)} KB)`, type: 'success' },
-      { msg: 'Analyzing geospatial vectors...', type: 'info' },
-      { msg: 'Node clustering active', type: 'success' },
-      { msg: 'UI Layer mounted', type: 'success' }
-    ];
-    const addLog = (msg, type = 'info') => {
-      const entry = document.createElement('div');
-      entry.className = 'tech-log-entry';
-      const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      entry.innerHTML = `<span class="tech-log-ts" style="color:#aaa;">[${time}]</span><span class="tech-log-msg ${type}" style="color:${type === 'success' ? '#4CAF50' : '#555'}">${msg}</span>`;
-      techLog.prepend(entry);
-      if (techLog.children.length > 20) techLog.lastChild.remove();
-    };
-    logs.forEach(l => addLog(l.msg, l.type));
-    setInterval(() => {
-      const verbs = ['Ping', 'Sync', 'Optimizing', 'Calibrating', 'Verifying'];
-      const nouns = ['Node', 'Packet', 'Latency', 'Cache', 'Buffer'];
-      addLog(`${verbs[Math.floor(Math.random() * verbs.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]} ${Math.floor(Math.random() * 999)}`, 'info');
-    }, 2500);
-  }
-
-  // Traffic Chart
-  const trafficCanvas = document.getElementById('traffic-chart');
-  if (trafficCanvas && !trafficCanvas.hasAttribute('init')) {
-    trafficCanvas.setAttribute('init', 'true');
-    const tCtx = trafficCanvas.getContext('2d');
-    const tDpr = window.devicePixelRatio || 1;
-    let points = new Array(60).fill(60).map((_, i) => 60 + Math.sin(i * 0.5) * 10 + Math.random() * 10);
-
-    function frame() {
-      const r = trafficCanvas.getBoundingClientRect();
-      if (r.width === 0) return requestAnimationFrame(frame);
-      if (trafficCanvas.width !== Math.floor(r.width * tDpr)) {
-        trafficCanvas.width = r.width * tDpr;
-        trafficCanvas.height = r.height * tDpr;
-        tCtx.scale(tDpr, tDpr);
-      }
-      const w = r.width, h = r.height;
-      tCtx.clearRect(0, 0, w, h);
-      tCtx.strokeStyle = '#f9f9f9';
-      tCtx.lineWidth = 1;
-      tCtx.beginPath();
-      for (let x = 0; x < w; x += w / 10) { tCtx.moveTo(x, 0); tCtx.lineTo(x, h); }
-      tCtx.stroke();
-      tCtx.beginPath();
-      points.forEach((p, i) => {
-        const x = (i / (points.length - 1)) * w;
-        const y = h - (p / 100) * h;
-        if (i === 0) tCtx.moveTo(x, y); else tCtx.lineTo(x, y);
-      });
-      tCtx.lineTo(w, h); tCtx.lineTo(0, h); tCtx.closePath();
-      const grad = tCtx.createLinearGradient(0, 0, 0, h);
-      grad.addColorStop(0, 'rgba(76,175,80,0.15)');
-      grad.addColorStop(1, 'rgba(76,175,80,0)');
-      tCtx.fillStyle = grad; tCtx.fill();
-      tCtx.beginPath();
-      points.forEach((p, i) => {
-        const x = (i / (points.length - 1)) * w;
-        const y = h - (p / 100) * h;
-        if (i === 0) tCtx.moveTo(x, y); else tCtx.lineTo(x, y);
-      });
-      tCtx.strokeStyle = '#4CAF50'; tCtx.lineWidth = 2; tCtx.lineJoin = 'round'; tCtx.stroke();
-      requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
-
-    setInterval(() => {
-      points.shift();
-      const last = points[points.length - 1] || 50;
-      let next = Math.max(20, Math.min(95, last + (Math.random() - 0.5) * 15));
-      points.push(next);
-      const rpsEl = document.getElementById('traffic-rps');
-      if (rpsEl) rpsEl.textContent = Math.floor(next * 2 + 100);
-      const deltaEl = document.querySelector('.traffic-delta');
-      if (deltaEl) {
-        const change = ((next - last) / last) * 100;
-        deltaEl.textContent = (change > 0 ? '▲' : '▼') + Math.abs(change).toFixed(1) + '%';
-        deltaEl.style.color = change > 0 ? '#4CAF50' : '#FF9800';
-      }
-    }, 1000);
   }
 
   // Regions count
