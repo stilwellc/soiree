@@ -1073,16 +1073,18 @@ body {
 }
 
 .event-card {
-  background: white;
-  border-radius: 20px;
+  background: #111111;
+  border-radius: 24px;
   overflow: hidden;
   margin-bottom: 16px;
-  box-shadow: 0 2px 20px rgba(28, 20, 16, 0.07);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
   position: relative;
   animation: cardAppear 0.7s var(--transition) both;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
 }
 
 .event-card:nth-child(1) {
@@ -1115,8 +1117,8 @@ body {
 
 .event-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 48px rgba(28, 20, 16, 0.14);
-  border-color: rgba(212, 175, 55, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .event-card.hidden {
@@ -1124,12 +1126,11 @@ body {
 }
 
 .event-card-header {
-  height: 120px;
+  height: 160px;
   padding: 24px;
-  padding-left: 72px;
   position: relative;
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   justify-content: flex-end;
   overflow: hidden;
 }
@@ -1394,39 +1395,9 @@ body {
   pointer-events: none;
 }
 
-.event-badge {
-  position: absolute;
-  top: 20px;
-  right: 24px;
-  padding: 6px 14px;
-  background: var(--gold);
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 12px;
-  letter-spacing: 0.5px;
-  border: none;
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
-  opacity: 1;
-  z-index: 20;
-}
-
-.event-category-badge {
-  position: absolute;
-  top: 20px;
-  left: 24px;
-  padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 12px;
-  letter-spacing: 0.5px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  text-transform: uppercase;
-}
-
+/* Legacy badge styles (no longer in card HTML) */
+.event-badge,
+.event-category-badge,
 .event-category-label {
   display: none;
 }
@@ -1478,11 +1449,11 @@ body {
 
 .favorite-btn {
   position: absolute;
-  bottom: 20px;
-  right: 24px;
-  background: rgba(255, 255, 255, 0.25);
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -1496,7 +1467,7 @@ body {
 
 .favorite-btn:hover {
   transform: scale(1.05);
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .favorite-btn.favorited {
@@ -1516,83 +1487,105 @@ body {
   stroke: var(--gold);
 }
 
-.event-details {
-  padding: 22px 24px 24px;
-}
-
-.event-date {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1.8px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.event-date::before {
-  content: '';
-  display: inline-block;
-  width: 20px;
-  height: 1px;
-  background: var(--gold);
-  opacity: 0.5;
-  flex-shrink: 0;
-}
-
+/* Event name — positioned in header, right-aligned */
 .event-name {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 24px;
-  font-weight: 500;
-  color: var(--deep);
-  margin-bottom: 10px;
-  letter-spacing: -0.3px;
-  line-height: 1.25;
+  font-family: 'Jost', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  text-align: right;
+  line-height: 1.2;
+  z-index: 5;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  max-width: 65%;
 }
 
-.event-location {
-  font-family: 'Cormorant Garamond', serif;
-  font-style: italic;
-  font-size: 14px;
-  color: var(--accent);
-  margin-bottom: 0;
-  font-weight: 400;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* Overlapping label tab */
+.event-card-label {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  padding: 14px 20px;
+  margin-top: -10px;
+  position: relative;
+  z-index: 6;
+  border-radius: 0 16px 0 0;
+  align-self: flex-start;
+  max-width: 75%;
 }
 
-.event-location::before {
-  content: '◆';
-  font-style: normal;
-  font-size: 6px;
-  color: var(--gold);
-  opacity: 0.7;
-}
-
-.event-free-badge {
-  position: absolute;
-  bottom: 20px;
-  left: 24px;
-  padding: 6px 12px;
-  background: rgba(16, 185, 129, 0.95);
-  backdrop-filter: blur(10px);
+.event-label-title {
+  font-family: 'Jost', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
   color: white;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 12px;
-  letter-spacing: 0.5px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
-  z-index: 10;
-  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-label-subtitle {
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 2px;
+}
+
+/* Dark body spacer */
+.event-card-body {
+  flex: 1;
+  min-height: 60px;
+}
+
+/* Footer stats */
+.event-card-footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 24px 24px;
+}
+
+.event-footer-left {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.event-footer-big {
+  font-family: 'Jost', sans-serif;
+  font-size: 32px;
+  font-weight: 300;
+  color: white;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.event-footer-small {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.event-footer-right {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  text-align: right;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Legacy — hidden */
+.event-free-badge {
+  display: none;
 }
 
 .event-tags {
