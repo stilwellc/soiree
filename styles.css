@@ -2161,42 +2161,79 @@ button:focus-visible,
    About Page — Apple-Style Full-Bleed Sections
    ================================================ */
 
-/* Hero */
+/* Hero — matches main page warm gradient */
 .ap-hero {
-  background: #0A0A0A;
-  padding: 100px 24px 80px;
-  text-align: center;
+  position: relative;
+  padding: 12px 28px 20px;
+  overflow: hidden;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
   box-sizing: border-box;
 }
 
-.ap-hero-kicker {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 16px;
-  font-weight: 400;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin: 0 0 20px;
+.ap-hero-content {
+  position: relative;
+  z-index: 2;
 }
 
 .ap-hero-headline {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(40px, 8vw, 72px);
+  font-size: 48px;
+  font-weight: 1000;
+  color: var(--deep);
+  letter-spacing: -2px;
+  line-height: 1.0;
+  margin-bottom: 8px;
+  opacity: 0;
+  animation: heroFadeUp 0.9s var(--transition) 0.2s forwards;
+}
+
+.ap-hero-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
   font-weight: 300;
-  line-height: 1.05;
-  color: #fff;
-  margin: 0;
-  letter-spacing: -0.02em;
+  font-style: italic;
+  color: var(--dusk);
+  letter-spacing: 0.2px;
+  line-height: 1.5;
+  margin-bottom: 0;
+  opacity: 0;
+  animation: heroFadeUp 0.9s var(--transition) 0.35s forwards;
 }
 
 /* Shared section layout */
 .ap-section {
-  padding: 80px 24px;
+  padding: 48px 24px;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
   box-sizing: border-box;
+  position: relative;
+}
+
+/* Gradient blend between sections */
+.ap-section::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ap-dark::before {
+  background: linear-gradient(to bottom, transparent, #111111);
+}
+
+.ap-dark.ap-first::before {
+  background: linear-gradient(to bottom, #E5CCA8, #111111);
+  height: 60px;
+  top: -60px;
+}
+
+.ap-light::before {
+  background: linear-gradient(to bottom, transparent, var(--cream));
 }
 
 .ap-light {
@@ -2215,12 +2252,12 @@ button:focus-visible,
 /* Overline label */
 .ap-overline {
   font-family: 'Jost', sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 2.5px;
   text-transform: uppercase;
   color: var(--accent);
-  margin: 0 0 24px;
+  margin: 0 0 16px;
 }
 
 .ap-overline-light {
@@ -2230,20 +2267,26 @@ button:focus-visible,
 /* Body text */
 .ap-body-lg {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(24px, 4.5vw, 36px);
+  font-size: clamp(18px, 3.5vw, 24px);
   font-weight: 400;
-  line-height: 1.35;
+  line-height: 1.4;
   color: var(--dark);
   margin: 0;
   letter-spacing: -0.01em;
 }
 
-/* Stats row — oversized numbers */
+.ap-dark .ap-body-lg {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Stats row — compact inline */
 .ap-stats-row {
   display: flex;
   justify-content: space-between;
-  gap: 32px;
-  margin-top: 16px;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .ap-stat {
@@ -2253,36 +2296,36 @@ button:focus-visible,
 
 .ap-stat-num {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(48px, 10vw, 80px);
+  font-size: clamp(32px, 7vw, 48px);
   font-weight: 300;
   line-height: 1;
   color: #fff;
   letter-spacing: -0.03em;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .ap-stat-lbl {
   font-family: 'Jost', sans-serif;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 500;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
-  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.35);
+  line-height: 1.4;
 }
 
 /* CTA button */
 .ap-btn {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 28px;
+  gap: 8px;
+  padding: 10px 22px;
   background: var(--dark);
   color: #fff;
   text-decoration: none;
   border-radius: 80px;
   font-family: 'Jost', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.5px;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2305,12 +2348,12 @@ button:focus-visible,
 
 /* CTA section */
 .ap-cta {
-  padding: 60px 24px;
+  padding: 36px 24px;
 }
 
 /* Flush section — less bottom padding for dashboard */
 .ap-section-flush {
-  padding-bottom: 40px;
+  padding-bottom: 32px;
 }
 
 /* ---- Tech Dashboard (inside ap-dark) ---- */
@@ -2557,24 +2600,32 @@ button:focus-visible,
 /* ---- About Page Mobile ---- */
 @media (max-width: 480px) {
   .ap-hero {
-    padding: 72px 20px 56px;
+    padding: 8px 20px 16px;
+  }
+
+  .ap-hero-headline {
+    font-size: 40px;
   }
 
   .ap-section {
-    padding: 56px 20px;
+    padding: 36px 20px;
   }
 
   .ap-stats-row {
-    flex-direction: column;
-    gap: 40px;
+    gap: 8px;
   }
 
   .ap-stat-num {
-    font-size: 56px;
+    font-size: 28px;
+  }
+
+  .ap-stat-lbl {
+    font-size: 8px;
+    letter-spacing: 1px;
   }
 
   .ap-cta {
-    padding: 40px 20px;
+    padding: 28px 20px;
   }
 
   .tech-dashboard-grid {
