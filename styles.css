@@ -1582,6 +1582,41 @@ body {
   white-space: nowrap;
 }
 
+/* Mobile card scaling */
+@media (max-width: 480px) {
+  .event-name {
+    font-size: 15px;
+  }
+
+  .event-card-label {
+    padding: 10px 16px;
+  }
+
+  .event-label-title {
+    font-size: 13px;
+  }
+
+  .event-label-subtitle {
+    font-size: 11px;
+  }
+
+  .event-card-footer {
+    padding: 0 18px 16px;
+  }
+
+  .event-footer-big {
+    font-size: 22px;
+  }
+
+  .event-footer-small {
+    font-size: 12px;
+  }
+
+  .event-footer-right {
+    font-size: 12px;
+  }
+}
+
 /* Legacy — hidden */
 .event-free-badge {
   display: none;
