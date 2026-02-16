@@ -27,7 +27,7 @@ body {
 
 .app-container {
   min-height: 100vh;
-  padding-top: 70px;
+  padding-top: calc(60px + env(safe-area-inset-top));
   padding-bottom: 40px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -196,7 +196,7 @@ body {
 
 .hero {
   position: relative;
-  padding: max(32px, env(safe-area-inset-top)) 28px 24px;
+  padding: 12px 28px 20px;
   overflow: visible;
 }
 
