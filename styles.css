@@ -196,7 +196,7 @@ body {
 
 .hero {
   position: relative;
-  padding: max(40px, env(safe-area-inset-top)) 28px 44px;
+  padding: max(32px, env(safe-area-inset-top)) 28px 24px;
   overflow: visible;
 }
 
@@ -322,7 +322,7 @@ body {
   letter-spacing: 4px;
   text-transform: uppercase;
   color: var(--dusk);
-  margin-bottom: 14px;
+  margin-bottom: 8px;
   opacity: 0;
   animation: heroFadeUp 0.9s var(--transition) 0.1s forwards;
 }
@@ -332,7 +332,7 @@ body {
   width: 48px;
   height: 1px;
   background: linear-gradient(90deg, var(--gold), transparent);
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   opacity: 0;
   animation: heroRuleGrow 1s ease-out 0.3s forwards;
 }
@@ -340,12 +340,12 @@ body {
 /* Main title */
 .hero-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 65px;
+  font-size: 56px;
   font-weight: 1000;
   color: var(--deep);
   letter-spacing: -2px;
   line-height: 1.0;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
   opacity: 0;
   isolation: isolate;
   animation: heroFadeUp 0.9s var(--transition) 0.2s forwards;
@@ -430,7 +430,7 @@ body {
   color: var(--dusk);
   letter-spacing: 0.2px;
   line-height: 1.5;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
   opacity: 0;
   animation: heroFadeUp 0.9s var(--transition) 0.35s forwards;
 }
@@ -781,7 +781,7 @@ body {
   position: sticky;
   top: calc(60px + env(safe-area-inset-top));
   z-index: 90;
-  padding: 10px 24px 10px;
+  padding: 8px 24px 6px;
   background: linear-gradient(to bottom, var(--cream) 65%, rgba(250, 248, 243, 0));
   display: flex;
   gap: 12px;
@@ -795,7 +795,7 @@ body {
 
 .search-input {
   width: 100%;
-  padding: 13px 44px 13px 18px;
+  padding: 11px 44px 11px 18px;
   border-radius: 14px;
   border: 1px solid rgba(212, 175, 55, 0.18);
   background: rgba(255, 255, 255, 0.92);
@@ -1001,7 +1001,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 4px 24px 22px;
+  padding: 2px 24px 14px;
 }
 
 .filter-chip {
