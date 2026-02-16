@@ -538,8 +538,10 @@ async function init() {
 
 // Setup Event Listeners
 function setupEventListeners() {
-  // Filter chips
+  // Filter chips — set accent colors and listeners
   filterChips.forEach(chip => {
+    const color = chip.dataset.color;
+    if (color) chip.style.setProperty('--chip-color', color);
     chip.addEventListener('click', () => handleFilterClick(chip));
   });
 
@@ -600,12 +602,15 @@ function setupEventListeners() {
 function handleFilterClick(chip) {
   document.querySelectorAll('.filter-chip').forEach(c => {
     c.classList.remove('active');
+    c.classList.remove('filter-chip-pop');
     c.setAttribute('aria-checked', 'false');
   });
   chip.classList.add('active');
+  chip.classList.add('filter-chip-pop');
   chip.setAttribute('aria-checked', 'true');
   currentFilter = chip.dataset.filter;
   renderEvents();
+  setTimeout(() => chip.classList.remove('filter-chip-pop'), 300);
 }
 
 // Search Events
