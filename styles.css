@@ -1506,8 +1506,7 @@ body {
 
 /* Overlapping label tab */
 .event-card-label {
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(12px);
+  background: #111111;
   padding: 14px 20px;
   margin-top: -10px;
   position: relative;
