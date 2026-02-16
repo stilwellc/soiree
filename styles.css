@@ -1126,8 +1126,8 @@ body {
 }
 
 .event-card-header {
-  height: 160px;
-  padding: 24px;
+  height: 120px;
+  padding: 20px;
   position: relative;
   display: flex;
   align-items: flex-start;
@@ -1538,7 +1538,7 @@ body {
 /* Dark body spacer */
 .event-card-body {
   flex: 1;
-  min-height: 60px;
+  min-height: 20px;
 }
 
 /* Footer stats */
@@ -1546,7 +1546,7 @@ body {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  padding: 0 24px 24px;
+  padding: 0 24px 20px;
 }
 
 .event-footer-left {
