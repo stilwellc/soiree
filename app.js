@@ -1306,8 +1306,7 @@ async function loadStats() {
     const data = await response.json();
 
     if (data.success && data.stats) {
-      // Format numbers with commas
-      const formatNumber = (num) => num.toLocaleString('en-US');
+      const formatNumber = (num) => num ? num.toLocaleString('en-US') : '—';
 
       const statEls = ['stat-events', 'stat-views', 'stat-unique'];
       const vals = [
@@ -1318,19 +1317,28 @@ async function loadStats() {
       statEls.forEach((id, i) => {
         const el = document.getElementById(id);
         if (el) {
-          el.classList.add('stat-loading');
-          setTimeout(() => { el.textContent = vals[i]; el.classList.remove('stat-loading'); el.classList.add('stat-loaded'); }, 200 + i * 150);
+          setTimeout(() => {
+            el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(6px)';
+            setTimeout(() => {
+              el.textContent = vals[i];
+              el.style.opacity = '1';
+              el.style.transform = 'translateY(0)';
+            }, 120);
+          }, 200 + i * 150);
         }
       });
     }
   } catch (error) {
     console.error('Error loading stats:', error);
-    document.getElementById('stat-events').textContent = '0';
-    document.getElementById('stat-views').textContent = '0';
-    document.getElementById('stat-unique').textContent = '0';
+    ['stat-events', 'stat-views', 'stat-unique'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '—';
+    });
   }
 
-  // Load technical stats
+  // Load technical stats (also updates stat-sources)
   loadTechStats();
 }
 
@@ -1386,6 +1394,11 @@ async function loadTechStats() {
       const sourceCountEl = document.getElementById('source-count');
       if (sources.size > 0 && sourceCountEl) {
         sourceCountEl.textContent = `${sources.size} curated sources`;
+      }
+      // Update the about page metrics bar source count
+      const statSourcesEl = document.getElementById('stat-sources');
+      if (sources.size > 0 && statSourcesEl) {
+        statSourcesEl.textContent = `${sources.size}+`;
       }
     }
   } catch (error) {
