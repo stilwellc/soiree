@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const { parseDateText } = require('./lib/dateParser.js');
-const { createNormalizedEvent } = require('./lib/normalize.js');
+const { createNormalizedEvent, generateHighlights } = require('./lib/normalize.js');
 const { scrapeWithPuppeteer, CONFIGS } = require('../scripts/scrape-puppeteer.js');
 
 const pool = new Pool({
@@ -24,7 +24,7 @@ function getFallbackEvents() {
       spots: 75,
       image: getEventImage("Brooklyn Street Art Walk", "art"),
       description: "Explore Bushwick's vibrant street art scene with a local guide.",
-      highlights: ["Guided tour", "Instagram spots", "Meet artists", "2-hour experience"],
+      highlights: generateHighlights("Brooklyn Street Art Walk", "Explore Bushwick's vibrant street art scene with a local guide.", "art", "Bushwick, Brooklyn", "Fallback"),
       url: "https://www.nycforfree.co/events"
     },
     {
@@ -38,7 +38,7 @@ function getFallbackEvents() {
       spots: 200,
       image: getEventImage("Free Jazz in Central Park", "music"),
       description: "Evening of smooth jazz under the stars.",
-      highlights: ["Live quartet", "Outdoor setting", "Bring picnic", "Family friendly"],
+      highlights: generateHighlights("Free Jazz in Central Park", "Evening of smooth jazz under the stars.", "music", "Central Park", "Fallback"),
       url: "https://www.nycforfree.co/events"
     },
     {
@@ -52,7 +52,7 @@ function getFallbackEvents() {
       spots: 300,
       image: getEventImage("DUMBO Food Market", "culinary"),
       description: "Sample artisanal foods from local vendors.",
-      highlights: ["50+ vendors", "Cooking demos", "Free samples", "Waterfront"],
+      highlights: generateHighlights("DUMBO Food Market", "Sample artisanal foods from local vendors.", "culinary", "DUMBO, Brooklyn", "Fallback"),
       url: "https://www.nycforfree.co/events"
     }
   ];
@@ -407,7 +407,7 @@ async function scrapeTimeOut() {
         spots: Math.floor(Math.random() * 150) + 30,
         image: getEventImage(title, category),
         description: description || `${title} - Free event in NYC`,
-        highlights: ['Free admission', 'TimeOut curated', 'NYC cultural event', 'All ages welcome'],
+        highlights: generateHighlights(title, description, category, location, 'TimeOut NY'),
         url: eventUrl,
         source: 'TimeOut NY'
       });
@@ -520,7 +520,7 @@ async function scrapeNYCForFree() {
         spots: Math.floor(Math.random() * 200) + 50,
         image: getEventImage(name, category),
         description,
-        highlights: ['Free event', 'NYC location', 'Limited spots', 'RSVP recommended'],
+        highlights: generateHighlights(name, description, category, location, 'NYC For Free'),
         url: eventUrl,
         source: 'NYC For Free'
       });
@@ -611,7 +611,7 @@ async function scrapeMoMA() {
         spots: Math.floor(Math.random() * 150) + 50,
         image: getEventImage(name, category),
         description,
-        highlights: ['MoMA', 'Modern art', 'Contemporary culture', 'Free event'],
+        highlights: generateHighlights(name, description, category, location, 'MoMA'),
         url: eventUrl,
         source: 'MoMA'
       });
@@ -689,7 +689,7 @@ async function scrapeAMNH() {
         spots: Math.floor(Math.random() * 150) + 50,
         image: getEventImage(name, category),
         description,
-        highlights: ['Natural History', 'Science', 'Family friendly'],
+        highlights: generateHighlights(name, description, category, location, 'AMNH'),
         url: eventUrl,
         source: 'AMNH'
       });
@@ -716,7 +716,7 @@ async function scrapeAMNH() {
           start_date, end_date, location, address,
           price: 'free', spots: Math.floor(Math.random() * 100) + 30,
           image: getEventImage(name, category), description,
-          highlights: ['Natural History', 'Science', 'Family friendly'],
+          highlights: generateHighlights(name, description, category, location, 'AMNH'),
           url: eventUrl, source: 'AMNH'
         });
         if (event) events.push(event);
@@ -783,7 +783,7 @@ async function scrapeWhitney() {
         spots: Math.floor(Math.random() * 150) + 50,
         image: getEventImage(name, category),
         description,
-        highlights: ['Whitney Museum', 'American art', 'Contemporary'],
+        highlights: generateHighlights(name, description, category, location, 'Whitney Museum'),
         url: eventUrl,
         source: 'Whitney Museum'
       });
@@ -811,7 +811,7 @@ async function scrapeWhitney() {
           start_date, end_date, location, address,
           price: 'free', spots: Math.floor(Math.random() * 100) + 30,
           image: getEventImage(name, category), description,
-          highlights: ['Whitney Museum', 'American art', 'Contemporary'],
+          highlights: generateHighlights(name, description, category, location, 'Whitney Museum'),
           url: eventUrl, source: 'Whitney Museum'
         });
         if (event) events.push(event);
@@ -939,7 +939,7 @@ async function scrapeTheLocalGirl() {
         spots: Math.floor(Math.random() * 100) + 20,
         image,
         description: `Event in ${location}: ${name}`,
-        highlights: categories.length ? categories.slice(0, 4) : ['Local event', 'Community', location],
+        highlights: generateHighlights(name, `Event in ${location}: ${name}. ${categories.join(', ')}`, category, location, 'The Local Girl'),
         url: href,
         source: 'The Local Girl'
       });
@@ -999,7 +999,7 @@ function galleryEvent(name, dateRaw, start_date, url, locationName, address, sou
     spots: Math.floor(Math.random() * 80) + 20,
     image: getEventImage(name, 'art'),
     description: `${name.trim()} at ${sourceName}.`,
-    highlights: [sourceName, 'Gallery opening', 'Contemporary art', 'Chelsea'],
+    highlights: generateHighlights(name, `${name.trim()} at ${sourceName}.`, 'art', locationName, sourceName),
     url,
     source: sourceName
   });
@@ -1087,7 +1087,7 @@ async function scrapeDavidZwirner() {
           const event = galleryEvent(name, item.startDate || '', start_date, url, 'David Zwirner', '519 W 19th St, New York, NY 10011', 'David Zwirner');
           if (event) events.push(event);
         }
-      } catch (_) {}
+      } catch (_) { }
     });
     return events;
   } catch (e) { console.error('David Zwirner failed:', e.message); return []; }
@@ -1224,7 +1224,7 @@ async function scrapeGladstoneGallery() {
 async function scrapeGalleries() {
   console.log('Scraping galleries...');
   const scrapers = [scrapeGagosian, scrapePaceGallery, scrapeDavidZwirner, scrapeLehmannMaupin, scrapeLissonGallery, scrapeMarianGoodman, scrapeGladstoneGallery];
-  const names =   ['Gagosian',     'Pace Gallery',    'David Zwirner',    'Lehmann Maupin',    'Lisson Gallery',    'Marian Goodman',    'Gladstone Gallery'];
+  const names = ['Gagosian', 'Pace Gallery', 'David Zwirner', 'Lehmann Maupin', 'Lisson Gallery', 'Marian Goodman', 'Gladstone Gallery'];
   const allEvents = [];
   const counts = {};
   for (let i = 0; i < scrapers.length; i++) {

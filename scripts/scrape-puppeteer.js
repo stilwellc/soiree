@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const { parseDateText } = require('../api/lib/dateParser.js');
+const { generateHighlights } = require('../api/lib/normalize.js');
 
 /**
  * Generic Puppeteer scraper for JavaScript-heavy event sites
@@ -192,7 +193,7 @@ async function scrapeWithPuppeteer(config) {
                 spots: Math.floor(Math.random() * 100) + 50,
                 image: event.image || `https://source.unsplash.com/featured/?${category},event`,
                 description: event.description.substring(0, 500) || `${event.title}`,
-                highlights: [config.name, category.charAt(0).toUpperCase() + category.slice(1)],
+                highlights: generateHighlights(event.title, event.description, category, event.location || config.defaultLocation, config.name),
                 url: event.link,
                 source: config.name
             };
