@@ -3019,6 +3019,207 @@ button:focus-visible,
   text-transform: uppercase;
 }
 
+/* ── Subscription Form ────────────────────────── */
+.about-subscribe-section {
+  background: rgba(212, 175, 55, 0.03);
+}
+
+.subscribe-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.subscribe-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.subscribe-label {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.45);
+  font-weight: 500;
+}
+
+.subscribe-hint {
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-transform: none;
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.subscribe-input,
+.subscribe-select {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--deep, #1C1C1E);
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.subscribe-input::placeholder {
+  color: rgba(0, 0, 0, 0.25);
+}
+
+.subscribe-input:focus,
+.subscribe-select:focus {
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.subscribe-select {
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+/* Category Chips */
+.subscribe-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.subscribe-chip {
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.45);
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.subscribe-chip:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.subscribe-chip.active {
+  background: var(--deep, #1C1C1E);
+  color: #fff;
+  border-color: var(--deep, #1C1C1E);
+}
+
+/* Submit Button */
+.subscribe-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  background: var(--deep, #1C1C1E);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 4px;
+}
+
+.subscribe-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.subscribe-btn:active {
+  transform: translateY(0);
+}
+
+.subscribe-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Success State */
+.subscribe-success {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.subscribe-success-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--deep, #1C1C1E);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 20px;
+  font-weight: 600;
+  animation: successPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes successPop {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.subscribe-success-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--deep, #1C1C1E);
+  margin-bottom: 8px;
+}
+
+.subscribe-success-text {
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0 0 20px;
+}
+
+.subscribe-again-btn {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--gold, #D4AF37);
+  background: none;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 20px;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.subscribe-again-btn:hover {
+  background: rgba(212, 175, 55, 0.08);
+}
+
 /* ── CTA Section ──────────────────────────────── */
 .about-cta-section {
   background: var(--deep, #1C1C1E);

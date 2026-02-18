@@ -2200,11 +2200,83 @@ function toggleFreeMode() {
   showToast(freeMode ? 'Showing free events only' : 'Showing all events');
 }
 
+// ── Email Subscription ──────────────────────────────
+function initSubscribeForm() {
+  const form = document.getElementById('subscribe-form');
+  const successEl = document.getElementById('subscribe-success');
+  const againBtn = document.getElementById('subscribe-again');
+  if (!form) return;
+
+  // Chip toggles
+  form.querySelectorAll('.subscribe-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      chip.classList.toggle('active');
+    });
+  });
+
+  // Pre-fill region from current selection
+  const regionSelect = document.getElementById('subscribe-region');
+  if (regionSelect && currentRegion) {
+    const option = regionSelect.querySelector(`option[value="${currentRegion}"]`);
+    if (option) regionSelect.value = currentRegion;
+  }
+
+  // Submit
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('subscribe-btn');
+    const btnText = btn.querySelector('.subscribe-btn-text');
+    const btnLoad = btn.querySelector('.subscribe-btn-loading');
+    const email = document.getElementById('subscribe-email').value.trim();
+    const region = regionSelect ? regionSelect.value : 'nyc';
+    const categories = Array.from(form.querySelectorAll('.subscribe-chip.active'))
+      .map(c => c.dataset.cat);
+
+    if (!email) return;
+
+    btn.disabled = true;
+    btnText.style.display = 'none';
+    btnLoad.style.display = 'inline-flex';
+
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, region, categories })
+      });
+      const data = await resp.json();
+
+      if (data.success) {
+        form.style.display = 'none';
+        successEl.style.display = 'block';
+      } else {
+        alert(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch (err) {
+      console.error('Subscribe error:', err);
+      alert('Network error. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btnText.style.display = 'inline';
+      btnLoad.style.display = 'none';
+    }
+  });
+
+  // "Update preferences" button
+  if (againBtn) {
+    againBtn.addEventListener('click', () => {
+      successEl.style.display = 'none';
+      form.style.display = 'flex';
+    });
+  }
+}
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     init();
     initRotatingTitle();
+    initSubscribeForm();
 
     const freeCheckbox = document.getElementById('free-mode-toggle');
     if (freeCheckbox) freeCheckbox.addEventListener('change', toggleFreeMode);
@@ -2229,5 +2301,7 @@ if (document.readyState === 'loading') {
 } else {
   init();
   initRotatingTitle();
+  initSubscribeForm();
 }
-// v1.0.1
+// v1.0.2
+

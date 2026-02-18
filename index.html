@@ -450,24 +450,96 @@
           </div>
         </section>
 
-    <!-- GitHub CTA -->
-    <section class="about-cta-section">
-      <div class="about-cta-inner">
-        <h2 class="about-cta-title">Open Source &amp; Growing</h2>
-        <p class="about-cta-text">Soirée is built in public. Explore the architecture, contribute new data sources,
-          or fork it for your own city.</p>
-        <a href="https://github.com/stilwellc/soiree" target="_blank" class="about-github-btn-new">
-          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-            <path
-              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
-            </path>
-          </svg>
-          View on GitHub
-        </a>
-      </div>
-    </section>
+        <!-- Email Subscription -->
+        <section class="about-section about-subscribe-section">
+          <div class="about-section-label">
+            <span class="about-section-num">04</span>
+            <span>Notify</span>
+          </div>
+          <div class="about-section-content">
+            <h2 class="about-section-title">Never miss<br>what matters to you.</h2>
+            <p class="about-section-text" style="margin-bottom:24px;">Get a curated digest of new events matching your
+              interests — delivered straight to your inbox.</p>
 
-    </div>
+            <form id="subscribe-form" class="subscribe-form" autocomplete="off">
+              <!-- Email -->
+              <div class="subscribe-field">
+                <label class="subscribe-label" for="subscribe-email">Email</label>
+                <input type="email" id="subscribe-email" class="subscribe-input" placeholder="you@email.com" required>
+              </div>
+
+              <!-- Region Select -->
+              <div class="subscribe-field">
+                <label class="subscribe-label" for="subscribe-region">Region</label>
+                <select id="subscribe-region" class="subscribe-select">
+                  <option value="nyc">New York City</option>
+                  <option value="hoboken-jc">Hoboken / Jersey City</option>
+                  <option value="north-nj">North NJ</option>
+                  <option value="central-nj">Central NJ</option>
+                  <option value="south-nj">South NJ</option>
+                  <option value="jersey-shore">Jersey Shore</option>
+                  <option value="philly">Philadelphia</option>
+                </select>
+              </div>
+
+              <!-- Category Chips -->
+              <div class="subscribe-field">
+                <label class="subscribe-label">Interests <span class="subscribe-hint">(select all that
+                    apply)</span></label>
+                <div class="subscribe-chips">
+                  <button type="button" class="subscribe-chip active" data-cat="art">🎨 Art</button>
+                  <button type="button" class="subscribe-chip active" data-cat="music">🎵 Music</button>
+                  <button type="button" class="subscribe-chip active" data-cat="culinary">🍷 Food & Drink</button>
+                  <button type="button" class="subscribe-chip active" data-cat="fashion">👗 Fashion</button>
+                  <button type="button" class="subscribe-chip active" data-cat="lifestyle">✨ Lifestyle</button>
+                  <button type="button" class="subscribe-chip active" data-cat="community">🤝 Community</button>
+                  <button type="button" class="subscribe-chip active" data-cat="perks">🎁 Perks</button>
+                </div>
+              </div>
+
+              <button type="submit" class="subscribe-btn" id="subscribe-btn">
+                <span class="subscribe-btn-text">Subscribe</span>
+                <span class="subscribe-btn-loading" style="display:none;">
+                  <svg class="subscribe-spinner" viewBox="0 0 24 24" width="16" height="16">
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.5"
+                      stroke-dasharray="31.4" stroke-linecap="round">
+                      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s"
+                        repeatCount="indefinite" />
+                    </circle>
+                  </svg>
+                </span>
+              </button>
+            </form>
+
+            <!-- Success State -->
+            <div id="subscribe-success" class="subscribe-success" style="display:none;">
+              <div class="subscribe-success-icon">✓</div>
+              <div class="subscribe-success-title">You're in.</div>
+              <p class="subscribe-success-text">We'll send you a curated digest when new events match your preferences.
+              </p>
+              <button class="subscribe-again-btn" id="subscribe-again">Update preferences</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- GitHub CTA -->
+        <section class="about-cta-section">
+          <div class="about-cta-inner">
+            <h2 class="about-cta-title">Open Source &amp; Growing</h2>
+            <p class="about-cta-text">Soirée is built in public. Explore the architecture, contribute new data sources,
+              or fork it for your own city.</p>
+            <a href="https://github.com/stilwellc/soiree" target="_blank" class="about-github-btn-new">
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                <path
+                  d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                </path>
+              </svg>
+              View on GitHub
+            </a>
+          </div>
+        </section>
+
+      </div>
     </div>
 
     <!-- Footer (Global) -->
