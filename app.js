@@ -510,13 +510,21 @@ function renderComingSoon(regionName) {
 
 // Initialize App
 async function init() {
-  // Show loading state
-  eventsList.innerHTML = `
-    <div class="loading">
-      <div class="loading-spinner" aria-hidden="true"></div>
-      <p>Loading amazing events...</p>
+  // Show skeleton loading cards
+  eventsList.innerHTML = Array.from({ length: 3 }, () => `
+    <div class="skeleton-card" aria-hidden="true">
+      <div class="skeleton-header"></div>
+      <div class="skeleton-label">
+        <div class="skeleton-line medium"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+      <div style="min-height:20px"></div>
+      <div class="skeleton-footer">
+        <div class="skeleton-line" style="width:80px;height:24px"></div>
+        <div class="skeleton-line" style="width:50px"></div>
+      </div>
     </div>
-  `;
+  `).join('');
 
   // Track page view
   trackPageView();
@@ -634,37 +642,59 @@ function handleNavClick(item) {
   navItems.forEach(n => n.classList.remove('active'));
   item.classList.add('active');
 
-  if (view === 'discover') {
-    currentTimeFilter = 'all';
-    discoverView.classList.remove('hidden');
-    favoritesView.classList.add('hidden');
-    aboutView.classList.add('hidden');
-    startRotating();
-    renderEvents();
-  } else if (view === 'today') {
-    currentTimeFilter = 'today';
-    discoverView.classList.remove('hidden');
-    favoritesView.classList.add('hidden');
-    aboutView.classList.add('hidden');
-    setFixedTitle("Today's");
-    renderEvents();
-  } else if (view === 'week') {
-    currentTimeFilter = 'week';
-    discoverView.classList.remove('hidden');
-    favoritesView.classList.add('hidden');
-    aboutView.classList.add('hidden');
-    setFixedTitle("This Week's");
-    renderEvents();
-  } else if (view === 'favorites') {
-    discoverView.classList.add('hidden');
-    favoritesView.classList.remove('hidden');
-    aboutView.classList.add('hidden');
-    renderFavorites();
-  } else if (view === 'about') {
-    discoverView.classList.add('hidden');
-    favoritesView.classList.add('hidden');
-    aboutView.classList.remove('hidden');
-    loadStats();
+  // Find the currently visible view
+  const views = [discoverView, favoritesView, aboutView];
+  const visibleView = views.find(v => !v.classList.contains('hidden'));
+
+  function showView() {
+    if (view === 'discover') {
+      currentTimeFilter = 'all';
+      discoverView.classList.remove('hidden');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.add('hidden');
+      startRotating();
+      renderEvents();
+    } else if (view === 'today') {
+      currentTimeFilter = 'today';
+      discoverView.classList.remove('hidden');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.add('hidden');
+      setFixedTitle("Today's");
+      renderEvents();
+    } else if (view === 'week') {
+      currentTimeFilter = 'week';
+      discoverView.classList.remove('hidden');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.add('hidden');
+      setFixedTitle("This Week's");
+      renderEvents();
+    } else if (view === 'favorites') {
+      discoverView.classList.add('hidden');
+      favoritesView.classList.remove('hidden');
+      aboutView.classList.add('hidden');
+      renderFavorites();
+    } else if (view === 'about') {
+      discoverView.classList.add('hidden');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.remove('hidden');
+      loadStats();
+    }
+  }
+
+  // If switching to a different view container, fade out then in
+  const targetView = (view === 'favorites') ? favoritesView : (view === 'about') ? aboutView : discoverView;
+  if (visibleView && visibleView !== targetView) {
+    visibleView.classList.add('view-fade-out');
+    setTimeout(() => {
+      visibleView.classList.remove('view-fade-out');
+      showView();
+      targetView.classList.add('view-fade-out');
+      requestAnimationFrame(() => {
+        targetView.classList.remove('view-fade-out');
+      });
+    }, 200);
+  } else {
+    showView();
   }
 }
 
@@ -812,6 +842,12 @@ function renderEvents() {
         openModal(eventId);
       }
     });
+    card.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.favorite-btn')) {
+        e.preventDefault();
+        openModal(parseInt(card.dataset.id));
+      }
+    });
   });
 
   // Add favorite button listeners
@@ -834,6 +870,7 @@ function renderFavorites() {
         <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
         <div class="empty-state-title">No favorites yet</div>
         <div class="empty-state-text">Tap the heart on events you love</div>
+        <button class="btn btn-primary empty-state-cta" onclick="document.querySelector('[data-view=discover]').click()">Browse Events</button>
       </div>
     `;
     return;
@@ -851,6 +888,12 @@ function renderFavorites() {
       if (!e.target.closest('.favorite-btn')) {
         const eventId = parseInt(card.dataset.id);
         openModal(eventId);
+      }
+    });
+    card.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.favorite-btn')) {
+        e.preventDefault();
+        openModal(parseInt(card.dataset.id));
       }
     });
   });
@@ -1069,18 +1112,69 @@ function openModal(eventId) {
             <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
           </svg>
         </button>
+        <button class="btn btn-secondary btn-icon" onclick="downloadICS(${event.id})" aria-label="Add to calendar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </button>
       </div>
     </div>
   `;
 
   document.getElementById('modal-body').innerHTML = modalContent;
+
+  // Set dynamic aria-labelledby to the modal title
+  const modalTitleEl = document.querySelector('.modal-title');
+  if (modalTitleEl) {
+    modalTitleEl.id = 'modal-dynamic-title';
+    modalOverlay.setAttribute('aria-labelledby', 'modal-dynamic-title');
+  }
+
+  // Remember which element had focus before opening
+  modalOverlay._previousFocus = document.activeElement;
+
   modalOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
+
+  // Move focus into the modal (close button)
+  requestAnimationFrame(() => {
+    modalClose.focus();
+  });
+
+  // Focus trapping
+  modalOverlay._trapFocus = (e) => {
+    if (e.key !== 'Tab') return;
+    const focusable = modalOverlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  };
+  modalOverlay.addEventListener('keydown', modalOverlay._trapFocus);
 }
 
 function closeModal() {
+  // Remove focus trap
+  if (modalOverlay._trapFocus) {
+    modalOverlay.removeEventListener('keydown', modalOverlay._trapFocus);
+    modalOverlay._trapFocus = null;
+  }
+
   modalOverlay.classList.remove('active');
   document.body.style.overflow = '';
+
+  // Restore focus to the element that opened the modal
+  if (modalOverlay._previousFocus) {
+    modalOverlay._previousFocus.focus();
+    modalOverlay._previousFocus = null;
+  }
 }
 
 function handleRSVP(eventId) {
@@ -1287,6 +1381,59 @@ function fallbackShare(event) {
   }).catch(() => {
     showToast('Share: ' + url);
   });
+}
+
+// Calendar export (ICS)
+function downloadICS(eventId) {
+  const event = events.find(e => e.id === eventId);
+  if (!event) return;
+
+  // Build start/end dates
+  let dtStart, dtEnd;
+  if (event.start_date) {
+    dtStart = event.start_date.replace(/[-:]/g, '').replace(/\.\d+/, '').replace('T', 'T');
+    if (!dtStart.includes('T')) dtStart += 'T190000';
+    if (event.end_date && event.end_date !== event.start_date) {
+      dtEnd = event.end_date.replace(/[-:]/g, '').replace(/\.\d+/, '').replace('T', 'T');
+      if (!dtEnd.includes('T')) dtEnd += 'T230000';
+    } else {
+      // Default 3-hour duration
+      dtEnd = dtStart.replace(/T(\d{2})/, (_, h) => 'T' + String(Math.min(23, parseInt(h) + 3)).padStart(2, '0'));
+    }
+  } else {
+    // No structured date — use tomorrow at 7pm as placeholder
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    const pad = (n) => String(n).padStart(2, '0');
+    dtStart = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T190000`;
+    dtEnd = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T220000`;
+  }
+
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Soiree//Event//EN',
+    'BEGIN:VEVENT',
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:${event.name}`,
+    `DESCRIPTION:${(event.description || '').replace(/\n/g, '\\n')}`,
+    `LOCATION:${event.address || event.location || ''}`,
+    event.url ? `URL:${event.url}` : '',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].filter(Boolean).join('\r\n');
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${event.name.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-')}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Calendar event downloaded');
 }
 
 function showToast(message) {
