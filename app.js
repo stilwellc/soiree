@@ -1033,101 +1033,144 @@ function openModal(eventId) {
   if (!event) return;
 
   const isFavorited = favorites.includes(event.id);
-  const capacityPercent = Math.min(100, Math.floor((event.spots / 250) * 100));
+  const isFree = FREE_SOURCES.includes(event.source);
+  const dateDisplay = formatEventDate(event);
+  const categoryName = getCategoryName(event.category);
+
+  // Build info pills
+  const datePill = `
+    <div class="modal-info-pill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <div class="modal-pill-content">
+        <span class="modal-pill-label">When</span>
+        <span class="modal-pill-value">${formatBadgeDate(event)}</span>
+        ${event.time && event.time !== 'See details' ? `<span class="modal-pill-sub">${event.time}</span>` : ''}
+      </div>
+    </div>`;
+
+  const locationPill = `
+    <div class="modal-info-pill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      <div class="modal-pill-content">
+        <span class="modal-pill-label">Where</span>
+        <span class="modal-pill-value">${event.location}</span>
+        ${event.address ? `<span class="modal-pill-sub">${event.address}</span>` : ''}
+      </div>
+    </div>`;
+
+  const freePill = isFree ? `<div class="modal-free-pill">Free Entry</div>` : '';
+
+  // Build highlights
+  const highlightsHTML = (event.highlights && event.highlights.length > 0) ? `
+    <div class="modal-highlights-section">
+      <span class="modal-section-label">What to Expect</span>
+      <div class="modal-highlights-grid">
+        ${event.highlights.map(h => `
+          <div class="modal-highlight-item">
+            <div class="modal-highlight-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="modal-highlight-text">${h}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>` : '';
+
+  // CTA button
+  const ctaHTML = event.url
+    ? `<a href="${event.url}" target="_blank" rel="noopener noreferrer" class="modal-cta-btn">
+        View Full Details
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>
+        </svg>
+      </a>`
+    : `<button class="modal-cta-btn rsvp-btn" onclick="handleRSVP(${event.id})">
+        Reserve Your Spot
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>`;
 
   const modalContent = `
-    <div class="modal-image" style="background-image: url('${event.image}')">
-      <div class="modal-image-overlay"></div>
+    <div class="modal-handle"></div>
+
+    <!-- Hero -->
+    <div class="modal-hero">
+      <div class="modal-hero-bg" style="background-image: url('${event.image || ''}')"></div>
+      <div class="modal-hero-gradient"></div>
+      <span class="modal-hero-category">${categoryName}</span>
+      <div class="modal-hero-title-block">
+        <h2 class="modal-hero-title" id="modal-dynamic-title">${event.name}</h2>
+        ${event.source ? `<div class="modal-source-badge"><span class="modal-source-dot"></span>${event.source}</div>` : ''}
+      </div>
     </div>
-    <div class="modal-content">
-      <div class="modal-category">${getCategoryName(event.category)}</div>
-      <h2 class="modal-title">${event.name}</h2>
 
-      <div class="modal-meta">
-        <div class="modal-meta-item">
-          <svg class="modal-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
-          <div>
-            <div class="meta-label">When</div>
-            <div class="meta-value">${formatEventDate(event)}</div>
-            ${event.start_date ? `<div class="meta-sublabel">${event.start_date}${event.end_date !== event.start_date ? ' to ' + event.end_date : ''}</div>` : ''}
-          </div>
-        </div>
-        <div class="modal-meta-item">
-          <svg class="modal-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-          <div>
-            <div class="meta-label">Where</div>
-            <div class="meta-value">${event.location}</div>
-            <div class="meta-sublabel">${event.address}</div>
-          </div>
-        </div>
-      </div>
+    <!-- Quick Actions -->
+    <div class="modal-actions-bar">
+      <button class="modal-action-btn ${isFavorited ? 'favorited' : ''}" id="modal-fav-btn"
+        onclick="toggleFavorite(${event.id}); updateModalFavBtn(${event.id})"
+        aria-label="${isFavorited ? 'Remove from favorites' : 'Save event'}">
+        <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        ${isFavorited ? 'Saved' : 'Save'}
+      </button>
+      <button class="modal-action-btn" onclick="shareEvent(${event.id})" aria-label="Share event">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+        Share
+      </button>
+      <button class="modal-action-btn" onclick="downloadICS(${event.id})" aria-label="Add to calendar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Calendar
+      </button>
+    </div>
 
-      <div class="modal-section">
-        <h3>About This Event</h3>
-        <p class="modal-description">${event.description}</p>
-      </div>
+    <!-- Info Pills -->
+    <div class="modal-info-pills">
+      ${datePill}
+      ${locationPill}
+      ${freePill}
+    </div>
 
-      ${event.highlights && event.highlights.length > 0 ? `
-      <div class="modal-section">
-        <h3>What to Expect</h3>
-        <ul class="modal-highlights">
-          ${event.highlights.map(h => `<li>${h}</li>`).join('')}
-        </ul>
-      </div>
-      ` : ''}
+    <!-- Description -->
+    <div class="modal-body-content">
+      <span class="modal-section-label">About This Event</span>
+      <p class="modal-description">${event.description}</p>
+    </div>
 
-      <div class="modal-actions">
-        ${event.url ? `
-          <a href="${event.url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-block">
-            View Event Details
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="7" y1="17" x2="17" y2="7"></line>
-              <polyline points="7 7 17 7 17 17"></polyline>
-            </svg>
-          </a>
-        ` : `
-          <button class="btn btn-primary btn-block" onclick="handleRSVP(${event.id})">
-            Reserve Your Spot
-          </button>
-        `}
-        <button class="btn btn-secondary btn-icon" onclick="toggleFavorite(${event.id}); updateModalFavoriteBtn(${event.id})" aria-label="${isFavorited ? 'Remove from favorites' : 'Add to favorites'}">
-          <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-          </svg>
-        </button>
-        <button class="btn btn-secondary btn-icon" onclick="shareEvent(${event.id})" aria-label="Share event">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="18" cy="5" r="3"></circle>
-            <circle cx="6" cy="12" r="3"></circle>
-            <circle cx="18" cy="19" r="3"></circle>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-          </svg>
-        </button>
-        <button class="btn btn-secondary btn-icon" onclick="downloadICS(${event.id})" aria-label="Add to calendar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
-        </button>
-      </div>
+    <!-- Highlights -->
+    ${highlightsHTML}
+
+    <!-- CTA -->
+    <div class="modal-cta-section">
+      <div class="modal-cta-divider"></div>
+      ${ctaHTML}
     </div>
   `;
 
   document.getElementById('modal-body').innerHTML = modalContent;
 
   // Set dynamic aria-labelledby to the modal title
-  const modalTitleEl = document.querySelector('.modal-title');
+  const modalTitleEl = document.querySelector('.modal-hero-title');
   if (modalTitleEl) {
     modalTitleEl.id = 'modal-dynamic-title';
     modalOverlay.setAttribute('aria-labelledby', 'modal-dynamic-title');
@@ -1189,6 +1232,20 @@ function updateModalFavoriteBtn(eventId) {
   if (btn) {
     btn.textContent = isFavorited ? 'Remove from Favorites' : 'Add to Favorites';
   }
+}
+
+// Update the new modal favorite button state
+function updateModalFavBtn(eventId) {
+  const isFavorited = favorites.includes(eventId);
+  const btn = document.getElementById('modal-fav-btn');
+  if (!btn) return;
+  btn.classList.toggle('favorited', isFavorited);
+  const svg = btn.querySelector('svg');
+  if (svg) svg.setAttribute('fill', isFavorited ? 'currentColor' : 'none');
+  // Update text node (last child)
+  const textNodes = [...btn.childNodes].filter(n => n.nodeType === 3);
+  if (textNodes.length) textNodes[textNodes.length - 1].textContent = isFavorited ? ' Saved' : ' Save';
+  btn.setAttribute('aria-label', isFavorited ? 'Remove from favorites' : 'Save event');
 }
 
 // Favorites
@@ -1663,19 +1720,19 @@ async function initNetworkGraph() {
 
   // Color + label maps
   const NODE_COLORS = {
-    'nyc':          '#4A90E2',
-    'hoboken-jc':   '#6BCB77',
-    'north-nj':     '#9370DB',
-    'central-nj':   '#FFB347',
-    'south-nj':     '#FF6B6B',
+    'nyc': '#4A90E2',
+    'hoboken-jc': '#6BCB77',
+    'north-nj': '#9370DB',
+    'central-nj': '#FFB347',
+    'south-nj': '#FF6B6B',
     'jersey-shore': '#00CED1'
   };
   const REGION_LABELS = {
-    'nyc':          'NYC',
-    'hoboken-jc':   'HBK/JC',
-    'north-nj':     'N.NJ',
-    'central-nj':   'C.NJ',
-    'south-nj':     'S.NJ',
+    'nyc': 'NYC',
+    'hoboken-jc': 'HBK/JC',
+    'north-nj': 'N.NJ',
+    'central-nj': 'C.NJ',
+    'south-nj': 'S.NJ',
     'jersey-shore': 'SHORE'
   };
 
@@ -1708,20 +1765,20 @@ async function initNetworkGraph() {
 
   // Category definitions (middle ring)
   const CATEGORY_COLORS = {
-    art:       '#9B8FE8',
-    music:     '#F07CAD',
-    culinary:  '#F0A050',
-    fashion:   '#C8A0C8',
-    perks:     '#50B8D8',
+    art: '#9B8FE8',
+    music: '#F07CAD',
+    culinary: '#F0A050',
+    fashion: '#C8A0C8',
+    perks: '#50B8D8',
     lifestyle: '#70C080',
     community: '#E88060'
   };
   const CATEGORY_LABELS = {
-    art:       'ART',
-    music:     'MUSIC',
-    culinary:  'FOOD',
-    fashion:   'FASHION',
-    perks:     'PERKS',
+    art: 'ART',
+    music: 'MUSIC',
+    culinary: 'FOOD',
+    fashion: 'FASHION',
+    perks: 'PERKS',
     lifestyle: 'LIFE',
     community: 'COMM.'
   };
@@ -1898,7 +1955,7 @@ async function initNetworkGraph() {
       node.vy += (dy / dist) * force;
 
       node.vx += (-dy / dist) * 0.009;
-      node.vy +=  (dx / dist) * 0.009;
+      node.vy += (dx / dist) * 0.009;
 
       node.vx *= 0.92;
       node.vy *= 0.92;
