@@ -218,9 +218,9 @@
         <div class="location">Ready when you are</div>
       </header>
       <div class="empty-state">
-        <div class="empty-state-icon">❤️</div>
+        <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
         <div class="empty-state-title">No favorites yet</div>
-        <div class="empty-state-text">Start adding events you love to see them here</div>
+        <div class="empty-state-text">Tap the heart on events you love</div>
       </div>
     </div>
 
@@ -282,17 +282,20 @@
 
         <!-- System Architecture -->
         <section class="about-block">
-          <div class="tech-header-controls">
+          <div class="tech-header-controls tech-toggle" id="tech-toggle" role="button" tabindex="0" aria-expanded="false">
             <div>
               <p class="about-label" style="margin-bottom: 2px;">System Architecture</p>
               <span class="version-tag">v2.1</span>
             </div>
-            <div class="status-pill">
-              <span class="status-dot-pulse"></span> Operational
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="status-pill">
+                <span class="status-dot-pulse"></span> Operational
+              </div>
+              <svg class="tech-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
           </div>
 
-          <div class="tech-dashboard-grid">
+          <div class="tech-dashboard-grid" id="tech-dashboard" style="display: none;">
             <div class="tech-card graph-module">
               <div class="module-header">
                 <span>TOPOLOGY</span>

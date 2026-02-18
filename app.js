@@ -792,7 +792,7 @@ function renderEvents() {
   if (filteredEvents.length === 0) {
     eventsList.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">🔍</div>
+        <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
         <div class="empty-state-title">No events found</div>
         <div class="empty-state-text">Try adjusting your filters or search</div>
       </div>
@@ -831,9 +831,9 @@ function renderFavorites() {
   if (favoriteEvents.length === 0) {
     favoritesView.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">❤️</div>
+        <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
         <div class="empty-state-title">No favorites yet</div>
-        <div class="empty-state-text">Start adding events you love to see them here</div>
+        <div class="empty-state-text">Tap the heart on events you love</div>
       </div>
     `;
     return;
@@ -1085,8 +1085,8 @@ function closeModal() {
 
 function handleRSVP(eventId) {
   const event = events.find(e => e.id === eventId);
-  alert(`🎉 You're on the list for ${event.name}!\n\nWe'll send you a confirmation email shortly with all the details.`);
   closeModal();
+  showToast(`You're on the list for ${event.name}`);
 }
 
 function updateModalFavoriteBtn(eventId) {
@@ -1099,14 +1099,24 @@ function updateModalFavoriteBtn(eventId) {
 
 // Favorites
 function toggleFavorite(eventId) {
-  if (favorites.includes(eventId)) {
-    favorites = favorites.filter(id => id !== eventId);
-  } else {
+  const wasAdded = !favorites.includes(eventId);
+  if (wasAdded) {
     favorites.push(eventId);
+  } else {
+    favorites = favorites.filter(id => id !== eventId);
   }
 
   localStorage.setItem('soireeFavorites', JSON.stringify(favorites));
   updateFavoriteBadge();
+
+  // Pulse the heart button that was clicked
+  if (wasAdded) {
+    const btn = document.querySelector(`.favorite-btn[data-id="${eventId}"]`);
+    if (btn) {
+      btn.classList.add('fav-pulse');
+      setTimeout(() => btn.classList.remove('fav-pulse'), 400);
+    }
+  }
 
   // Re-render current view
   const activeNav = document.querySelector('.nav-item.active');
@@ -1148,9 +1158,19 @@ async function loadStats() {
       // Format numbers with commas
       const formatNumber = (num) => num.toLocaleString('en-US');
 
-      document.getElementById('stat-events').textContent = formatNumber(data.stats.totalEventsScraped || data.stats.totalEvents);
-      document.getElementById('stat-views').textContent = formatNumber(data.stats.pageViews);
-      document.getElementById('stat-unique').textContent = formatNumber(data.stats.uniqueEvents);
+      const statEls = ['stat-events', 'stat-views', 'stat-unique'];
+      const vals = [
+        formatNumber(data.stats.totalEventsScraped || data.stats.totalEvents),
+        formatNumber(data.stats.pageViews),
+        formatNumber(data.stats.uniqueEvents)
+      ];
+      statEls.forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.add('stat-loading');
+          setTimeout(() => { el.textContent = vals[i]; el.classList.remove('stat-loading'); el.classList.add('stat-loaded'); }, 200 + i * 150);
+        }
+      });
     }
   } catch (error) {
     console.error('Error loading stats:', error);
@@ -1324,17 +1344,23 @@ function stopRotating() {
 
 function setFixedTitle(text) {
   stopRotating();
+  const panel = document.getElementById('hero-title-panel');
   const words = document.querySelectorAll('.title-word');
-  words.forEach(w => w.classList.remove('active', 'exit'));
-  // Find matching word or use first
-  for (const w of words) {
-    if (w.textContent.trim().toLowerCase() === text.toLowerCase()) {
-      w.classList.add('active');
-      return;
+  // Fade out, swap, fade in
+  if (panel) panel.style.opacity = '0';
+  setTimeout(() => {
+    words.forEach(w => w.classList.remove('active', 'exit'));
+    let found = false;
+    for (const w of words) {
+      if (w.textContent.trim().toLowerCase() === text.toLowerCase()) {
+        w.classList.add('active');
+        found = true;
+        break;
+      }
     }
-  }
-  words[0].textContent = text;
-  words[0].classList.add('active');
+    if (!found) { words[0].textContent = text; words[0].classList.add('active'); }
+    if (panel) panel.style.opacity = '1';
+  }, 200);
 }
 
 // ============================================================================
@@ -1954,6 +1980,7 @@ function toggleFreeMode() {
   const checkbox = document.getElementById('free-mode-toggle');
   freeMode = checkbox ? checkbox.checked : !freeMode;
   renderEvents();
+  showToast(freeMode ? 'Showing free events only' : 'Showing all events');
 }
 
 // Initialize when DOM is ready
@@ -1965,15 +1992,22 @@ if (document.readyState === 'loading') {
     const freeCheckbox = document.getElementById('free-mode-toggle');
     if (freeCheckbox) freeCheckbox.addEventListener('change', toggleFreeMode);
 
-    // Initialize network graph when About view is shown
-    const aboutView = document.getElementById('about-view');
-    const observer = new MutationObserver(() => {
-      if (!aboutView.classList.contains('hidden')) {
-        observer.disconnect();
-        requestAnimationFrame(() => initNetworkGraph());
-      }
-    });
-    observer.observe(aboutView, { attributes: true, attributeFilter: ['class'] });
+    // Tech dashboard collapsible toggle
+    const techToggle = document.getElementById('tech-toggle');
+    const techDashboard = document.getElementById('tech-dashboard');
+    let techGraphInited = false;
+    if (techToggle && techDashboard) {
+      techToggle.addEventListener('click', () => {
+        const open = techDashboard.style.display !== 'none';
+        techDashboard.style.display = open ? 'none' : 'flex';
+        techToggle.setAttribute('aria-expanded', !open);
+        techToggle.querySelector('.tech-chevron').style.transform = open ? '' : 'rotate(180deg)';
+        if (!open && !techGraphInited) {
+          techGraphInited = true;
+          requestAnimationFrame(() => initNetworkGraph());
+        }
+      });
+    }
   });
 } else {
   init();
