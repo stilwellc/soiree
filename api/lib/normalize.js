@@ -55,7 +55,7 @@ function createNormalizedEvent(data) {
         price: price.trim().substring(0, 50),
         spots: typeof spots === 'number' ? spots : parseInt(spots, 10) || 50,
         image: image || null,
-        description: (description || name).trim().substring(0, 500),
+        description: (description || name).trim().substring(0, 1500),
         highlights: Array.isArray(highlights) ? highlights.slice(0, 5) : [],
         url: url.trim().substring(0, 500),
         start_date,

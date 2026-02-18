@@ -191,33 +191,69 @@ function getEventImage(title, category) {
 async function fetchDetailPageData(url) {
   try {
     const response = await axios.get(url, {
-      timeout: 5000,
+      timeout: 8000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html'
+        'Accept': 'text/html,application/xhtml+xml'
       }
     });
     const $ = cheerio.load(response.data);
 
+    // Remove nav, footer, sidebar, cookie banners, scripts, styles — keep only content
+    $('nav, footer, header, aside, script, style, noscript, [class*="cookie"], [class*="banner"], [class*="newsletter"], [class*="popup"], [class*="modal"], [id*="cookie"], [id*="banner"]').remove();
+
     // --- Extract Description ---
+    // Ordered from most specific to most generic
     const descSelectors = [
-      '.eventitem-column-content p',
-      '.sqs-block-content p',
-      '.entry-content p',
-      'article p',
-      '.event-description p',
-      '.post-content p',
-      '.event-content p'
+      // Squarespace event pages
+      '.eventitem-column-content',
+      '.sqs-block-content',
+      // WordPress / common CMS
+      '.entry-content',
+      '.post-content',
+      '.page-content',
+      '.content-area',
+      // Generic event selectors
+      '[class*="event-description"]',
+      '[class*="event-content"]',
+      '[class*="event-body"]',
+      '[class*="event-detail"]',
+      '[class*="description"]',
+      // Museum / gallery sites
+      '.exhibition-description',
+      '.program-description',
+      '[class*="about"]',
+      // Article / main content fallback
+      'article',
+      'main',
+      '[role="main"]',
     ];
 
     let description = '';
     for (const sel of descSelectors) {
-      $(sel).each((_, el) => {
-        description += ' ' + $(el).text().trim();
+      const el = $(sel).first();
+      if (!el.length) continue;
+      // Grab all paragraph text within the container
+      const paras = [];
+      el.find('p').each((_, p) => {
+        const t = $(p).text().trim();
+        if (t.length > 20) paras.push(t);
       });
-      if (description.trim().length > 50) break;
+      if (paras.length > 0) {
+        description = paras.join(' ');
+      } else {
+        // No <p> tags — grab raw text
+        description = el.text().replace(/\s+/g, ' ').trim();
+      }
+      if (description.length > 80) break;
     }
-    description = description.trim().substring(0, 1000);
+
+    // Final cleanup: collapse whitespace, strip leading/trailing junk
+    description = description
+      .replace(/\s+/g, ' ')
+      .replace(/^[\s\W]+/, '')
+      .trim()
+      .substring(0, 1500);
 
     // --- Extract Date Information ---
     let dateText = '';
@@ -241,21 +277,14 @@ async function fetchDetailPageData(url) {
     // Fallback: Try common date selectors
     if (!dateText) {
       const dateSelectors = [
-        '.event-date',
-        '.event-time',
-        '.date',
-        'time',
-        '.event-meta',
-        '.eventitem-meta-date',
-        '.eventitem-meta-time',
-        '[class*="date"]',
-        '[class*="time"]'
+        '.event-date', '.event-time', '.date', 'time',
+        '.event-meta', '.eventitem-meta-date', '.eventitem-meta-time',
+        '[class*="date"]', '[class*="time"]'
       ];
 
       for (const sel of dateSelectors) {
         const text = $(sel).first().text().trim();
         if (text && text.length > 3 && text.length < 200) {
-          // Check if this looks like a date
           if (text.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|\d{1,2}\/\d{1,2})/i)) {
             dateText = text;
             break;
@@ -264,23 +293,15 @@ async function fetchDetailPageData(url) {
       }
     }
 
-    return {
-      description,
-      dateText,
-      timeText
-    };
+    return { description, dateText, timeText };
   } catch {
-    return {
-      description: '',
-      dateText: '',
-      timeText: ''
-    };
+    return { description: '', dateText: '', timeText: '' };
   }
 }
 
 // Enrich events array by fetching detail pages in parallel batches
-// Extracts richer descriptions and accurate dates, then re-categorizes
-async function enrichWithDetailPages(events, batchSize = 10) {
+// Extracts richer descriptions and accurate dates, then re-categorizes and regenerates highlights
+async function enrichWithDetailPages(events, batchSize = 8) {
   console.log(`Enriching ${events.length} events with detail page data...`);
   let enrichedDesc = 0;
   let enrichedDates = 0;
@@ -291,37 +312,41 @@ async function enrichWithDetailPages(events, batchSize = 10) {
       batch.map(async (event) => {
         const detail = await fetchDetailPageData(event.url);
 
-        // Update description if we got better content
-        if (detail.description && detail.description.length > 30) {
-          // Combine original + detail description for categorization
-          const fullDesc = (event.description + ' ' + detail.description).substring(0, 1000);
-          event.description = fullDesc.substring(0, 500);
+        // Update description if we got meaningfully better content
+        if (detail.description && detail.description.length > 80) {
+          // Prefer the detail page description if it's substantially longer
+          const combined = detail.description.length > event.description.length
+            ? detail.description
+            : (event.description + ' ' + detail.description).substring(0, 1500);
+          event.description = combined.substring(0, 1500);
+
           // Re-categorize with richer text
-          const newCategory = categorizeEvent(event.name, fullDesc, event.location);
+          const newCategory = categorizeEvent(event.name, event.description, event.location);
           if (newCategory !== event.category) {
             event.category = newCategory;
             event.image = getEventImage(event.name, newCategory);
           }
+
+          // Regenerate highlights now that we have better description text
+          event.highlights = generateHighlights(event.name, event.description, event.category, event.location, event.source);
+
           enrichedDesc++;
         }
 
         // Update dates if we got better date info
         if (detail.dateText) {
-          // Only update if current dates are generic placeholders
           const isGenericDate = event.date && (
             event.date.toLowerCase() === 'upcoming' ||
             event.date.toLowerCase() === 'today' ||
             event.date.toLowerCase() === 'this week' ||
             event.date.toLowerCase() === 'this weekend' ||
+            event.date.toLowerCase() === 'ongoing' ||
             !event.start_date
           );
 
           if (isGenericDate) {
             event.date = detail.dateText;
-            if (detail.timeText) {
-              event.time = detail.timeText;
-            }
-            // Re-parse dates with better info
+            if (detail.timeText) event.time = detail.timeText;
             const { start_date, end_date } = parseDateText(detail.dateText, detail.timeText);
             if (start_date) {
               event.start_date = start_date;
@@ -1316,10 +1341,10 @@ async function scrapeAllEvents() {
       return getFallbackEvents();
     }
 
-    // TODO: Re-enable detail page enrichment when we have better selectors
-    // Most museum sites don't expose dates in easily-scrapable format
-    // console.log('Enriching events with detail page data...');
-    // await enrichWithDetailPages(allEvents, 15);
+    // Enrich events with full descriptions from their detail pages
+    // Batched at 8 concurrent requests to stay within Vercel timeout
+    console.log('Enriching events with detail page descriptions...');
+    await enrichWithDetailPages(allEvents, 8);
 
     return allEvents;
   } catch (error) {
