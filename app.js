@@ -699,6 +699,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
     if (view === 'discover') {
       currentTimeFilter = 'all';
       discoverView.classList.remove('hidden');
+      discoverView.classList.add('view-home');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.remove('hidden');
@@ -708,6 +709,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
     } else if (view === 'all') {
       currentTimeFilter = 'all';
       discoverView.classList.remove('hidden');
+      discoverView.classList.remove('view-home');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
@@ -717,6 +719,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
     } else if (view === 'today') {
       currentTimeFilter = 'today';
       discoverView.classList.remove('hidden');
+      discoverView.classList.remove('view-home');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
@@ -726,6 +729,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
     } else if (view === 'week') {
       currentTimeFilter = 'week';
       discoverView.classList.remove('hidden');
+      discoverView.classList.remove('view-home');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');

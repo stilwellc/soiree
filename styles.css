@@ -787,6 +787,11 @@ body {
   align-items: center;
 }
 
+/* Hide search/filters on home (gallery) view */
+#discover-view.view-home .event-controls {
+  display: none !important;
+}
+
 .search-box {
   position: relative;
   flex: 1;

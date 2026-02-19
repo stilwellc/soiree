@@ -77,7 +77,7 @@
   <!-- Main Content -->
   <main class="app-container">
     <!-- Discover View -->
-    <div id="discover-view">
+    <div id="discover-view" class="view-home">
       <!-- Hero -->
       <header class="hero">
         <div class="hero-bg" aria-hidden="true"></div>
@@ -161,7 +161,7 @@
       </header>
 
       <!-- Search -->
-      <section class="search-container" aria-label="Search events"
+      <section class="search-container event-controls" aria-label="Search events"
         style="display: flex; gap: 12px; align-items: center;">
         <div class="search-box" style="flex: 1;">
           <input type="search" id="search-input" class="search-input" placeholder="Search events, locations..."
@@ -189,7 +189,7 @@
       </section>
 
       <!-- Filters -->
-      <section class="filters" role="radiogroup" aria-label="Event categories">
+      <section class="filters event-controls" role="radiogroup" aria-label="Event categories">
         <button class="filter-chip active" data-filter="all" data-color="#D4AF37" role="radio"
           aria-checked="true">All</button>
         <button class="filter-chip" data-filter="art" data-color="#A0686B" role="radio" aria-checked="false">Art &
