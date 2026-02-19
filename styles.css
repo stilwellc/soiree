@@ -3370,19 +3370,58 @@ button:focus-visible,
 }
 .cat-gallery-row::-webkit-scrollbar { display: none; }
 
-/* 1.5 cards visible: one full card + half of the next peeks in */
+/* 1.5 cards visible: one full + half peek */
 .cat-gallery-row .event-card {
   flex: 0 0 calc((100vw - 48px) / 1.5);
   scroll-snap-align: start;
   animation: none;
   min-width: 0;
-  max-width: 340px;
+  max-width: 280px;
+  margin-bottom: 0;
+  border-radius: 24px;
+}
+
+/* Compact header for gallery context */
+.cat-gallery-row .event-card-header {
+  height: 90px;
+  padding: 14px 14px;
+}
+
+/* Tighter label */
+.cat-gallery-row .event-card-label {
+  padding: 10px 14px;
+  margin-top: -8px;
+}
+.cat-gallery-row .event-label-title {
+  font-size: 13px;
+}
+.cat-gallery-row .event-label-subtitle {
+  font-size: 11px;
+}
+
+/* Hide the empty body spacer */
+.cat-gallery-row .event-card-body {
+  display: none;
+}
+
+/* Compact footer */
+.cat-gallery-row .event-card-footer {
+  padding: 6px 14px 14px;
+}
+.cat-gallery-row .event-footer-big {
+  font-size: 22px;
+}
+.cat-gallery-row .event-footer-small {
+  font-size: 11px;
+}
+.cat-gallery-row .event-footer-right {
+  font-size: 12px;
 }
 
 @media (min-width: 768px) {
   .cat-gallery-row .event-card {
-    flex: 0 0 300px;
-    max-width: 300px;
+    flex: 0 0 260px;
+    max-width: 260px;
   }
 }
 
