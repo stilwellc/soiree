@@ -547,11 +547,9 @@ async function init() {
 
   // Navigate to URL path on initial load (e.g. direct link to /today)
   const initialView = PATH_VIEWS[location.pathname] || 'discover';
-  const initialNav = document.querySelector(`[data-view="${initialView}"]`);
-  if (initialNav && initialView !== 'discover') {
-    handleNavClick(initialNav, { pushHistory: false });
+  if (initialView !== 'discover') {
+    navigateToView(initialView, { pushHistory: false });
   } else {
-    // Replace state for the home path so popstate works correctly
     history.replaceState({ view: 'discover' }, '', location.pathname);
   }
 }
@@ -574,11 +572,19 @@ function setupEventListeners() {
     item.addEventListener('click', () => handleNavClick(item));
   });
 
+  // Logo → home
+  const navBrandHome = document.getElementById('nav-brand-home');
+  if (navBrandHome) {
+    navBrandHome.addEventListener('click', () => navigateToView('discover'));
+    navBrandHome.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') navigateToView('discover');
+    });
+  }
+
   // Browser back/forward
   window.addEventListener('popstate', (e) => {
     const view = (e.state && e.state.view) || PATH_VIEWS[location.pathname] || 'discover';
-    const navItem = document.querySelector(`[data-view="${view}"]`);
-    if (navItem) handleNavClick(navItem, { pushHistory: false });
+    navigateToView(view, { pushHistory: false });
   });
 
   // Modal
@@ -656,14 +662,25 @@ function clearSearch() {
 
 // Navigation
 // Map view name → URL path
-const VIEW_PATHS = { discover: '/', today: '/today', week: '/week', favorites: '/favorites', about: '/about' };
-const PATH_VIEWS = { '/': 'discover', '/today': 'today', '/week': 'week', '/favorites': 'favorites', '/about': 'about' };
+const VIEW_PATHS = { discover: '/', all: '/all', today: '/today', week: '/week', favorites: '/favorites', about: '/about' };
+const PATH_VIEWS = { '/': 'discover', '/all': 'all', '/today': 'today', '/week': 'week', '/favorites': 'favorites', '/about': 'about' };
+
+function navigateToView(view, opts = {}) {
+  const navItem = document.querySelector(`[data-view="${view}"]`);
+  if (navItem) {
+    handleNavClick(navItem, opts);
+  } else {
+    // Home (discover) has no nav item — call handleNavClick with a synthetic element
+    handleNavClick({ dataset: { view }, classList: { contains: () => false, add: () => {}, remove: () => {} } }, opts);
+  }
+}
 
 function handleNavClick(item, { pushHistory = true } = {}) {
   const view = item.dataset.view;
 
+  // Update active state (logo/home has no nav item to activate)
   navItems.forEach(n => n.classList.remove('active'));
-  item.classList.add('active');
+  if (item.classList) item.classList.add('active');
 
   // Update browser URL
   if (pushHistory) {
@@ -688,6 +705,15 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       if (eventsListEl) eventsListEl.classList.add('hidden');
       startRotating();
       updateCategoryCounts();
+    } else if (view === 'all') {
+      currentTimeFilter = 'all';
+      discoverView.classList.remove('hidden');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.add('hidden');
+      if (categoryGrid) categoryGrid.classList.add('hidden');
+      if (eventsListEl) eventsListEl.classList.remove('hidden');
+      setFixedTitle('All');
+      renderEvents();
     } else if (view === 'today') {
       currentTimeFilter = 'today';
       discoverView.classList.remove('hidden');
@@ -908,7 +934,7 @@ function renderFavorites() {
         <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
         <div class="empty-state-title">No favorites yet</div>
         <div class="empty-state-text">Tap the heart on events you love</div>
-        <button class="btn btn-primary empty-state-cta" onclick="document.querySelector('[data-view=discover]').click()">Browse Events</button>
+        <button class="btn btn-primary empty-state-cta" onclick="navigateToView('all')">Browse Events</button>
       </div>
     `;
     return;
@@ -2285,8 +2311,7 @@ function renderCategoryGalleries() {
         c.setAttribute('aria-checked', matches ? 'true' : 'false');
       });
       currentFilter = cat;
-      const todayNav = document.querySelector('[data-view="today"]');
-      if (todayNav) handleNavClick(todayNav);
+      navigateToView('all');
     });
   });
 }

@@ -11,6 +11,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/(today|week|favorites|about)", "destination": "/index.html" }
+    { "source": "/(all|today|week|favorites|about)", "destination": "/index.html" }
   ]
 }
