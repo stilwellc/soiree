@@ -3326,6 +3326,18 @@ button:focus-visible,
   gap: 0;
 }
 
+.cat-gallery-eyebrow {
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: 0 24px;
+  margin-bottom: 6px;
+  opacity: 0.8;
+}
+
 .cat-gallery-header {
   display: flex;
   align-items: baseline;
