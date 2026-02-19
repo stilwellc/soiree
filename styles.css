@@ -3339,17 +3339,17 @@ button:focus-visible,
 
 .cat-gallery-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  padding: 0 24px 12px;
+  padding: 0 24px 6px;
 }
 
 .cat-gallery-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 22px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.92);
-  letter-spacing: -0.3px;
+  font-family: 'Jost', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.2px;
   line-height: 1;
 }
 
