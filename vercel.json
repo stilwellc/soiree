@@ -9,5 +9,8 @@
       "path": "/api/scrape",
       "schedule": "0 6 * * *"
     }
+  ],
+  "rewrites": [
+    { "source": "/(today|week|favorites|about)", "destination": "/index.html" }
   ]
 }

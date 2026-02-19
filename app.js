@@ -544,6 +544,16 @@ async function init() {
   setupEventListeners();
   updateFavoriteBadge();
   updateCategoryCounts();
+
+  // Navigate to URL path on initial load (e.g. direct link to /today)
+  const initialView = PATH_VIEWS[location.pathname] || 'discover';
+  const initialNav = document.querySelector(`[data-view="${initialView}"]`);
+  if (initialNav && initialView !== 'discover') {
+    handleNavClick(initialNav, { pushHistory: false });
+  } else {
+    // Replace state for the home path so popstate works correctly
+    history.replaceState({ view: 'discover' }, '', location.pathname);
+  }
 }
 
 // Setup Event Listeners
@@ -562,6 +572,13 @@ function setupEventListeners() {
   // Navigation
   navItems.forEach(item => {
     item.addEventListener('click', () => handleNavClick(item));
+  });
+
+  // Browser back/forward
+  window.addEventListener('popstate', (e) => {
+    const view = (e.state && e.state.view) || PATH_VIEWS[location.pathname] || 'discover';
+    const navItem = document.querySelector(`[data-view="${view}"]`);
+    if (navItem) handleNavClick(navItem, { pushHistory: false });
   });
 
   // Modal
@@ -638,11 +655,21 @@ function clearSearch() {
 }
 
 // Navigation
-function handleNavClick(item) {
+// Map view name → URL path
+const VIEW_PATHS = { discover: '/', today: '/today', week: '/week', favorites: '/favorites', about: '/about' };
+const PATH_VIEWS = { '/': 'discover', '/today': 'today', '/week': 'week', '/favorites': 'favorites', '/about': 'about' };
+
+function handleNavClick(item, { pushHistory = true } = {}) {
   const view = item.dataset.view;
 
   navItems.forEach(n => n.classList.remove('active'));
   item.classList.add('active');
+
+  // Update browser URL
+  if (pushHistory) {
+    const path = VIEW_PATHS[view] || '/';
+    history.pushState({ view }, '', path);
+  }
 
   // Find the currently visible view
   const views = [discoverView, favoritesView, aboutView];
