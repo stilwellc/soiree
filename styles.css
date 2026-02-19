@@ -2566,22 +2566,6 @@ button:focus-visible,
    Apple/Airbnb-level typography & layout.
    ================================================ */
 
-/* ── Hero (reuses .header + .greeting + .title) ─ */
-.about-header {
-  padding-bottom: 0;
-}
-
-.about-header-sub {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 16px;
-  font-weight: 300;
-  font-style: italic;
-  color: var(--accent);
-  line-height: 1.55;
-  margin-top: 10px;
-  max-width: 400px;
-}
-
 /* ── Live Stats Row ───────────────────────────── */
 .about-stats-row {
   display: grid;
