@@ -3348,7 +3348,7 @@ button:focus-visible,
   font-family: 'Jost', sans-serif;
   font-size: 18px;
   font-weight: 600;
-  color: #fff;
+  color: #ffffff !important;
   letter-spacing: -0.2px;
   line-height: 1;
 }
