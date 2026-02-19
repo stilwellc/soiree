@@ -3363,27 +3363,26 @@ button:focus-visible,
   flex-direction: row;
   gap: 12px;
   overflow-x: auto;
-  padding: 4px 24px 12px;
+  padding: 4px 0 12px 24px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 .cat-gallery-row::-webkit-scrollbar { display: none; }
 
-/* Gallery cards are narrower versions of the standard event card */
+/* 1.5 cards visible: one full card + half of the next peeks in */
 .cat-gallery-row .event-card {
-  flex: 0 0 220px;
+  flex: 0 0 calc((100vw - 48px) / 1.5);
   scroll-snap-align: start;
   animation: none;
-  min-width: 220px;
-  max-width: 220px;
+  min-width: 0;
+  max-width: 340px;
 }
 
 @media (min-width: 768px) {
   .cat-gallery-row .event-card {
-    flex: 0 0 260px;
-    min-width: 260px;
-    max-width: 260px;
+    flex: 0 0 300px;
+    max-width: 300px;
   }
 }
 
