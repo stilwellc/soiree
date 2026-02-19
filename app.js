@@ -544,14 +544,6 @@ async function init() {
   setupEventListeners();
   updateFavoriteBadge();
   updateCategoryCounts();
-
-  // Home view: show category grid, hide event list + subscribe strip
-  const categoryGrid = document.getElementById('category-grid');
-  const eventsListEl = document.getElementById('events-list');
-  const subscribeStrip = document.getElementById('subscribe-strip');
-  if (categoryGrid) categoryGrid.classList.remove('hidden');
-  if (eventsListEl) eventsListEl.classList.add('hidden');
-  if (subscribeStrip) subscribeStrip.classList.add('hidden');
 }
 
 // Setup Event Listeners
