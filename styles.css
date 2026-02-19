@@ -3318,6 +3318,7 @@ button:focus-visible,
   display: flex;
   flex-direction: column;
   gap: 32px;
+  background: var(--dark);
 }
 
 .cat-gallery-section {
