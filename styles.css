@@ -3485,8 +3485,80 @@ button:focus-visible,
 
 .subscribe-strip-form {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 12px;
   margin-top: 16px;
+}
+
+.subscribe-strip-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.subscribe-strip-label {
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.subscribe-strip-select {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 11px 14px;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.2s ease;
+}
+
+.subscribe-strip-select:focus {
+  border-color: var(--gold);
+}
+
+.subscribe-strip-select option {
+  background: #1C1C1E;
+  color: white;
+}
+
+.subscribe-strip-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.subscribe-strip-chip {
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.subscribe-strip-chip.active {
+  color: var(--dark);
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.subscribe-strip-chip:hover:not(.active) {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .subscribe-strip-input {

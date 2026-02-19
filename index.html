@@ -243,6 +243,29 @@
           <form class="subscribe-strip-form" id="subscribe-strip-form" autocomplete="off">
             <input type="email" class="subscribe-strip-input" id="subscribe-strip-email"
               placeholder="your@email.com" required aria-label="Email address">
+            <div class="subscribe-strip-field">
+              <label class="subscribe-strip-label" for="subscribe-strip-region">Location</label>
+              <select class="subscribe-strip-select" id="subscribe-strip-region" aria-label="Region">
+                <option value="nyc">New York City</option>
+                <option value="hoboken-jc">Hoboken · Jersey City</option>
+                <option value="north-nj">North NJ</option>
+                <option value="central-nj">Central NJ</option>
+                <option value="south-nj">South NJ</option>
+                <option value="jersey-shore">Jersey Shore</option>
+                <option value="philly">Philadelphia</option>
+              </select>
+            </div>
+            <div class="subscribe-strip-field">
+              <label class="subscribe-strip-label">Interests</label>
+              <div class="subscribe-strip-chips">
+                <button type="button" class="subscribe-strip-chip active" data-cat="art">Art</button>
+                <button type="button" class="subscribe-strip-chip active" data-cat="culinary">Food</button>
+                <button type="button" class="subscribe-strip-chip active" data-cat="music">Music</button>
+                <button type="button" class="subscribe-strip-chip active" data-cat="perks">Perks</button>
+                <button type="button" class="subscribe-strip-chip active" data-cat="lifestyle">Lifestyle</button>
+                <button type="button" class="subscribe-strip-chip active" data-cat="community">Community</button>
+              </div>
+            </div>
             <button type="submit" class="subscribe-strip-btn" id="subscribe-strip-btn">
               <span>Notify me</span>
             </button>

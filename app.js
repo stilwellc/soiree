@@ -2330,17 +2330,32 @@ function initSubscribeStrip() {
   const btn = document.getElementById('subscribe-strip-btn');
   if (!form) return;
 
+  // Pre-fill region from current selection
+  const regionSelect = document.getElementById('subscribe-strip-region');
+  if (regionSelect && currentRegion) {
+    const opt = regionSelect.querySelector(`option[value="${currentRegion}"]`);
+    if (opt) regionSelect.value = currentRegion;
+  }
+
+  // Chip toggles
+  form.querySelectorAll('.subscribe-strip-chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('active'));
+  });
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('subscribe-strip-email').value.trim();
     if (!email) return;
+
+    const region = regionSelect ? regionSelect.value : currentRegion;
+    const categories = [...form.querySelectorAll('.subscribe-strip-chip.active')].map(c => c.dataset.cat);
 
     btn.disabled = true;
     try {
       const resp = await fetch(`${API_BASE_URL}/api/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, region: currentRegion, categories: [] })
+        body: JSON.stringify({ email, region, categories })
       });
       const data = await resp.json();
       if (data.success) {
