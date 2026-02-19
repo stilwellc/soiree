@@ -3469,7 +3469,7 @@ button:focus-visible,
   font-weight: 600;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--dusk);
   margin-bottom: 6px;
 }
 
@@ -3522,7 +3522,7 @@ button:focus-visible,
 }
 
 .subscribe-strip-select:focus {
-  border-color: var(--gold);
+  border-color: var(--dusk);
 }
 
 .subscribe-strip-select option {
@@ -3551,9 +3551,9 @@ button:focus-visible,
 }
 
 .subscribe-strip-chip.active {
-  color: var(--dark);
-  background: var(--gold);
-  border-color: var(--gold);
+  color: white;
+  background: var(--dusk);
+  border-color: var(--dusk);
 }
 
 .subscribe-strip-chip:hover:not(.active) {
@@ -3583,7 +3583,7 @@ button:focus-visible,
 }
 
 .subscribe-strip-input:focus {
-  border-color: var(--gold);
+  border-color: var(--dusk);
   background: rgba(255, 255, 255, 0.11);
 }
 
@@ -3593,8 +3593,8 @@ button:focus-visible,
   align-items: center;
   justify-content: center;
   padding: 11px 20px;
-  background: var(--gold);
-  color: var(--dark);
+  background: var(--dusk);
+  color: white;
   border: none;
   border-radius: 12px;
   font-family: 'Jost', sans-serif;
@@ -3607,9 +3607,9 @@ button:focus-visible,
 }
 
 .subscribe-strip-btn:hover {
-  background: #c49f2a;
+  background: #b8845a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 4px 16px rgba(196, 149, 106, 0.35);
 }
 
 .subscribe-strip-btn:active {
@@ -3626,7 +3626,7 @@ button:focus-visible,
   font-family: 'Cormorant Garamond', serif;
   font-size: 20px;
   font-weight: 400;
-  color: var(--gold);
+  color: var(--dusk);
   letter-spacing: 0.3px;
   margin-top: 14px;
   text-align: center;
