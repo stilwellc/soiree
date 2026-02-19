@@ -3363,22 +3363,31 @@ button:focus-visible,
   flex-direction: row;
   gap: 12px;
   overflow-x: auto;
-  padding: 4px 0 12px 24px;
+  /* symmetric 20px gutters so the active card is centered */
+  padding: 4px 20px 12px 20px;
   scroll-snap-type: x mandatory;
+  scroll-padding-left: 20px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 .cat-gallery-row::-webkit-scrollbar { display: none; }
 
-/* 1.5 cards visible: one full + half peek */
+/* Full card centered with ~20px peek on each side */
 .cat-gallery-row .event-card {
-  flex: 0 0 calc((100vw - 48px) / 1.5);
-  scroll-snap-align: start;
+  flex: 0 0 calc(100vw - 40px - 30px); /* viewport - gutters - half-peek */
+  scroll-snap-align: center;
   animation: none;
   min-width: 0;
-  max-width: 280px;
+  max-width: 340px;
   margin-bottom: 0;
   border-radius: 24px;
+}
+
+@media (min-width: 480px) {
+  .cat-gallery-row .event-card {
+    flex: 0 0 340px;
+    max-width: 340px;
+  }
 }
 
 /* Compact header for gallery context */
@@ -3416,13 +3425,6 @@ button:focus-visible,
 }
 .cat-gallery-row .event-footer-right {
   font-size: 12px;
-}
-
-@media (min-width: 768px) {
-  .cat-gallery-row .event-card {
-    flex: 0 0 260px;
-    max-width: 260px;
-  }
 }
 
 .cat-gallery-empty {
