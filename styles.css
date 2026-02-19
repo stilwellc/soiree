@@ -2561,201 +2561,215 @@ button:focus-visible,
 
 
 /* ================================================
-   About Page — Light & Premium Redesign
+   About Page — Premium Redesign
+   Consistent with discover/favorites hero style.
+   Apple/Airbnb-level typography & layout.
    ================================================ */
 
-/* ── Hero ─────────────────────────────────────── */
-.about-hero-light {
-  padding: 48px 24px 36px;
-  text-align: center;
+/* ── Hero (reuses .header + .greeting + .title) ─ */
+.about-header {
+  padding-bottom: 0;
 }
 
-.about-hero-light-title {
+.about-header-sub {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 38px;
+  font-size: 16px;
   font-weight: 300;
-  color: var(--deep, #1C1410);
-  margin-bottom: 12px;
+  font-style: italic;
+  color: var(--accent);
+  line-height: 1.55;
+  margin-top: 10px;
+  max-width: 400px;
+}
+
+/* ── Live Stats Row ───────────────────────────── */
+.about-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 20px 24px 0;
+}
+
+.about-stat-card {
+  background: #1C1C1E;
+  border-radius: 18px;
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 2px solid rgba(255,255,255,0.06);
+  animation: cardAppear 0.7s var(--transition) both;
+}
+
+.about-stat-card:nth-child(1) { animation-delay: 0.15s; }
+.about-stat-card:nth-child(2) { animation-delay: 0.25s; }
+.about-stat-card:nth-child(3) { animation-delay: 0.35s; }
+
+.about-stat-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 500;
+  color: white;
+  line-height: 1;
   letter-spacing: -0.5px;
 }
 
-.about-hero-light-title em {
-  font-style: italic;
-  color: var(--accent, #8B7355);
-}
-
-.about-hero-light-sub {
+.about-stat-lbl {
   font-family: 'Jost', sans-serif;
-  font-size: 14px;
-  font-weight: 300;
-  line-height: 1.7;
-  color: rgba(28, 20, 16, 0.5);
-  max-width: 480px;
-  margin: 0 auto 24px;
-}
-
-/* Stat pills — same as main app's filter chips */
-.about-stats-inline {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-}
-
-.about-stat-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: 'Jost', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 400;
-  color: rgba(28, 20, 16, 0.55);
-  background: rgba(28, 20, 16, 0.04);
-  border: 1px solid rgba(28, 20, 16, 0.08);
-  border-radius: 20px;
-  padding: 6px 14px;
-  transition: opacity 0.3s ease;
-}
-
-.about-stat-pill strong {
-  font-weight: 600;
-  color: var(--deep, #1C1410);
+  color: rgba(255,255,255,0.38);
+  letter-spacing: 0.2px;
 }
 
 /* ── Content Flow ─────────────────────────────── */
 .about-flow {
-  padding: 0 16px 32px;
+  padding: 32px 24px 48px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
 }
 
-/* ── Cards (shared style) ─────────────────────── */
-.about-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 32px 24px;
-  border: 1px solid rgba(28, 20, 16, 0.06);
+/* ── Generic Section ──────────────────────────── */
+.about-section {
+  padding: 36px 0;
+  border-bottom: 1px solid rgba(28, 20, 16, 0.06);
 }
 
-.about-card-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 26px;
-  font-weight: 400;
-  color: var(--deep, #1C1410);
-  line-height: 1.3;
-  margin-bottom: 12px;
-  letter-spacing: -0.3px;
+.about-section:last-child {
+  border-bottom: none;
 }
 
-.about-card-title em {
-  font-style: italic;
-  color: var(--accent, #8B7355);
-}
-
-.about-card-text {
+.about-overline {
   font-family: 'Jost', sans-serif;
-  font-size: 14px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+}
+
+.about-overline--light {
+  color: rgba(255,255,255,0.35);
+}
+
+.about-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--deep);
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+
+.about-heading em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.about-heading--light {
+  color: white;
+}
+
+.about-heading--light em {
+  color: var(--sand);
+}
+
+.about-body {
+  font-family: 'Jost', sans-serif;
+  font-size: 15px;
   font-weight: 300;
-  line-height: 1.75;
+  line-height: 1.8;
   color: rgba(28, 20, 16, 0.55);
 }
 
-/* ── How It Works ─────────────────────────────── */
-.about-how {
-  padding: 8px 0;
-}
-
-.about-how-heading {
-  font-family: 'Jost', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: rgba(28, 20, 16, 0.35);
-  margin-bottom: 12px;
-  padding-left: 4px;
-}
-
-.about-steps {
+/* ── Process Row (horizontal scroll on mobile) ── */
+.about-process-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
 
-.about-step-card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 24px 18px;
-  border: 1px solid rgba(28, 20, 16, 0.06);
-  transition: transform 0.2s var(--transition), box-shadow 0.2s ease;
+.about-process-card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px 20px;
+  border: 1px solid rgba(28,20,16,0.07);
+  transition: transform 0.3s var(--transition), box-shadow 0.3s ease;
 }
 
-.about-step-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(28, 20, 16, 0.06);
+.about-process-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(28,20,16,0.08);
 }
 
-.about-step-num {
+.about-process-num {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 28px;
+  font-size: 38px;
   font-weight: 300;
-  color: var(--sand, #E8D5B0);
-  margin-bottom: 12px;
+  color: var(--sand);
   line-height: 1;
+  margin-bottom: 14px;
 }
 
-.about-step-title {
+.about-process-title {
   font-family: 'Jost', sans-serif;
   font-size: 15px;
-  font-weight: 500;
-  color: var(--deep, #1C1410);
-  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--deep);
+  margin-bottom: 8px;
+  letter-spacing: -0.1px;
 }
 
-.about-step-desc {
+.about-process-desc {
   font-family: 'Jost', sans-serif;
   font-size: 12.5px;
   font-weight: 300;
-  line-height: 1.65;
-  color: rgba(28, 20, 16, 0.5);
+  line-height: 1.7;
+  color: rgba(28, 20, 16, 0.48);
 }
 
-/* ── Architecture Card ────────────────────────── */
-.about-arch-card {
-  padding: 24px;
+/* ── Architecture Section ─────────────────────── */
+.about-arch-section {
+  padding-bottom: 0;
 }
 
-.about-arch-row {
+.about-arch-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
   user-select: none;
+  padding-bottom: 0;
+}
+
+.about-arch-header-left .about-overline {
+  margin-bottom: 6px;
 }
 
 .about-arch-meta {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
 }
 
 .about-arch-tag {
   font-family: ui-monospace, monospace;
   font-size: 10px;
   font-weight: 500;
-  color: rgba(28, 20, 16, 0.45);
-  background: rgba(28, 20, 16, 0.04);
+  color: rgba(28, 20, 16, 0.4);
+  background: rgba(28, 20, 16, 0.05);
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 2px 7px;
 }
 
 .about-arch-status {
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   font-weight: 400;
-  color: rgba(28, 20, 16, 0.45);
+  color: rgba(28, 20, 16, 0.4);
   display: flex;
   align-items: center;
   gap: 5px;
@@ -2775,48 +2789,46 @@ button:focus-visible,
   50% { opacity: 0.4; }
 }
 
-.about-arch-toggle {
+.about-arch-toggle-btn {
   display: flex;
   align-items: center;
   gap: 6px;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   font-weight: 500;
-  color: var(--accent, #8B7355);
+  color: var(--accent);
   background: rgba(139, 115, 85, 0.08);
   border-radius: 20px;
-  padding: 7px 14px;
+  padding: 8px 14px;
   transition: background 0.2s ease;
+  flex-shrink: 0;
 }
 
-.about-arch-toggle:hover {
+.about-arch-toggle-btn:hover {
   background: rgba(139, 115, 85, 0.14);
 }
 
-.about-arch-toggle .tech-chevron {
+.about-arch-toggle-label {
+  display: inline;
+}
+
+.tech-chevron {
   transition: transform 0.25s var(--transition);
 }
 
-/* ── Subscribe Card ───────────────────────────── */
-.about-subscribe-card {
-  background: rgba(232, 213, 176, 0.12);
-  border-color: rgba(232, 213, 176, 0.25);
+/* ── Subscribe Section ────────────────────────── */
+.about-subscribe-section {
+  background: transparent;
 }
 
-/* ── GitHub Card ──────────────────────────────── */
-.about-gh-card {
+/* ── GitHub CTA Section — dark card ──────────── */
+.about-gh-section {
+  background: #1C1C1E;
+  border-radius: 24px;
+  padding: 44px 28px;
+  border: none;
+  margin-top: 16px;
   text-align: center;
-  padding: 40px 24px;
-}
-
-.about-gh-label {
-  font-family: 'Jost', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: rgba(28, 20, 16, 0.3);
-  margin-bottom: 8px;
 }
 
 .about-gh-btn {
@@ -2826,17 +2838,19 @@ button:focus-visible,
   font-family: 'Jost', sans-serif;
   font-size: 13px;
   font-weight: 500;
-  color: #fff;
-  background: var(--deep, #1C1410);
+  color: var(--deep);
+  background: white;
   border-radius: 24px;
-  padding: 10px 22px;
+  padding: 11px 22px;
   text-decoration: none;
-  transition: all 0.25s var(--transition);
+  margin-top: 20px;
+  transition: all 0.3s var(--transition);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 
 .about-gh-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(28, 20, 16, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.3);
 }
 
 /* ── Subscription Form ────────────────────────── */
@@ -2854,18 +2868,18 @@ button:focus-visible,
 
 .subscribe-label {
   font-family: 'Jost', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: rgba(28, 20, 16, 0.4);
+  color: rgba(28, 20, 16, 0.35);
 }
 
 .subscribe-hint {
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
-  color: rgba(28, 20, 16, 0.25);
+  color: rgba(28, 20, 16, 0.22);
 }
 
 .subscribe-input,
@@ -2873,11 +2887,11 @@ button:focus-visible,
   font-family: 'Jost', sans-serif;
   font-size: 14px;
   font-weight: 400;
-  color: var(--deep, #1C1410);
-  background: #fff;
-  border: 1px solid rgba(28, 20, 16, 0.1);
-  border-radius: 10px;
-  padding: 11px 14px;
+  color: var(--deep);
+  background: white;
+  border: 1.5px solid rgba(28, 20, 16, 0.09);
+  border-radius: 12px;
+  padding: 12px 15px;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   -webkit-appearance: none;
@@ -2890,8 +2904,8 @@ button:focus-visible,
 
 .subscribe-input:focus,
 .subscribe-select:focus {
-  border-color: var(--sand, #E8D5B0);
-  box-shadow: 0 0 0 3px rgba(232, 213, 176, 0.2);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
 }
 
 .subscribe-select {
@@ -2902,7 +2916,7 @@ button:focus-visible,
   cursor: pointer;
 }
 
-/* Category Chips — match main app filter chips */
+/* Chips — match main filter chips */
 .subscribe-chips {
   display: flex;
   flex-wrap: wrap;
@@ -2912,25 +2926,27 @@ button:focus-visible,
 .subscribe-chip {
   font-family: 'Jost', sans-serif;
   font-size: 12px;
-  font-weight: 400;
-  color: rgba(28, 20, 16, 0.45);
-  background: #fff;
-  border: 1px solid rgba(28, 20, 16, 0.08);
+  font-weight: 500;
+  color: var(--accent);
+  background: rgba(28, 28, 30, 0.04);
+  border: 1.5px solid rgba(28, 28, 30, 0.08);
   border-radius: 20px;
-  padding: 6px 14px;
+  padding: 7px 15px;
   cursor: pointer;
-  transition: all 0.2s var(--transition);
+  transition: all 0.25s var(--transition);
   user-select: none;
 }
 
 .subscribe-chip:hover {
-  border-color: var(--sand, #E8D5B0);
+  background: rgba(28, 28, 30, 0.08);
+  border-color: rgba(28, 28, 30, 0.14);
 }
 
 .subscribe-chip.active {
-  background: var(--deep, #1C1410);
-  color: #fff;
-  border-color: var(--deep, #1C1410);
+  background: #1C1C1E;
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.14);
 }
 
 /* Submit Button */
@@ -2940,22 +2956,24 @@ button:focus-visible,
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 12px;
-  background: var(--deep, #1C1410);
-  color: #fff;
+  padding: 15px;
+  background: #1C1C1E;
+  color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 14px;
   font-family: 'Jost', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s var(--transition);
+  transition: all 0.3s var(--transition);
   margin-top: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+  letter-spacing: 0.2px;
 }
 
 .subscribe-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(28, 20, 16, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.22);
 }
 
 .subscribe-btn:active { transform: translateY(0); }
@@ -2973,16 +2991,16 @@ button:focus-visible,
 }
 
 .subscribe-success-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: var(--deep, #1C1410);
-  color: #fff;
+  background: #1C1C1E;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 14px;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   animation: successPop 0.4s var(--transition);
 }
@@ -2994,9 +3012,9 @@ button:focus-visible,
 
 .subscribe-success-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 400;
-  color: var(--deep, #1C1410);
+  color: var(--deep);
   margin-bottom: 6px;
 }
 
@@ -3028,12 +3046,15 @@ button:focus-visible,
 
 /* ── About Mobile ─────────────────────────────── */
 @media (max-width: 600px) {
-  .about-hero-light-title { font-size: 30px; }
-  .about-steps { grid-template-columns: 1fr; gap: 10px; }
-  .about-step-card { padding: 20px 16px; }
-  .about-card { padding: 24px 20px; }
-  .about-arch-toggle span { display: none; }
-  .about-stat-pill { font-size: 11px; padding: 5px 11px; }
+  .about-stats-row { grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 16px 16px 0; }
+  .about-stat-val { font-size: 22px; }
+  .about-stat-lbl { font-size: 10px; }
+  .about-flow { padding: 24px 16px 36px; }
+  .about-heading { font-size: 26px; }
+  .about-process-row { grid-template-columns: 1fr; gap: 10px; }
+  .about-process-card { padding: 20px 18px; }
+  .about-arch-toggle-label { display: none; }
+  .about-gh-section { padding: 36px 20px; border-radius: 20px; }
 }
 
 
@@ -3295,16 +3316,6 @@ button:focus-visible,
   color: rgba(255, 255, 255, 0.22);
 }
 
-/* ---- About Page Mobile ---- */
-@media (max-width: 480px) {
-  .about-flow {
-    padding: 0 16px 16px;
-  }
-
-  .about-stat-num {
-    font-size: 26px;
-  }
-}
 
 #network-graph {
   width: 100%;
