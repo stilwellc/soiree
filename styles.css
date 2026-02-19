@@ -3326,16 +3326,16 @@ button:focus-visible,
   gap: 0;
 }
 
-.cat-gallery-eyebrow {
-  font-family: 'Jost', sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--gold);
+.cat-gallery-desc {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.42);
   padding: 0 24px;
-  margin-bottom: 6px;
-  opacity: 0.8;
+  margin-bottom: 14px;
+  line-height: 1.3;
+  letter-spacing: 0.1px;
 }
 
 .cat-gallery-header {
