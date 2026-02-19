@@ -450,6 +450,7 @@ function handleRegionChange(newRegion) {
     localStorage.setItem('soireeManualRegion', 'true');
     updateRegionUI();
     renderEvents(); // Refresh events
+    updateCategoryCounts();
   }
 
   closeRegionDropdown();
@@ -542,6 +543,15 @@ async function init() {
   renderEvents();
   setupEventListeners();
   updateFavoriteBadge();
+  updateCategoryCounts();
+
+  // Home view: show category grid, hide event list + subscribe strip
+  const categoryGrid = document.getElementById('category-grid');
+  const eventsListEl = document.getElementById('events-list');
+  const subscribeStrip = document.getElementById('subscribe-strip');
+  if (categoryGrid) categoryGrid.classList.remove('hidden');
+  if (eventsListEl) eventsListEl.classList.add('hidden');
+  if (subscribeStrip) subscribeStrip.classList.add('hidden');
 }
 
 // Setup Event Listeners
@@ -647,18 +657,29 @@ function handleNavClick(item) {
   const visibleView = views.find(v => !v.classList.contains('hidden'));
 
   function showView() {
+    const categoryGrid = document.getElementById('category-grid');
+    const eventsListEl = document.getElementById('events-list');
+    const subscribeStrip = document.getElementById('subscribe-strip');
+
     if (view === 'discover') {
       currentTimeFilter = 'all';
       discoverView.classList.remove('hidden');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
+      // Home = category discovery; hide event list + strip
+      if (categoryGrid) categoryGrid.classList.remove('hidden');
+      if (eventsListEl) eventsListEl.classList.add('hidden');
+      if (subscribeStrip) subscribeStrip.classList.add('hidden');
       startRotating();
-      renderEvents();
+      updateCategoryCounts();
     } else if (view === 'today') {
       currentTimeFilter = 'today';
       discoverView.classList.remove('hidden');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
+      if (categoryGrid) categoryGrid.classList.add('hidden');
+      if (eventsListEl) eventsListEl.classList.remove('hidden');
+      if (subscribeStrip) subscribeStrip.classList.remove('hidden');
       setFixedTitle("Today's");
       renderEvents();
     } else if (view === 'week') {
@@ -666,6 +687,9 @@ function handleNavClick(item) {
       discoverView.classList.remove('hidden');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
+      if (categoryGrid) categoryGrid.classList.add('hidden');
+      if (eventsListEl) eventsListEl.classList.remove('hidden');
+      if (subscribeStrip) subscribeStrip.classList.remove('hidden');
       setFixedTitle("This Week's");
       renderEvents();
     } else if (view === 'favorites') {
@@ -2200,6 +2224,81 @@ function toggleFreeMode() {
   showToast(freeMode ? 'Showing free events only' : 'Showing all events');
 }
 
+// ── Category Discovery ───────────────────────────────
+const CATEGORY_LABELS = {
+  art: 'Art & Culture',
+  culinary: 'Food & Drink',
+  music: 'Music',
+  lifestyle: 'Lifestyle',
+  community: 'Community',
+  perks: 'Perks',
+};
+
+function updateCategoryCounts() {
+  Object.keys(CATEGORY_LABELS).forEach(cat => {
+    const el = document.getElementById(`cat-count-${cat}`);
+    if (!el) return;
+    const count = events.filter(e => e.category === cat && matchesCurrentRegion(e)).length;
+    el.textContent = count > 0 ? count : '—';
+  });
+
+  // Attach click handlers (idempotent via flag)
+  document.querySelectorAll('.cat-card').forEach(card => {
+    if (card._soireeHandlerAttached) return;
+    card._soireeHandlerAttached = true;
+    card.addEventListener('click', () => {
+      const cat = card.dataset.cat;
+      // Activate matching filter chip
+      document.querySelectorAll('.filter-chip').forEach(c => {
+        const matches = c.dataset.filter === cat;
+        c.classList.toggle('active', matches);
+        c.setAttribute('aria-checked', matches ? 'true' : 'false');
+      });
+      currentFilter = cat;
+      // Navigate to Today view
+      const todayNav = document.querySelector('[data-view="today"]');
+      if (todayNav) handleNavClick(todayNav);
+    });
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+    });
+  });
+}
+
+// ── Inline Subscribe Strip ───────────────────────────
+function initSubscribeStrip() {
+  const form = document.getElementById('subscribe-strip-form');
+  const successEl = document.getElementById('subscribe-strip-success');
+  const btn = document.getElementById('subscribe-strip-btn');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('subscribe-strip-email').value.trim();
+    if (!email) return;
+
+    btn.disabled = true;
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, region: currentRegion, categories: [] })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        form.style.display = 'none';
+        successEl.style.display = 'block';
+      } else {
+        alert(data.error || 'Something went wrong. Please try again.');
+        btn.disabled = false;
+      }
+    } catch {
+      alert('Network error. Please try again.');
+      btn.disabled = false;
+    }
+  });
+}
+
 // ── Email Subscription ──────────────────────────────
 function initSubscribeForm() {
   const form = document.getElementById('subscribe-form');
@@ -2277,6 +2376,7 @@ if (document.readyState === 'loading') {
     init();
     initRotatingTitle();
     initSubscribeForm();
+    initSubscribeStrip();
 
     const freeCheckbox = document.getElementById('free-mode-toggle');
     if (freeCheckbox) freeCheckbox.addEventListener('change', toggleFreeMode);
