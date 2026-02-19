@@ -651,17 +651,14 @@ function handleNavClick(item) {
   function showView() {
     const categoryGrid = document.getElementById('category-grid');
     const eventsListEl = document.getElementById('events-list');
-    const subscribeStrip = document.getElementById('subscribe-strip');
 
     if (view === 'discover') {
       currentTimeFilter = 'all';
       discoverView.classList.remove('hidden');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
-      // Home = category discovery; hide event list + strip
       if (categoryGrid) categoryGrid.classList.remove('hidden');
       if (eventsListEl) eventsListEl.classList.add('hidden');
-      if (subscribeStrip) subscribeStrip.classList.add('hidden');
       startRotating();
       updateCategoryCounts();
     } else if (view === 'today') {
@@ -671,7 +668,6 @@ function handleNavClick(item) {
       aboutView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
-      if (subscribeStrip) subscribeStrip.classList.remove('hidden');
       setFixedTitle("Today's");
       renderEvents();
     } else if (view === 'week') {
@@ -681,7 +677,6 @@ function handleNavClick(item) {
       aboutView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
-      if (subscribeStrip) subscribeStrip.classList.remove('hidden');
       setFixedTitle("This Week's");
       renderEvents();
     } else if (view === 'favorites') {
@@ -2216,46 +2211,61 @@ function toggleFreeMode() {
   showToast(freeMode ? 'Showing free events only' : 'Showing all events');
 }
 
-// ── Category Discovery ───────────────────────────────
-const CATEGORY_LABELS = {
-  art: 'Art & Culture',
-  culinary: 'Food & Drink',
-  music: 'Music',
-  lifestyle: 'Lifestyle',
-  community: 'Community',
-  perks: 'Perks',
-};
+// ── Category Galleries ───────────────────────────────
+const GALLERY_CATEGORIES = ['art', 'culinary', 'perks'];
 
-function updateCategoryCounts() {
-  Object.keys(CATEGORY_LABELS).forEach(cat => {
-    const el = document.getElementById(`cat-count-${cat}`);
-    if (!el) return;
-    const count = events.filter(e => e.category === cat && matchesCurrentRegion(e)).length;
-    el.textContent = count > 0 ? count : '—';
+function renderCategoryGalleries() {
+  GALLERY_CATEGORIES.forEach(cat => {
+    const row = document.getElementById(`gallery-${cat}`);
+    if (!row) return;
+
+    // Pick up to 5 random region-matched events for this category
+    const pool = events.filter(e => e.category === cat && matchesCurrentRegion(e));
+    const picked = pool.length <= 5 ? pool : pool.sort(() => Math.random() - 0.5).slice(0, 5);
+
+    if (picked.length === 0) {
+      row.innerHTML = `<div class="cat-gallery-empty">No events found in this area</div>`;
+      return;
+    }
+
+    row.innerHTML = picked.map((event, i) => createEventCard(event, i)).join('');
+
+    // Wire up card click → modal (same as main list)
+    row.querySelectorAll('.event-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (!e.target.closest('.favorite-btn')) {
+          openModal(parseInt(card.dataset.id));
+        }
+      });
+    });
+    row.querySelectorAll('.favorite-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFavorite(parseInt(btn.dataset.id));
+      });
+    });
   });
 
-  // Attach click handlers (idempotent via flag)
-  document.querySelectorAll('.cat-card').forEach(card => {
-    if (card._soireeHandlerAttached) return;
-    card._soireeHandlerAttached = true;
-    card.addEventListener('click', () => {
-      const cat = card.dataset.cat;
-      // Activate matching filter chip
+  // "See all" buttons → navigate to Today filtered by category
+  document.querySelectorAll('.cat-gallery-see-all').forEach(btn => {
+    if (btn._soireeHandlerAttached) return;
+    btn._soireeHandlerAttached = true;
+    btn.addEventListener('click', () => {
+      const cat = btn.dataset.cat;
       document.querySelectorAll('.filter-chip').forEach(c => {
         const matches = c.dataset.filter === cat;
         c.classList.toggle('active', matches);
         c.setAttribute('aria-checked', matches ? 'true' : 'false');
       });
       currentFilter = cat;
-      // Navigate to Today view
       const todayNav = document.querySelector('[data-view="today"]');
       if (todayNav) handleNavClick(todayNav);
     });
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
-    });
   });
 }
+
+// Keep old name as alias so region-change call still works
+function updateCategoryCounts() { renderCategoryGalleries(); }
 
 // ── Inline Subscribe Strip ───────────────────────────
 function initSubscribeStrip() {

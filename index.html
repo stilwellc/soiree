@@ -206,50 +206,47 @@
           aria-checked="false">Community</button>
       </section>
 
-      <!-- Category Discovery Grid (home/All view) -->
-      <div id="category-grid" class="category-grid" aria-label="Browse by category">
-        <div class="cat-card" data-cat="art" role="button" tabindex="0" aria-label="Art & Culture events">
-          <div class="cat-card-bg"></div>
-          <div class="cat-card-body">
-            <span class="cat-card-count" id="cat-count-art">—</span>
-            <h3 class="cat-card-name">Art & Culture</h3>
+      <!-- Category Galleries (home view) -->
+      <div id="category-grid" class="category-galleries" aria-label="Browse by category">
+
+        <div class="cat-gallery-section" data-cat="art">
+          <div class="cat-gallery-header">
+            <h2 class="cat-gallery-title">Art &amp; Culture</h2>
+            <button class="cat-gallery-see-all" data-cat="art">See all</button>
           </div>
+          <div class="cat-gallery-row" id="gallery-art"></div>
         </div>
-        <div class="cat-card" data-cat="culinary" role="button" tabindex="0" aria-label="Food & Drink events">
-          <div class="cat-card-bg"></div>
-          <div class="cat-card-body">
-            <span class="cat-card-count" id="cat-count-culinary">—</span>
-            <h3 class="cat-card-name">Food & Drink</h3>
+
+        <div class="cat-gallery-section" data-cat="culinary">
+          <div class="cat-gallery-header">
+            <h2 class="cat-gallery-title">Food &amp; Drink</h2>
+            <button class="cat-gallery-see-all" data-cat="culinary">See all</button>
           </div>
+          <div class="cat-gallery-row" id="gallery-culinary"></div>
         </div>
-        <div class="cat-card" data-cat="music" role="button" tabindex="0" aria-label="Music events">
-          <div class="cat-card-bg"></div>
-          <div class="cat-card-body">
-            <span class="cat-card-count" id="cat-count-music">—</span>
-            <h3 class="cat-card-name">Music</h3>
+
+        <div class="cat-gallery-section" data-cat="perks">
+          <div class="cat-gallery-header">
+            <h2 class="cat-gallery-title">Perks</h2>
+            <button class="cat-gallery-see-all" data-cat="perks">See all</button>
           </div>
+          <div class="cat-gallery-row" id="gallery-perks"></div>
         </div>
-        <div class="cat-card" data-cat="lifestyle" role="button" tabindex="0" aria-label="Lifestyle events">
-          <div class="cat-card-bg"></div>
-          <div class="cat-card-body">
-            <span class="cat-card-count" id="cat-count-lifestyle">—</span>
-            <h3 class="cat-card-name">Lifestyle</h3>
-          </div>
+
+        <!-- Subscribe Strip (home view, after galleries) -->
+        <div class="subscribe-strip" id="subscribe-strip-home">
+          <p class="subscribe-strip-eyebrow">Stay in the loop</p>
+          <p class="subscribe-strip-text">New events delivered to your inbox.</p>
+          <form class="subscribe-strip-form" id="subscribe-strip-form" autocomplete="off">
+            <input type="email" class="subscribe-strip-input" id="subscribe-strip-email"
+              placeholder="your@email.com" required aria-label="Email address">
+            <button type="submit" class="subscribe-strip-btn" id="subscribe-strip-btn">
+              <span>Notify me</span>
+            </button>
+          </form>
+          <p class="subscribe-strip-success" id="subscribe-strip-success" style="display:none;">You're in ✦</p>
         </div>
-        <div class="cat-card" data-cat="community" role="button" tabindex="0" aria-label="Community events">
-          <div class="cat-card-bg"></div>
-          <div class="cat-card-body">
-            <span class="cat-card-count" id="cat-count-community">—</span>
-            <h3 class="cat-card-name">Community</h3>
-          </div>
-        </div>
-        <div class="cat-card" data-cat="perks" role="button" tabindex="0" aria-label="Perks events">
-          <div class="cat-card-bg"></div>
-          <div class="cat-card-body">
-            <span class="cat-card-count" id="cat-count-perks">—</span>
-            <h3 class="cat-card-name">Perks</h3>
-          </div>
-        </div>
+
       </div>
 
       <!-- Events List (Today / This Week views) -->
@@ -259,20 +256,6 @@
           <p>Loading amazing events...</p>
         </div>
       </section>
-
-      <!-- Subscribe Strip (shown below event list) -->
-      <div class="subscribe-strip hidden" id="subscribe-strip">
-        <p class="subscribe-strip-eyebrow">Stay in the loop</p>
-        <p class="subscribe-strip-text">New events delivered to your inbox.</p>
-        <form class="subscribe-strip-form" id="subscribe-strip-form" autocomplete="off">
-          <input type="email" class="subscribe-strip-input" id="subscribe-strip-email"
-            placeholder="your@email.com" required aria-label="Email address">
-          <button type="submit" class="subscribe-strip-btn" id="subscribe-strip-btn">
-            <span>Notify me</span>
-          </button>
-        </form>
-        <p class="subscribe-strip-success" id="subscribe-strip-success" style="display:none;">You're in ✦</p>
-      </div>
 
     </div>
 
