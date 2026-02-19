@@ -3318,7 +3318,6 @@ button:focus-visible,
   display: flex;
   flex-direction: column;
   gap: 32px;
-  background: var(--dark);
 }
 
 .cat-gallery-section {
@@ -3331,7 +3330,7 @@ button:focus-visible,
   font-family: 'Jost', sans-serif;
   font-size: 13px;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(0, 0, 0, 0.45);
   padding: 0 24px;
   margin-bottom: 14px;
   line-height: 1.4;
@@ -3349,7 +3348,7 @@ button:focus-visible,
   font-family: 'Jost', sans-serif;
   font-size: 18px;
   font-weight: 600;
-  color: #ffffff !important;
+  color: var(--dark);
   letter-spacing: -0.2px;
   line-height: 1;
 }
