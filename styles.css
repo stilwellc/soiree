@@ -3374,7 +3374,7 @@ button:focus-visible,
 
 /* Full card centered with ~20px peek on each side */
 .cat-gallery-row .event-card {
-  flex: 0 0 calc(100vw - 40px - 30px); /* viewport - gutters - half-peek */
+  flex: 0 0 calc(100vw - 40px - 70px); /* viewport - gutters - peek */
   scroll-snap-align: center;
   animation: none;
   min-width: 0;
