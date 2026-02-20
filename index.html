@@ -78,8 +78,8 @@
   <main class="app-container">
     <!-- Discover View -->
     <div id="discover-view" class="view-home">
-      <!-- Hero -->
-      <header class="hero">
+      <!-- Hero — Full-viewport immersive -->
+      <header class="hero hero-landing">
         <div class="hero-bg" aria-hidden="true"></div>
         <div class="hero-grain" aria-hidden="true"></div>
         <div class="hero-content">
@@ -100,6 +100,9 @@
 
           <!-- Region picker panel — shown when location toggle is tapped -->
           <div class="hero-region-panel" id="hero-region-panel" aria-hidden="true">
+            <button class="region-panel-close" id="region-panel-close" aria-label="Close region picker">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
             <p class="region-panel-eyebrow">Where are you?</p>
             <div class="region-panel-list">
 
@@ -157,8 +160,14 @@
               </svg>
             </button>
           </div>
+
         </div>
       </header>
+
+      <!-- Value Line -->
+      <p class="value-line" aria-label="Platform highlights">
+        Curating <span class="value-line-num" id="value-events">120</span> experiences for you — 100% free.
+      </p>
 
       <!-- Search -->
       <section class="search-container event-controls" aria-label="Search events"
@@ -209,69 +218,114 @@
       <!-- Category Galleries (home view) -->
       <div id="category-grid" class="category-galleries" aria-label="Browse by category">
 
-        <div class="cat-gallery-section" data-cat="art">
+        <div class="cat-gallery-section reveal-section" data-cat="art">
           <div class="cat-gallery-header">
-            <div class="cat-gallery-title">Art &amp; Culture</div>
-            <button class="cat-gallery-see-all" data-cat="art">See all</button>
+            <div>
+              <span class="cat-gallery-overline">01</span>
+              <div class="cat-gallery-title">Art &amp; Culture</div>
+              <p class="cat-gallery-desc">Galleries, openings &amp; immersive experiences</p>
+            </div>
+            <button class="cat-gallery-see-all" data-cat="art">Explore
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
           </div>
-          <p class="cat-gallery-desc">Galleries, openings &amp; immersive experiences</p>
           <div class="cat-gallery-row" id="gallery-art"></div>
         </div>
 
-        <div class="cat-gallery-section" data-cat="culinary">
+        <div class="cat-gallery-section reveal-section" data-cat="culinary">
           <div class="cat-gallery-header">
-            <div class="cat-gallery-title">Food &amp; Drink</div>
-            <button class="cat-gallery-see-all" data-cat="culinary">See all</button>
+            <div>
+              <span class="cat-gallery-overline">02</span>
+              <div class="cat-gallery-title">Food &amp; Drink</div>
+              <p class="cat-gallery-desc">Pop-ups, tastings &amp; chef's tables</p>
+            </div>
+            <button class="cat-gallery-see-all" data-cat="culinary">Explore
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
           </div>
-          <p class="cat-gallery-desc">Pop-ups, tastings &amp; chef's tables</p>
           <div class="cat-gallery-row" id="gallery-culinary"></div>
         </div>
 
-        <div class="cat-gallery-section" data-cat="perks">
+        <div class="cat-gallery-section reveal-section" data-cat="perks">
           <div class="cat-gallery-header">
-            <div class="cat-gallery-title">Perks</div>
-            <button class="cat-gallery-see-all" data-cat="perks">See all</button>
+            <div>
+              <span class="cat-gallery-overline">03</span>
+              <div class="cat-gallery-title">Perks</div>
+              <p class="cat-gallery-desc">Members-only access &amp; exclusive offers</p>
+            </div>
+            <button class="cat-gallery-see-all" data-cat="perks">Explore
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
           </div>
-          <p class="cat-gallery-desc">Members-only access &amp; exclusive offers</p>
           <div class="cat-gallery-row" id="gallery-perks"></div>
         </div>
 
-        <!-- Subscribe Strip (home view, after galleries) -->
-        <div class="subscribe-strip" id="subscribe-strip-home">
-          <p class="subscribe-strip-eyebrow">Stay in the loop</p>
-          <p class="subscribe-strip-text">New events delivered to your inbox.</p>
-          <form class="subscribe-strip-form" id="subscribe-strip-form" autocomplete="off">
-            <input type="email" class="subscribe-strip-input" id="subscribe-strip-email"
-              placeholder="your@email.com" required aria-label="Email address">
-            <div class="subscribe-strip-field">
-              <label class="subscribe-strip-label" for="subscribe-strip-region">Location</label>
-              <select class="subscribe-strip-select" id="subscribe-strip-region" aria-label="Region">
-                <option value="nyc">New York City</option>
-                <option value="hoboken-jc">Hoboken · Jersey City</option>
-                <option value="north-nj">North NJ</option>
-                <option value="central-nj">Central NJ</option>
-                <option value="south-nj">South NJ</option>
-                <option value="jersey-shore">Jersey Shore</option>
-                <option value="philly">Philadelphia</option>
-              </select>
-            </div>
-            <div class="subscribe-strip-field">
-              <label class="subscribe-strip-label">Interests</label>
-              <div class="subscribe-strip-chips">
-                <button type="button" class="subscribe-strip-chip active" data-cat="art">Art</button>
-                <button type="button" class="subscribe-strip-chip active" data-cat="culinary">Food</button>
-                <button type="button" class="subscribe-strip-chip active" data-cat="music">Music</button>
-                <button type="button" class="subscribe-strip-chip active" data-cat="perks">Perks</button>
-                <button type="button" class="subscribe-strip-chip active" data-cat="lifestyle">Lifestyle</button>
-                <button type="button" class="subscribe-strip-chip active" data-cat="community">Community</button>
+        <!-- Subscribe Strip — Full-bleed editorial CTA -->
+        <section class="subscribe-section reveal-section" id="subscribe-strip-home">
+          <div class="subscribe-section-bg" aria-hidden="true"></div>
+          <div class="subscribe-section-content">
+            <p class="subscribe-section-eyebrow">Stay in the loop</p>
+            <h2 class="subscribe-section-heading">Never miss<br><em>what matters.</em></h2>
+            <p class="subscribe-section-text">Get a curated digest of new events matching your interests, delivered straight to your inbox.</p>
+            <form class="subscribe-strip-form" id="subscribe-strip-form" autocomplete="off">
+              <div class="subscribe-form-row">
+                <input type="email" class="subscribe-strip-input" id="subscribe-strip-email"
+                  placeholder="your@email.com" required aria-label="Email address">
+                <button type="submit" class="subscribe-strip-btn" id="subscribe-strip-btn">
+                  <span>Notify me</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
               </div>
+              <div class="subscribe-strip-field">
+                <label class="subscribe-strip-label" for="subscribe-strip-region">Location</label>
+                <select class="subscribe-strip-select" id="subscribe-strip-region" aria-label="Region">
+                  <option value="nyc">New York City</option>
+                  <option value="hoboken-jc">Hoboken · Jersey City</option>
+                  <option value="north-nj">North NJ</option>
+                  <option value="central-nj">Central NJ</option>
+                  <option value="south-nj">South NJ</option>
+                  <option value="jersey-shore">Jersey Shore</option>
+                  <option value="philly">Philadelphia</option>
+                </select>
+              </div>
+              <div class="subscribe-strip-field">
+                <label class="subscribe-strip-label">Interests</label>
+                <div class="subscribe-strip-chips">
+                  <button type="button" class="subscribe-strip-chip active" data-cat="art">Art</button>
+                  <button type="button" class="subscribe-strip-chip active" data-cat="culinary">Food</button>
+                  <button type="button" class="subscribe-strip-chip active" data-cat="music">Music</button>
+                  <button type="button" class="subscribe-strip-chip active" data-cat="perks">Perks</button>
+                  <button type="button" class="subscribe-strip-chip active" data-cat="lifestyle">Lifestyle</button>
+                  <button type="button" class="subscribe-strip-chip active" data-cat="community">Community</button>
+                </div>
+              </div>
+            </form>
+            <p class="subscribe-strip-success" id="subscribe-strip-success" style="display:none;">You're in. We'll be in touch.</p>
+          </div>
+        </section>
+
+        <!-- How It Works — Editorial -->
+        <section class="home-how-section reveal-section">
+          <p class="editorial-overline">How It Works</p>
+          <h2 class="editorial-heading">Fresh events, every morning.<br><em>Zero effort.</em></h2>
+          <div class="home-how-steps">
+            <div class="home-how-step">
+              <div class="home-how-num">01</div>
+              <h3 class="home-how-title">We Scrape</h3>
+              <p class="home-how-desc">Automated crawlers pull from 12+ curated sources every morning at 6 AM.</p>
             </div>
-            <button type="submit" class="subscribe-strip-btn" id="subscribe-strip-btn">
-              <span>Notify me</span>
-            </button>
-          </form>
-          <p class="subscribe-strip-success" id="subscribe-strip-success" style="display:none;">You're in ✦</p>
-        </div>
+            <div class="home-how-step">
+              <div class="home-how-num">02</div>
+              <h3 class="home-how-title">We Curate</h3>
+              <p class="home-how-desc">Events are deduplicated, categorized, and enriched with details you care about.</p>
+            </div>
+            <div class="home-how-step">
+              <div class="home-how-num">03</div>
+              <h3 class="home-how-title">You Discover</h3>
+              <p class="home-how-desc">Browse by category, save favorites, and never miss what matters to you.</p>
+            </div>
+          </div>
+        </section>
 
       </div>
 
@@ -545,6 +599,7 @@
     <!-- Footer (Global) -->
     <footer class="app-footer">
       <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="footer-logo">
+      <p class="footer-tagline">Curating local experience.</p>
     </footer>
   </main>
 

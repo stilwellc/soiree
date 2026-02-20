@@ -477,18 +477,22 @@ function unlockBodyScroll() {
 // Toggle region picker (morphs hero title ↔ city list)
 function toggleRegionDropdown() {
   const hero = document.querySelector('.hero');
+  const backdrop = document.getElementById('region-backdrop');
   if (!hero) return;
   const opening = !hero.classList.contains('hero--picking');
   hero.classList.toggle('hero--picking');
+  if (backdrop) backdrop.classList.toggle('active', opening);
   opening ? lockBodyScroll() : unlockBodyScroll();
 }
 
 // Close region picker
 function closeRegionDropdown() {
   const hero = document.querySelector('.hero');
+  const backdrop = document.getElementById('region-backdrop');
   if (!hero) return;
   if (hero.classList.contains('hero--picking')) {
     hero.classList.remove('hero--picking');
+    if (backdrop) backdrop.classList.remove('active');
     unlockBodyScroll();
   }
 }
@@ -544,6 +548,7 @@ async function init() {
   setupEventListeners();
   updateFavoriteBadge();
   updateCategoryCounts();
+  updateValueStrip();
 
   // Navigate to URL path on initial load (e.g. direct link to /today)
   const initialView = PATH_VIEWS[location.pathname] || 'discover';
@@ -598,6 +603,14 @@ function setupEventListeners() {
   if (regionToggle) {
     regionToggle.addEventListener('click', toggleRegionDropdown);
   }
+  const regionPanelClose = document.getElementById('region-panel-close');
+  if (regionPanelClose) {
+    regionPanelClose.addEventListener('click', closeRegionDropdown);
+  }
+  const regionBackdrop = document.getElementById('region-backdrop');
+  if (regionBackdrop) {
+    regionBackdrop.addEventListener('click', closeRegionDropdown);
+  }
 
   document.querySelectorAll('.region-panel-option').forEach(option => {
     option.addEventListener('click', () => {
@@ -606,18 +619,13 @@ function setupEventListeners() {
     });
   });
 
-  // Prevent page scroll when touching the region picker panel (iOS fix)
+  // On desktop, prevent page scroll when touching the region picker panel
   const regionPanel = document.getElementById('hero-region-panel');
-  const regionPanelList = regionPanel && regionPanel.querySelector('.region-panel-list');
   if (regionPanel) {
     regionPanel.addEventListener('touchmove', (e) => {
-      e.preventDefault();
+      // Only prevent default on desktop (inline panel); full-screen mobile needs to scroll
+      if (window.innerWidth >= 768) e.preventDefault();
     }, { passive: false });
-  }
-  if (regionPanelList) {
-    regionPanelList.addEventListener('touchmove', (e) => {
-      e.stopPropagation();
-    }, { passive: true });
   }
 
   // Keyboard navigation
@@ -2372,6 +2380,31 @@ function initSubscribeStrip() {
   });
 }
 
+// ── Scroll Reveal ──────────────────────────────────
+function initScrollReveal() {
+  const sections = document.querySelectorAll('.reveal-section');
+  if (!sections.length) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+  sections.forEach(s => observer.observe(s));
+}
+
+// ── Value strip event count ────────────────────────
+function updateValueStrip() {
+  const el = document.getElementById('value-events');
+  if (el && events.length > 0) {
+    el.textContent = events.length;
+  }
+}
+
 // ── Email Subscription ──────────────────────────────
 function initSubscribeForm() {
   const form = document.getElementById('subscribe-form');
@@ -2450,6 +2483,8 @@ if (document.readyState === 'loading') {
     initRotatingTitle();
     initSubscribeForm();
     initSubscribeStrip();
+    initScrollReveal();
+    updateValueStrip();
 
     const freeCheckbox = document.getElementById('free-mode-toggle');
     if (freeCheckbox) freeCheckbox.addEventListener('change', toggleFreeMode);
