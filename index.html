@@ -98,50 +98,86 @@
             <p class="hero-sub">Curating local experience. Connecting communities.</p>
           </div>
 
-          <!-- Region picker panel — shown when location toggle is tapped -->
+          <!-- Region picker panel — full-screen immersive overlay -->
           <div class="hero-region-panel" id="hero-region-panel" aria-hidden="true">
-            <button class="region-panel-close" id="region-panel-close" aria-label="Close region picker">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-            <p class="region-panel-eyebrow">Where are you?</p>
-            <div class="region-panel-list">
+            <div class="region-panel-bg" aria-hidden="true"></div>
+            <div class="region-panel-inner">
+              <button class="region-panel-close" id="region-panel-close" aria-label="Close region picker">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
 
-              <div class="region-panel-option region-panel-option--auto" data-region="auto">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                  class="region-panel-auto-icon" aria-hidden="true">
-                  <circle cx="12" cy="12" r="3" />
-                  <path
-                    d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1l2.1-2.1M17 7l2.1-2.1" />
+              <div class="region-panel-hero">
+                <svg class="region-panel-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
                 </svg>
-                Auto-detect
+                <h2 class="region-panel-title">Choose your city</h2>
+                <p class="region-panel-subtitle">We'll show you what's happening nearby.</p>
               </div>
 
-              <div class="region-panel-divider"></div>
+              <div class="region-panel-list">
+                <div class="region-panel-option region-panel-option--auto" data-region="auto">
+                  <div class="region-option-content">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                      class="region-panel-auto-icon" aria-hidden="true">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1l2.1-2.1M17 7l2.1-2.1" />
+                    </svg>
+                    <span>Auto-detect</span>
+                  </div>
+                  <span class="region-option-arrow">→</span>
+                </div>
 
-              <div class="region-panel-group">
-                <div class="region-panel-group-label">New York</div>
-                <div class="region-panel-option" data-region="nyc">New York City</div>
+                <div class="region-panel-divider"></div>
+
+                <div class="region-panel-group">
+                  <div class="region-panel-group-label">New York</div>
+                  <div class="region-panel-option" data-region="nyc">
+                    <span class="region-option-content">New York City</span>
+                    <span class="region-option-arrow">→</span>
+                  </div>
+                </div>
+
+                <div class="region-panel-divider"></div>
+
+                <div class="region-panel-group">
+                  <div class="region-panel-group-label">New Jersey</div>
+                  <div class="region-panel-option" data-region="hoboken-jc">
+                    <span class="region-option-content">Hoboken · Jersey City</span>
+                    <span class="region-option-arrow">→</span>
+                  </div>
+                  <div class="region-panel-option" data-region="nj-state">
+                    <span class="region-option-content">Statewide</span>
+                    <span class="region-option-arrow">→</span>
+                  </div>
+                  <div class="region-panel-option" data-region="north-nj">
+                    <span class="region-option-content">North NJ</span>
+                    <span class="region-option-arrow">→</span>
+                  </div>
+                  <div class="region-panel-option" data-region="central-nj">
+                    <span class="region-option-content">Central NJ</span>
+                    <span class="region-option-arrow">→</span>
+                  </div>
+                  <div class="region-panel-option" data-region="south-nj">
+                    <span class="region-option-content">South NJ</span>
+                    <span class="region-option-arrow">→</span>
+                  </div>
+                  <div class="region-panel-option" data-region="jersey-shore">
+                    <span class="region-option-content">Jersey Shore</span>
+                    <span class="region-option-arrow">→</span>
+                  </div>
+                </div>
+
+                <div class="region-panel-divider"></div>
+
+                <div class="region-panel-group">
+                  <div class="region-panel-group-label">Pennsylvania</div>
+                  <div class="region-panel-option" data-region="philly">
+                    <span class="region-option-content">Philadelphia</span>
+                    <span class="region-option-arrow">→</span>
+                  </div>
+                </div>
               </div>
-
-              <div class="region-panel-divider"></div>
-
-              <div class="region-panel-group">
-                <div class="region-panel-group-label">New Jersey</div>
-                <div class="region-panel-option" data-region="hoboken-jc">Hoboken · Jersey City</div>
-                <div class="region-panel-option" data-region="nj-state">Statewide</div>
-                <div class="region-panel-option" data-region="north-nj">North NJ</div>
-                <div class="region-panel-option" data-region="central-nj">Central NJ</div>
-                <div class="region-panel-option" data-region="south-nj">South NJ</div>
-                <div class="region-panel-option" data-region="jersey-shore">Jersey Shore</div>
-              </div>
-
-              <div class="region-panel-divider"></div>
-
-              <div class="region-panel-group">
-                <div class="region-panel-group-label">Pennsylvania</div>
-                <div class="region-panel-option" data-region="philly">Philadelphia</div>
-              </div>
-
             </div>
           </div>
 
