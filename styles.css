@@ -4439,30 +4439,34 @@ button:focus-visible,
 
 #social-view {
   min-height: 100vh;
-  background: #FAF8F3;
+  background: var(--dusk);
   padding: 0;
 }
 
 .social-posts-container {
   display: flex;
   flex-direction: column;
-  gap: 48px;
-  padding: 48px 24px;
-  max-width: 1400px;
+  gap: 0;
+  padding: 0;
+  max-width: 100%;
   margin: 0 auto;
 }
 
-/* Individual post card - Instagram 1:1 aspect ratio ready */
+/* Individual post card - iPhone screen-sized for easy screenshots */
 .social-post {
   background: linear-gradient(160deg, #1C1410 0%, #2C1E14 50%, #1A1612 100%);
-  border-radius: 24px;
-  padding: 48px 40px;
-  width: 1080px;
-  max-width: 100%;
-  margin: 0 auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border-radius: 0;
+  padding: 48px 32px 32px;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  box-shadow: none;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .social-post::before {
@@ -4479,31 +4483,32 @@ button:focus-visible,
   position: relative;
   z-index: 1;
   text-align: center;
-  margin-bottom: 40px;
-  padding-bottom: 32px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
   border-bottom: 1px solid rgba(196, 149, 106, 0.15);
+  flex-shrink: 0;
 }
 
 .social-logo {
-  width: 160px;
+  width: 140px;
   height: auto;
-  margin: 0 auto 20px;
+  margin: 0 auto 16px;
   display: block;
   filter: brightness(1.1);
 }
 
 .social-post-title {
   font-family: 'Jost', sans-serif;
-  font-size: 42px;
+  font-size: 36px;
   font-weight: 600;
   color: #FAF8F3;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   letter-spacing: -0.5px;
 }
 
 .social-post-subtitle {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 20px;
+  font-size: 18px;
   font-style: italic;
   color: #C4956A;
   letter-spacing: 0.3px;
@@ -4514,57 +4519,52 @@ button:focus-visible,
   z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin-bottom: 40px;
+  gap: 16px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .social-event-item {
   background: rgba(250, 248, 243, 0.05);
   border: 1px solid rgba(196, 149, 106, 0.1);
-  border-radius: 16px;
-  padding: 24px;
-  transition: all 0.2s ease;
-}
-
-.social-event-item:hover {
-  background: rgba(250, 248, 243, 0.08);
-  border-color: rgba(196, 149, 106, 0.2);
+  border-radius: 12px;
+  padding: 18px;
 }
 
 .social-event-name {
   font-family: 'Jost', sans-serif;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 500;
   color: #FAF8F3;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   line-height: 1.3;
 }
 
 .social-event-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
   font-family: 'Jost', sans-serif;
-  font-size: 15px;
+  font-size: 13px;
   color: rgba(250, 248, 243, 0.7);
 }
 
 .social-event-detail {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .social-event-detail svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   opacity: 0.6;
 }
 
 .social-event-location {
-  font-size: 15px;
+  font-size: 13px;
   color: #C4956A;
-  margin-top: 8px;
+  margin-top: 6px;
   font-family: 'Jost', sans-serif;
 }
 
@@ -4572,13 +4572,15 @@ button:focus-visible,
   position: relative;
   z-index: 1;
   text-align: center;
-  padding-top: 32px;
+  padding-top: 24px;
+  margin-top: 24px;
   border-top: 1px solid rgba(196, 149, 106, 0.15);
+  flex-shrink: 0;
 }
 
 .social-cta {
   font-family: 'Jost', sans-serif;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
   color: #C4956A;
   letter-spacing: 0.5px;
@@ -4592,41 +4594,10 @@ button:focus-visible,
   font-size: 16px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1100px) {
-  .social-post {
-    width: 100%;
-  }
-}
-
+/* iPhone screenshot optimizations */
 @media (max-width: 768px) {
-  .social-posts-container {
-    gap: 32px;
-    padding: 32px 16px;
-  }
-
   .social-post {
-    padding: 32px 24px;
-  }
-
-  .social-logo {
-    width: 120px;
-  }
-
-  .social-post-title {
-    font-size: 32px;
-  }
-
-  .social-post-subtitle {
-    font-size: 18px;
-  }
-
-  .social-event-name {
-    font-size: 19px;
-  }
-
-  .social-event-details {
-    font-size: 14px;
+    padding: 40px 28px 28px;
   }
 }
 
