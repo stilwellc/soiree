@@ -806,7 +806,7 @@ function clearSearch() {
 
 // Navigation
 // Map view name → URL path
-const VIEW_PATHS = { discover: '/', all: '/all', today: '/today', week: '/week', favorites: '/favorites', about: '/about' };
+const VIEW_PATHS = { discover: '/', all: '/all', today: '/today', week: '/week', favorites: '/favorites', about: '/about', social: '/social' };
 const PATH_VIEWS = { '/': 'discover', '/all': 'all', '/today': 'today', '/week': 'week', '/favorites': 'favorites', '/about': 'about' };
 
 function navigateToView(view, opts = {}) {
@@ -833,12 +833,17 @@ function handleNavClick(item, { pushHistory = true } = {}) {
   }
 
   // Find the currently visible view
-  const views = [discoverView, favoritesView, aboutView];
+  const socialView = document.getElementById('social-view');
+  const views = [discoverView, favoritesView, aboutView, socialView];
   const visibleView = views.find(v => !v.classList.contains('hidden'));
 
   function showView() {
     const categoryGrid = document.getElementById('category-grid');
     const eventsListEl = document.getElementById('events-list');
+
+    // Restore nav/footer if coming from social view
+    document.querySelector('.nav-bar').style.display = '';
+    document.querySelector('.app-footer').style.display = '';
 
     if (view === 'discover') {
       currentTimeFilter = 'all';
@@ -846,6 +851,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       discoverView.classList.add('view-home');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
+      socialView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.remove('hidden');
       if (eventsListEl) eventsListEl.classList.add('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
@@ -859,6 +865,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       discoverView.classList.remove('view-home');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
+      socialView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
@@ -872,6 +879,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       discoverView.classList.remove('view-home');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
+      socialView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
@@ -885,6 +893,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       discoverView.classList.remove('view-home');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
+      socialView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
@@ -895,6 +904,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       discoverView.classList.add('hidden');
       favoritesView.classList.remove('hidden');
       aboutView.classList.add('hidden');
+      socialView.classList.add('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
       if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
       renderFavorites();
@@ -904,12 +914,24 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
       favoritesView.classList.add('hidden');
       aboutView.classList.remove('hidden');
+      socialView.classList.add('hidden');
       loadStats();
+    } else if (view === 'social') {
+      discoverView.classList.add('hidden');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.add('hidden');
+      socialView.classList.remove('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
+      // Hide nav and footer for clean screenshots
+      document.querySelector('.nav-bar').style.display = 'none';
+      document.querySelector('.app-footer').style.display = 'none';
+      renderSocialPosts();
     }
   }
 
   // If switching to a different view container, fade out then in
-  const targetView = (view === 'favorites') ? favoritesView : (view === 'about') ? aboutView : discoverView;
+  const targetView = (view === 'favorites') ? favoritesView : (view === 'about') ? aboutView : (view === 'social') ? socialView : discoverView;
   if (visibleView && visibleView !== targetView) {
     visibleView.classList.add('view-fade-out');
     setTimeout(() => {
@@ -1181,6 +1203,83 @@ function renderFavorites() {
       toggleFavorite(eventId);
     });
   });
+}
+
+// Render Social Media Posts for Instagram
+function renderSocialPosts() {
+  // Filter events: NYC region, this week, categories: art, perks, culinary
+  const nycEvents = events.filter(event => {
+    const region = getEventRegion(event);
+    return region === 'nyc';
+  });
+
+  // Get this week's events
+  const today = new Date();
+  const endOfWeek = new Date(today);
+  endOfWeek.setDate(today.getDate() + 7);
+  const todayStr = formatDateLocal(today);
+  const endOfWeekStr = formatDateLocal(endOfWeek);
+
+  const thisWeekEvents = nycEvents.filter(event => {
+    const eventDate = event.start_date || extractDateFromISO(event.date) || event.date;
+    if (!eventDate) return false;
+    return eventDate >= todayStr && eventDate <= endOfWeekStr;
+  });
+
+  // Split by category
+  const artEvents = thisWeekEvents.filter(e => e.category === 'art').slice(0, 6);
+  const perksEvents = thisWeekEvents.filter(e => e.category === 'perks').slice(0, 6);
+  const foodEvents = thisWeekEvents.filter(e => e.category === 'culinary').slice(0, 6);
+
+  // Render each category
+  renderSocialCategory('social-art-events', artEvents);
+  renderSocialCategory('social-perks-events', perksEvents);
+  renderSocialCategory('social-food-events', foodEvents);
+}
+
+function renderSocialCategory(containerId, categoryEvents) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (categoryEvents.length === 0) {
+    container.innerHTML = '<div class="social-empty">No events this week</div>';
+    return;
+  }
+
+  container.innerHTML = categoryEvents.map(event => {
+    const date = formatEventDate(event);
+    const time = event.time || '';
+    const location = event.location || '';
+
+    return `
+      <div class="social-event-item">
+        <div class="social-event-name">${event.name}</div>
+        <div class="social-event-details">
+          ${date ? `
+            <div class="social-event-detail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>${date}</span>
+            </div>
+          ` : ''}
+          ${time ? `
+            <div class="social-event-detail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>${time}</span>
+            </div>
+          ` : ''}
+        </div>
+        ${location ? `<div class="social-event-location">${location}</div>` : ''}
+      </div>
+    `;
+  }).join('');
 }
 
 // Format Date for Display
