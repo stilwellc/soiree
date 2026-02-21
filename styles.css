@@ -980,6 +980,14 @@ body {
   transition: all 0.2s var(--transition);
 }
 
+.region-option-content,
+.region-option-arrow,
+.region-option-check,
+.region-option-check svg,
+.region-auto-label {
+  pointer-events: none;
+}
+
 .region-option-content {
   display: flex;
   align-items: center;

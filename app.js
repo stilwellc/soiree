@@ -449,28 +449,21 @@ function updateRegionUI() {
 
 // Handle region selection
 function handleRegionChange(newRegion) {
-  // Visual flash feedback before closing
-  const clickedOption = document.querySelector(`.region-panel-option[data-region="${newRegion}"]`);
-  if (clickedOption) clickedOption.classList.add('selecting');
+  if (newRegion === 'auto') {
+    manualRegionOverride = false;
+    localStorage.setItem('soireeManualRegion', 'false');
+    initRegion();
+  } else {
+    currentRegion = newRegion;
+    manualRegionOverride = true;
+    localStorage.setItem('soireeRegion', newRegion);
+    localStorage.setItem('soireeManualRegion', 'true');
+    updateRegionUI();
+    renderEvents();
+    updateCategoryCounts();
+  }
 
-  setTimeout(() => {
-    if (newRegion === 'auto') {
-      manualRegionOverride = false;
-      localStorage.setItem('soireeManualRegion', 'false');
-      initRegion();
-    } else {
-      currentRegion = newRegion;
-      manualRegionOverride = true;
-      localStorage.setItem('soireeRegion', newRegion);
-      localStorage.setItem('soireeManualRegion', 'true');
-      updateRegionUI();
-      renderEvents();
-      updateCategoryCounts();
-    }
-
-    closeRegionDropdown();
-    if (clickedOption) clickedOption.classList.remove('selecting');
-  }, 180);
+  closeRegionDropdown();
 }
 
 // Lock/unlock body scroll (iOS-safe)
