@@ -495,6 +495,7 @@ function toggleRegionDropdown() {
 
   const opening = !hero.classList.contains('hero--picking');
   hero.classList.toggle('hero--picking');
+  document.body.classList.toggle('region-picking', opening);
   if (backdrop) backdrop.classList.toggle('active', opening);
   if (panel) panel.setAttribute('aria-hidden', !opening);
   if (toggle) toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
@@ -524,6 +525,7 @@ function closeRegionDropdown() {
   if (!hero) return;
   if (hero.classList.contains('hero--picking')) {
     hero.classList.remove('hero--picking');
+    document.body.classList.remove('region-picking');
     if (backdrop) backdrop.classList.remove('active');
     if (panel) panel.setAttribute('aria-hidden', 'true');
     if (toggle) toggle.setAttribute('aria-expanded', 'false');

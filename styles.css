@@ -349,6 +349,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 200;
+  background: #1C1410;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
@@ -561,6 +562,21 @@ body {
   animation: regionOptionTap 0.15s ease;
 }
 
+/* When region picker is open on mobile, hide nav and boost stacking */
+@media (max-width: 767px) {
+  body.region-picking .nav-bar {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  body.region-picking .hero-region-panel {
+    z-index: 9999;
+  }
+  body.region-picking .region-backdrop {
+    z-index: 9998;
+  }
+}
+
 /* Region backdrop */
 .region-backdrop {
   position: fixed;
@@ -589,6 +605,7 @@ body {
     left: auto;
     width: 340px;
     z-index: 10;
+    background: none;
     opacity: 0;
     pointer-events: none;
     transform: translateY(-8px) scale(0.97);
