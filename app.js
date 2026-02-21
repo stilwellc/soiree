@@ -807,7 +807,7 @@ function clearSearch() {
 // Navigation
 // Map view name → URL path
 const VIEW_PATHS = { discover: '/', all: '/all', today: '/today', week: '/week', favorites: '/favorites', about: '/about', social: '/social' };
-const PATH_VIEWS = { '/': 'discover', '/all': 'all', '/today': 'today', '/week': 'week', '/favorites': 'favorites', '/about': 'about' };
+const PATH_VIEWS = { '/': 'discover', '/all': 'all', '/today': 'today', '/week': 'week', '/favorites': 'favorites', '/about': 'about', '/social': 'social' };
 
 function navigateToView(view, opts = {}) {
   const navItem = document.querySelector(`[data-view="${view}"]`);
