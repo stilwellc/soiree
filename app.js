@@ -271,6 +271,8 @@ let currentFilter = 'all';
 let searchQuery = '';
 let currentTimeFilter = 'all'; // 'all', 'today', 'week'
 let favorites = JSON.parse(localStorage.getItem('soireeFavorites') || '[]');
+let currentPage = 1;
+const EVENTS_PER_PAGE = 10;
 
 // Region State
 let currentRegion = localStorage.getItem('soireeRegion') || null;
@@ -650,6 +652,7 @@ function handleFilterClick(chip) {
   chip.classList.add('filter-chip-pop');
   chip.setAttribute('aria-checked', 'true');
   currentFilter = chip.dataset.filter;
+  currentPage = 1;
   renderEvents();
   setTimeout(() => chip.classList.remove('filter-chip-pop'), 300);
 }
@@ -658,6 +661,7 @@ function handleFilterClick(chip) {
 function handleSearch(e) {
   searchQuery = e.target.value.toLowerCase();
   searchClear.classList.toggle('visible', searchQuery.length > 0);
+  currentPage = 1;
   renderEvents();
 }
 
@@ -665,6 +669,7 @@ function clearSearch() {
   searchInput.value = '';
   searchQuery = '';
   searchClear.classList.remove('visible');
+  currentPage = 1;
   renderEvents();
 }
 
@@ -712,45 +717,60 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       aboutView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.remove('hidden');
       if (eventsListEl) eventsListEl.classList.add('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
       startRotating();
       updateCategoryCounts();
     } else if (view === 'all') {
       currentTimeFilter = 'all';
+      currentPage = 1;
       discoverView.classList.remove('hidden');
       discoverView.classList.remove('view-home');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
-      setFixedTitle('All');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.remove('hidden');
+      setFixedTitle("This Week's");
       renderEvents();
     } else if (view === 'today') {
       currentTimeFilter = 'today';
+      currentPage = 1;
       discoverView.classList.remove('hidden');
       discoverView.classList.remove('view-home');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.remove('hidden');
       setFixedTitle("Today's");
       renderEvents();
     } else if (view === 'week') {
       currentTimeFilter = 'week';
+      currentPage = 1;
       discoverView.classList.remove('hidden');
       discoverView.classList.remove('view-home');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.remove('hidden');
       setFixedTitle("This Week's");
       renderEvents();
     } else if (view === 'favorites') {
       discoverView.classList.add('hidden');
       favoritesView.classList.remove('hidden');
       aboutView.classList.add('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
       renderFavorites();
     } else if (view === 'about') {
       discoverView.classList.add('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
       favoritesView.classList.add('hidden');
       aboutView.classList.remove('hidden');
       loadStats();
@@ -906,9 +926,36 @@ function renderEvents() {
     return;
   }
 
-  eventsList.innerHTML = filteredEvents.map((event, index) =>
-    createEventCard(event, index)
-  ).join('');
+  // Pagination
+  const totalPages = Math.ceil(filteredEvents.length / EVENTS_PER_PAGE);
+  const startIndex = (currentPage - 1) * EVENTS_PER_PAGE;
+  const endIndex = startIndex + EVENTS_PER_PAGE;
+  const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
+
+  let paginationHTML = '';
+  if (totalPages > 1) {
+    paginationHTML = `
+      <div class="pagination">
+        <button class="pagination-btn" id="prev-page" ${currentPage === 1 ? 'disabled' : ''}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+          Previous
+        </button>
+        <span class="pagination-info">Page ${currentPage} of ${totalPages}</span>
+        <button class="pagination-btn" id="next-page" ${currentPage === totalPages ? 'disabled' : ''}>
+          Next
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+    `;
+  }
+
+  eventsList.innerHTML = paginatedEvents.map((event, index) =>
+    createEventCard(event, startIndex + index)
+  ).join('') + paginationHTML;
 
   // Add event listeners to cards
   document.querySelectorAll('.event-card').forEach(card => {
@@ -934,6 +981,28 @@ function renderEvents() {
       toggleFavorite(eventId);
     });
   });
+
+  // Add pagination listeners
+  const prevBtn = document.getElementById('prev-page');
+  const nextBtn = document.getElementById('next-page');
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderEvents();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderEvents();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  }
 }
 
 // Render Favorites
@@ -2380,6 +2449,55 @@ function initSubscribeStrip() {
   });
 }
 
+// ── Events List Subscribe Strip ───────────────────────────
+function initSubscribeStripEvents() {
+  const form = document.getElementById('subscribe-strip-form-events');
+  const successEl = document.getElementById('subscribe-strip-success-events');
+  const btn = document.getElementById('subscribe-strip-btn-events');
+  if (!form) return;
+
+  // Pre-fill region from current selection
+  const regionSelect = document.getElementById('subscribe-strip-region-events');
+  if (regionSelect && currentRegion) {
+    const opt = regionSelect.querySelector(`option[value="${currentRegion}"]`);
+    if (opt) regionSelect.value = currentRegion;
+  }
+
+  // Chip toggles
+  form.querySelectorAll('.subscribe-strip-chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('active'));
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('subscribe-strip-email-events').value.trim();
+    if (!email) return;
+
+    const region = regionSelect ? regionSelect.value : currentRegion;
+    const categories = [...form.querySelectorAll('.subscribe-strip-chip.active')].map(c => c.dataset.cat);
+
+    btn.disabled = true;
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, region, categories })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        form.style.display = 'none';
+        successEl.style.display = 'block';
+      } else {
+        alert(data.error || 'Something went wrong. Please try again.');
+        btn.disabled = false;
+      }
+    } catch {
+      alert('Network error. Please try again.');
+      btn.disabled = false;
+    }
+  });
+}
+
 // ── Scroll Reveal ──────────────────────────────────
 function initScrollReveal() {
   const sections = document.querySelectorAll('.reveal-section');
@@ -2483,6 +2601,7 @@ if (document.readyState === 'loading') {
     initRotatingTitle();
     initSubscribeForm();
     initSubscribeStrip();
+    initSubscribeStripEvents();
     initScrollReveal();
     updateValueStrip();
 
@@ -2510,6 +2629,8 @@ if (document.readyState === 'loading') {
   init();
   initRotatingTitle();
   initSubscribeForm();
+  initSubscribeStrip();
+  initSubscribeStripEvents();
 }
 // v1.0.2
 

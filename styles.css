@@ -221,7 +221,7 @@ body {
 
 /* Landing hero — compact centered layout (only on home view) */
 .view-home .hero.hero-landing {
-  padding: 16px 24px 12px;
+  padding: 12px 24px 8px;
 }
 
 .view-home .hero.hero-landing .hero-content {
@@ -239,55 +239,56 @@ body {
 }
 
 .view-home .hero.hero-landing .hero-rule {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .view-home .hero.hero-landing .hero-title {
   font-size: 64px;
   letter-spacing: -3px;
   line-height: 0.95;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .view-home .hero.hero-landing .hero-title-logo {
   height: 50px;
-  margin-top: 10px;
-}
-
-.view-home .hero.hero-landing .hero-sub {
-  font-size: 18px;
-  max-width: 340px;
-  margin-bottom: 10px;
+  margin-top: 6px;
 }
 
 .view-home .hero.hero-landing .hero-location-row {
   display: flex;
   justify-content: flex-end;
   width: 100%;
+  margin-top: 8px;
 }
 
 @media (min-width: 768px) {
+  .view-home .hero.hero-landing {
+    padding: 16px 24px 10px;
+  }
   .view-home .hero.hero-landing .hero-title {
     font-size: 80px;
     letter-spacing: -4px;
   }
   .view-home .hero.hero-landing .hero-title-logo {
     height: 60px;
-    margin-top: 12px;
+    margin-top: 8px;
   }
-  .view-home .hero.hero-landing .hero-sub {
-    font-size: 20px;
-    max-width: 400px;
+  .view-home .hero.hero-landing .hero-location-row {
+    margin-top: 12px;
   }
 }
 
 @media (max-width: 380px) {
+  .view-home .hero.hero-landing {
+    padding: 10px 20px 6px;
+  }
   .view-home .hero.hero-landing .hero-title {
     font-size: 52px;
     letter-spacing: -2px;
   }
   .view-home .hero.hero-landing .hero-title-logo {
     height: 38px;
+    margin-top: 4px;
   }
 }
 
@@ -634,6 +635,9 @@ body {
   transform: translateY(100%);
   transition: transform 0.45s var(--transition), opacity 0.3s ease;
   white-space: nowrap;
+  color: var(--dark);
+  -webkit-text-stroke: 0.3px var(--dark);
+  paint-order: stroke fill;
 }
 
 .title-word.active {
@@ -2780,6 +2784,57 @@ body {
   margin-top: 20px;
 }
 
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32px 0 20px;
+  margin-top: 16px;
+  gap: 16px;
+}
+
+.pagination-btn {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dark);
+  background: var(--cream);
+  border: 1px solid rgba(74, 60, 50, 0.15);
+  border-radius: 24px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all 0.3s var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--gold);
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pagination-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+.pagination-info {
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.3px;
+}
+
 /* Scroll behavior */
 .app-container {
   scrollbar-width: none;
@@ -3873,24 +3928,24 @@ button:focus-visible,
    ============================================================ */
 
 .home-how-section {
-  padding: 16px 24px 8px;
+  padding: 12px 24px 6px;
   text-align: left;
 }
 
 .home-how-section .editorial-heading {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .home-how-steps {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: 16px;
   max-width: 800px;
   margin: 0 auto;
 }
 
 .home-how-step {
-  padding: 24px 20px;
+  padding: 18px 16px;
   background: white;
   border-radius: 20px;
   border: 1px solid rgba(0, 0, 0, 0.05);
@@ -3910,7 +3965,7 @@ button:focus-visible,
   font-weight: 600;
   color: var(--dusk);
   letter-spacing: 1px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .home-how-title {
@@ -3918,7 +3973,7 @@ button:focus-visible,
   font-size: 24px;
   font-weight: 500;
   color: var(--deep);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   letter-spacing: -0.3px;
 }
 
@@ -3927,26 +3982,26 @@ button:focus-visible,
   font-size: 14px;
   font-weight: 400;
   color: var(--accent);
-  line-height: 1.6;
+  line-height: 1.5;
   margin: 0;
 }
 
 @media (min-width: 640px) {
   .home-how-steps {
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    gap: 10px;
   }
   .home-how-section {
-    padding: 16px 32px 8px;
+    padding: 12px 32px 6px;
   }
 }
 
 @media (min-width: 768px) {
   .home-how-steps {
-    gap: 20px;
+    gap: 16px;
   }
   .home-how-step {
-    padding: 28px 24px;
+    padding: 22px 20px;
   }
   .home-how-title {
     font-size: 26px;
