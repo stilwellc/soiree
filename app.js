@@ -398,14 +398,21 @@ async function initRegion() {
   const manualOverride = localStorage.getItem('soireeManualRegion') === 'true';
 
   if (manualOverride && savedRegion) {
-    // User has manually selected a region
     currentRegion = savedRegion;
     manualRegionOverride = true;
   } else {
-    // Auto-detect region
     detectedRegion = await detectUserRegion();
     currentRegion = detectedRegion;
     localStorage.setItem('soireeRegion', currentRegion);
+  }
+
+  // Show detected city in auto-detect option
+  const detectedLabel = document.getElementById('region-auto-detected');
+  if (detectedLabel && (detectedRegion || currentRegion)) {
+    const regionInfo = REGIONS[detectedRegion || currentRegion];
+    if (regionInfo) {
+      detectedLabel.textContent = `Near ${regionInfo.name}`;
+    }
   }
 
   updateRegionUI();
@@ -426,36 +433,44 @@ function updateRegionUI() {
     locationDiv.textContent = regionData.name;
   }
 
-  // Mark active option in region picker panel
+  // Mark active option in region picker panel + ARIA
   document.querySelectorAll('.region-panel-option').forEach(option => {
     const optionRegion = option.dataset.region;
+    let isActive;
     if (optionRegion === 'auto') {
-      option.classList.toggle('active', !manualRegionOverride);
+      isActive = !manualRegionOverride;
     } else {
-      option.classList.toggle('active', optionRegion === currentRegion && manualRegionOverride);
+      isActive = optionRegion === currentRegion && manualRegionOverride;
     }
+    option.classList.toggle('active', isActive);
+    option.setAttribute('aria-selected', isActive ? 'true' : 'false');
   });
 }
 
 // Handle region selection
 function handleRegionChange(newRegion) {
-  if (newRegion === 'auto') {
-    // Re-enable auto-detection
-    manualRegionOverride = false;
-    localStorage.setItem('soireeManualRegion', 'false');
-    initRegion(); // Re-detect
-  } else {
-    // Manual selection
-    currentRegion = newRegion;
-    manualRegionOverride = true;
-    localStorage.setItem('soireeRegion', newRegion);
-    localStorage.setItem('soireeManualRegion', 'true');
-    updateRegionUI();
-    renderEvents(); // Refresh events
-    updateCategoryCounts();
-  }
+  // Visual flash feedback before closing
+  const clickedOption = document.querySelector(`.region-panel-option[data-region="${newRegion}"]`);
+  if (clickedOption) clickedOption.classList.add('selecting');
 
-  closeRegionDropdown();
+  setTimeout(() => {
+    if (newRegion === 'auto') {
+      manualRegionOverride = false;
+      localStorage.setItem('soireeManualRegion', 'false');
+      initRegion();
+    } else {
+      currentRegion = newRegion;
+      manualRegionOverride = true;
+      localStorage.setItem('soireeRegion', newRegion);
+      localStorage.setItem('soireeManualRegion', 'true');
+      updateRegionUI();
+      renderEvents();
+      updateCategoryCounts();
+    }
+
+    closeRegionDropdown();
+    if (clickedOption) clickedOption.classList.remove('selecting');
+  }, 180);
 }
 
 // Lock/unlock body scroll (iOS-safe)
@@ -480,23 +495,141 @@ function unlockBodyScroll() {
 function toggleRegionDropdown() {
   const hero = document.querySelector('.hero');
   const backdrop = document.getElementById('region-backdrop');
+  const panel = document.getElementById('hero-region-panel');
+  const toggle = document.getElementById('region-toggle');
+
   if (!hero) return;
+
   const opening = !hero.classList.contains('hero--picking');
   hero.classList.toggle('hero--picking');
   if (backdrop) backdrop.classList.toggle('active', opening);
-  opening ? lockBodyScroll() : unlockBodyScroll();
+  if (panel) panel.setAttribute('aria-hidden', !opening);
+  if (toggle) toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+
+  if (opening) {
+    if (window.innerWidth < 768) lockBodyScroll();
+    // Focus active option after animation settles
+    setTimeout(() => {
+      if (panel) {
+        const activeOption = panel.querySelector('.region-panel-option.active')
+                          || panel.querySelector('.region-panel-option');
+        if (activeOption) activeOption.focus();
+      }
+    }, 300);
+  } else {
+    unlockBodyScroll();
+    if (toggle) toggle.focus();
+  }
 }
 
 // Close region picker
 function closeRegionDropdown() {
   const hero = document.querySelector('.hero');
   const backdrop = document.getElementById('region-backdrop');
+  const panel = document.getElementById('hero-region-panel');
+  const toggle = document.getElementById('region-toggle');
   if (!hero) return;
   if (hero.classList.contains('hero--picking')) {
     hero.classList.remove('hero--picking');
     if (backdrop) backdrop.classList.remove('active');
+    if (panel) panel.setAttribute('aria-hidden', 'true');
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
     unlockBodyScroll();
   }
+}
+
+// Keyboard navigation for region picker
+function setupRegionKeyboardNav() {
+  const panel = document.getElementById('hero-region-panel');
+  if (!panel) return;
+
+  panel.addEventListener('keydown', (e) => {
+    const options = Array.from(panel.querySelectorAll('.region-panel-option'));
+    const currentFocus = document.activeElement;
+    const currentIndex = options.indexOf(currentFocus);
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        options[currentIndex < options.length - 1 ? currentIndex + 1 : 0].focus();
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        options[currentIndex > 0 ? currentIndex - 1 : options.length - 1].focus();
+        break;
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        if (currentFocus && currentFocus.dataset.region !== undefined) {
+          handleRegionChange(currentFocus.dataset.region);
+        }
+        break;
+      case 'Tab':
+        if (!e.shiftKey && currentIndex === options.length - 1) {
+          e.preventDefault();
+          options[0].focus();
+        } else if (e.shiftKey && currentIndex === 0) {
+          e.preventDefault();
+          options[options.length - 1].focus();
+        }
+        break;
+    }
+  });
+}
+
+// Swipe-to-dismiss for mobile region picker
+function setupSwipeToDismiss() {
+  const panel = document.getElementById('hero-region-panel');
+  if (!panel) return;
+
+  const panelInner = panel.querySelector('.region-panel-inner');
+  const handle = panel.querySelector('.region-panel-handle');
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+
+  function shouldCapture(e) {
+    if (window.innerWidth >= 768) return false;
+    if (handle && handle.contains(e.target)) return true;
+    const list = panel.querySelector('.region-panel-list');
+    if (list && list.scrollTop <= 0) return true;
+    return false;
+  }
+
+  panel.addEventListener('touchstart', (e) => {
+    if (!shouldCapture(e)) return;
+    startY = e.touches[0].clientY;
+    currentY = startY;
+    isDragging = true;
+  }, { passive: true });
+
+  panel.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    currentY = e.touches[0].clientY;
+    const deltaY = currentY - startY;
+    if (deltaY > 0 && panelInner) {
+      const dampened = deltaY * 0.4;
+      panelInner.style.transform = `translateY(${dampened}px)`;
+      panelInner.style.opacity = Math.max(0.5, 1 - (deltaY / 500));
+    }
+  }, { passive: true });
+
+  panel.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    const deltaY = currentY - startY;
+
+    if (panelInner) {
+      panelInner.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease';
+      panelInner.style.transform = '';
+      panelInner.style.opacity = '';
+      setTimeout(() => { panelInner.style.transition = ''; }, 300);
+    }
+
+    if (deltaY > 80) closeRegionDropdown();
+    startY = 0;
+    currentY = 0;
+  }, { passive: true });
 }
 
 // Render coming soon placeholder for non-NYC regions
@@ -639,6 +772,10 @@ function setupEventListeners() {
       closeRegionDropdown();
     }
   });
+
+  // Region picker: keyboard nav + swipe-to-dismiss
+  setupRegionKeyboardNav();
+  setupSwipeToDismiss();
 }
 
 // Filter Events

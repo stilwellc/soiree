@@ -377,9 +377,8 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: calc(20px + env(safe-area-inset-top)) 28px calc(24px + env(safe-area-inset-bottom));
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  padding: calc(12px + env(safe-area-inset-top)) 28px 0;
+  overflow: hidden;
 }
 
 .hero--picking .hero-title-panel {
@@ -483,6 +482,85 @@ body {
   transform: translateY(0);
 }
 
+.hero--picking .region-panel-group .region-panel-option {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Swipe handle (mobile sheet pattern) */
+.region-panel-handle {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px;
+  cursor: grab;
+  flex-shrink: 0;
+}
+.region-panel-handle-bar {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  transition: background 0.2s ease;
+}
+.region-panel-handle:active .region-panel-handle-bar {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Auto-detect detected city sub-label */
+.region-auto-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.region-auto-detected {
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.3px;
+}
+.region-auto-detected:empty {
+  display: none;
+}
+
+/* Checkmark indicator */
+.region-option-check {
+  display: none;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--dusk);
+}
+.region-panel-option.active .region-option-arrow {
+  display: none;
+}
+.region-panel-option.active .region-option-check {
+  display: flex;
+  animation: checkPop 0.3s var(--transition);
+}
+@keyframes checkPop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Selection flash feedback */
+.region-panel-option.selecting {
+  background: rgba(196, 149, 106, 0.25) !important;
+  color: #fff !important;
+  transition: background 0.15s ease;
+}
+
+/* Tap micro-animation */
+@keyframes regionOptionTap {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+.region-panel-option:active:not(.selecting) {
+  animation: regionOptionTap 0.15s ease;
+}
+
 /* Region backdrop */
 .region-backdrop {
   position: fixed;
@@ -498,37 +576,59 @@ body {
   pointer-events: auto;
 }
 
-/* Desktop: constrained inline panel */
+/* Desktop: card popover panel */
 @media (min-width: 768px) {
+  .hero-location-row {
+    position: relative;
+  }
   .hero-region-panel {
     position: absolute;
     inset: unset;
-    top: 0;
-    left: 0;
+    top: 100%;
     right: 0;
-    z-index: 5;
-    transform: translateY(14px);
-    transition: opacity 0.35s ease, transform 0.35s ease;
+    left: auto;
+    width: 340px;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px) scale(0.97);
+    transform-origin: top right;
+    transition: opacity 0.25s var(--transition), transform 0.25s var(--transition);
+  }
+  .hero--picking .hero-region-panel {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(4px) scale(1);
   }
   .hero-region-panel .region-panel-bg {
+    display: block;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 40px rgba(28, 20, 16, 0.12),
+                0 1px 3px rgba(28, 20, 16, 0.06);
+    border: 1px solid rgba(196, 149, 106, 0.12);
+  }
+  .hero-region-panel .region-panel-bg::after {
     display: none;
   }
   .region-panel-inner {
-    padding: 0;
+    padding: 20px 24px 16px;
     height: auto;
     overflow: visible;
+    border-radius: 16px;
   }
   .region-panel-hero {
     display: none;
   }
-  .hero--picking .hero-region-panel {
-    transform: translateY(0);
-  }
   .region-panel-close {
     display: none;
   }
-  .region-backdrop {
+  .region-panel-handle {
     display: none;
+  }
+  .region-backdrop {
+    background: transparent;
+    z-index: 9;
   }
   /* Reset stagger animations on desktop */
   .region-panel-list .region-panel-option,
@@ -536,7 +636,11 @@ body {
   .region-panel-list .region-panel-divider {
     opacity: 1;
     transform: none;
-    transition: color 0.18s ease, padding-left 0.18s ease;
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+  /* Auto-detect sub-label on desktop */
+  .region-auto-detected {
+    color: rgba(139, 115, 85, 0.6);
   }
 }
 
@@ -549,9 +653,11 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
 
 /* Chevron rotates when picking */
@@ -769,24 +875,32 @@ body {
   color: var(--gold);
 }
 
-/* Region toggle pill (original) */
+/* Region toggle pill */
 .region-toggle {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 24px;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+  transition: background 0.2s ease, border-color 0.2s ease,
+              box-shadow 0.2s ease, opacity 0.3s ease, transform 0.2s ease;
   font-family: 'Jost', sans-serif;
 }
 
 .region-toggle:hover {
   background: rgba(255, 255, 255, 1);
-  border-color: rgba(0, 0, 0, 0.2);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.region-toggle:active {
+  transform: scale(0.97);
 }
 
 .hero--picking .region-toggle {
@@ -829,28 +943,19 @@ body {
   margin: 0 0 18px;
 }
 
-.region-panel-list {
-  overflow-x: hidden;
-  overflow-y: auto;
-  max-height: 260px;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
-}
-
 .region-panel-group {
   margin-bottom: 4px;
 }
 
 .region-panel-group-label {
   font-family: 'Jost', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 2.5px;
   text-transform: uppercase;
   color: var(--dusk);
-  opacity: 0.5;
-  padding: 14px 0 6px;
+  opacity: 0.65;
+  padding: 18px 0 8px;
 }
 
 .region-panel-divider {
@@ -904,14 +1009,8 @@ body {
 }
 
 .region-panel-option.active {
-  background: rgba(196, 149, 106, 0.12);
-  color: var(--dusk);
-}
-
-.region-panel-option.active .region-option-arrow {
-  content: '';
-  opacity: 1;
-  transform: translateX(0);
+  background: rgba(196, 149, 106, 0.15);
+  color: #fff;
 }
 
 /* Auto-detect row */
@@ -932,77 +1031,74 @@ body {
   opacity: 0.7;
 }
 
-/* Desktop: lighter inline region panel */
+/* Desktop: card popover option styling */
 @media (min-width: 768px) {
   .region-panel-eyebrow {
-    display: block;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 9px;
-    font-weight: 500;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin: 0 0 18px;
+    display: none;
   }
   .region-panel-list {
-    max-height: 260px;
+    max-height: 380px;
     flex: unset;
+    overflow-y: auto;
+    margin: 0 -8px;
+    padding: 0 8px;
+    padding-bottom: 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(196, 149, 106, 0.3) transparent;
+  }
+  .region-panel-list::-webkit-scrollbar {
+    width: 4px;
+  }
+  .region-panel-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .region-panel-list::-webkit-scrollbar-thumb {
+    background: rgba(196, 149, 106, 0.3);
+    border-radius: 2px;
   }
   .region-panel-option {
-    font-size: 26px;
-    padding: 3px 0;
-    margin: 0;
-    border-radius: 0;
+    font-size: 22px;
+    padding: 8px 12px;
+    margin: 1px 0;
+    border-radius: 10px;
     color: var(--deep);
     background: none;
   }
   .region-panel-option--auto {
-    font-size: 26px;
-    padding: 3px 0 4px;
+    font-size: 22px;
+    padding: 8px 12px;
     color: var(--dusk);
   }
   .region-panel-option:hover {
-    background: none;
+    background: rgba(196, 149, 106, 0.08);
     color: var(--dusk);
-    padding-left: 5px;
   }
   .region-panel-option.active {
-    background: none;
+    background: rgba(196, 149, 106, 0.1);
     color: var(--dusk);
   }
   .region-option-arrow {
     display: none;
   }
   .region-panel-option::after {
-    content: '›';
-    font-family: 'Jost', sans-serif;
-    font-size: 18px;
-    font-weight: 300;
+    display: none;
+  }
+  .region-panel-option.active .region-option-check {
+    display: flex;
     color: var(--dusk);
-    opacity: 0;
-    transform: translateX(-6px);
-    transition: opacity 0.18s ease, transform 0.18s ease;
-  }
-  .region-panel-option:hover::after {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  .region-panel-option.active::after {
-    content: '✓';
-    font-size: 13px;
-    opacity: 1;
-    transform: translateX(0);
   }
   .region-panel-group-label {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 8px;
-    letter-spacing: 3px;
-    color: rgba(196, 149, 106, 0.55);
-    padding: 10px 0 5px;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(196, 149, 106, 0.6);
+    padding: 12px 12px 4px;
   }
   .region-panel-divider {
-    background: linear-gradient(90deg, rgba(196, 149, 106, 0.22), transparent);
-    margin: 6px 0;
+    background: linear-gradient(90deg, rgba(196, 149, 106, 0.15), transparent);
+    margin: 4px 12px;
   }
   .region-panel-group {
     margin-bottom: 2px;
