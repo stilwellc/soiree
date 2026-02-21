@@ -484,176 +484,47 @@
             No algorithms, no noise. Just the best of what's happening, right now.</p>
         </section>
 
-        <!-- How It Works — horizontal scroll cards -->
-        <section class="about-section">
-          <p class="about-overline">Process</p>
-          <div class="about-process-row">
-            <div class="about-process-card">
-              <div class="about-process-num">01</div>
-              <h3 class="about-process-title">Scrape</h3>
-              <p class="about-process-desc">Automated crawlers run every morning at 06:00 EST, pulling from 12+
-                curated sources — museums, galleries, editorial sites, and community boards.</p>
-            </div>
-            <div class="about-process-card">
-              <div class="about-process-num">02</div>
-              <h3 class="about-process-title">Enrich</h3>
-              <p class="about-process-desc">Events are deduplicated, categorized by type, and enriched with full
-                descriptions, pricing, and venue details from source pages.</p>
-            </div>
-            <div class="about-process-card">
-              <div class="about-process-num">03</div>
-              <h3 class="about-process-title">Serve</h3>
-              <p class="about-process-desc">Everything is cached in PostgreSQL and served via Vercel Edge
-                Functions — sub-200ms response times, anywhere in the world.</p>
-            </div>
-          </div>
-        </section>
-
-        <!-- System Architecture — collapsible dark dashboard -->
-        <section class="about-section about-arch-section">
-          <div class="about-arch-header" id="tech-toggle" role="button" tabindex="0" aria-expanded="false">
-            <div class="about-arch-header-left">
-              <p class="about-overline" style="margin-bottom:4px;">System Architecture</p>
-              <div class="about-arch-meta">
-                <span class="about-arch-tag">v2.1</span>
-                <span class="about-arch-status"><span class="about-arch-dot"></span>Operational</span>
+        <!-- Subscribe Strip — About Page -->
+        <section class="subscribe-section reveal-section" id="subscribe-strip-about">
+          <div class="subscribe-section-bg" aria-hidden="true"></div>
+          <div class="subscribe-section-content">
+            <p class="subscribe-section-eyebrow">Stay in the loop</p>
+            <h2 class="subscribe-section-heading">Never miss<br><em>what matters.</em></h2>
+            <p class="subscribe-section-text">Get a curated digest of new events matching your interests, delivered straight to your inbox.</p>
+            <form class="subscribe-strip-form" id="subscribe-form" autocomplete="off">
+              <div class="subscribe-form-row">
+                <input type="email" class="subscribe-strip-input" id="subscribe-email"
+                  placeholder="your@email.com" required aria-label="Email address">
+                <button type="submit" class="subscribe-strip-btn" id="subscribe-btn">
+                  <span>Notify me</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
               </div>
-            </div>
-            <div class="about-arch-toggle-btn">
-              <span class="about-arch-toggle-label">Dashboard</span>
-              <svg class="tech-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                width="14" height="14" aria-hidden="true">
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </div>
-          </div>
-
-          <div class="tech-dashboard-grid" id="tech-dashboard" style="display: none;">
-            <div class="tech-card graph-module">
-              <div class="module-header">
-                <span>TOPOLOGY</span>
-                <span class="module-id">NET-01</span>
+              <div class="subscribe-strip-field">
+                <label class="subscribe-strip-label" for="subscribe-region">Location</label>
+                <select class="subscribe-strip-select" id="subscribe-region" aria-label="Region">
+                  <option value="nyc">New York City</option>
+                  <option value="hoboken-jc">Hoboken · Jersey City</option>
+                  <option value="north-nj">North NJ</option>
+                  <option value="central-nj">Central NJ</option>
+                  <option value="south-nj">South NJ</option>
+                  <option value="jersey-shore">Jersey Shore</option>
+                  <option value="philly">Philadelphia</option>
+                </select>
               </div>
-              <div class="graph-wrapper-refined">
-                <canvas id="network-graph"></canvas>
-                <div class="graph-overlay">
-                  <div class="g-stat">
-                    <span class="g-val" id="network-nodes">0</span>
-                    <span class="g-lbl">NODES</span>
-                  </div>
-                  <div class="g-stat">
-                    <span class="g-val" id="network-events">0</span>
-                    <span class="g-lbl">EVENTS</span>
-                  </div>
+              <div class="subscribe-strip-field">
+                <label class="subscribe-strip-label">Interests</label>
+                <div class="subscribe-strip-chips">
+                  <button type="button" class="subscribe-strip-chip active" data-cat="art">Art</button>
+                  <button type="button" class="subscribe-strip-chip active" data-cat="culinary">Food</button>
+                  <button type="button" class="subscribe-strip-chip active" data-cat="music">Music</button>
+                  <button type="button" class="subscribe-strip-chip active" data-cat="perks">Perks</button>
+                  <button type="button" class="subscribe-strip-chip active" data-cat="lifestyle">Lifestyle</button>
+                  <button type="button" class="subscribe-strip-chip active" data-cat="community">Community</button>
                 </div>
               </div>
-              <div class="tech-legend-refined" id="js-tech-legend"></div>
-            </div>
-
-            <div class="tech-card traffic-module">
-              <div class="module-header">
-                <span>TRAFFIC LOAD</span>
-                <span class="module-id">TRF-02</span>
-              </div>
-              <div class="traffic-wrapper-refined" style="position: relative; height: 160px; padding: 0;">
-                <canvas id="traffic-chart" style="width: 100%; height: 100%; display: block;"></canvas>
-                <div class="traffic-overlay" style="position: absolute; top: 16px; right: 20px; text-align: right;">
-                  <div class="traffic-val" id="traffic-rps"
-                    style="font-family: ui-monospace, monospace; font-size: 24px; font-weight: 600; color: rgba(255,255,255,0.9);">
-                    142</div>
-                  <div class="traffic-lbl"
-                    style="font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 1px;">REQ/MIN</div>
-                  <div class="traffic-delta"
-                    style="font-size: 11px; color: #4CAF50; font-family: ui-monospace, monospace;">+12%</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="tech-side-column">
-              <div class="tech-card specs-module">
-                <div class="module-header">
-                  <span>SPECIFICATIONS</span>
-                  <span class="module-id">SYS-02</span>
-                </div>
-                <div class="specs-list">
-                  <div class="spec-item"><span class="spec-key">Core</span><span class="spec-val">Node.js +
-                      Puppeteer</span></div>
-                  <div class="spec-item"><span class="spec-key">Database</span><span
-                      class="spec-val">PostgreSQL</span></div>
-                  <div class="spec-item"><span class="spec-key">Sync Cycle</span><span class="spec-val">Daily 06:00
-                      EST</span></div>
-                  <div class="spec-item"><span class="spec-key">Last Sync</span><span class="spec-val"
-                      id="last-scrape">Loading...</span></div>
-                </div>
-              </div>
-              <div class="tech-card log-module">
-                <div class="module-header">
-                  <span>ACTIVITY LOG</span>
-                  <span class="module-id">LOG-03</span>
-                </div>
-                <div class="tech-log-refined" id="js-tech-log"></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Email Subscription -->
-        <section class="about-section about-subscribe-section">
-          <p class="about-overline">Stay in the loop</p>
-          <h2 class="about-heading">Never miss<br><em>what matters to you.</em></h2>
-          <p class="about-body" style="margin-bottom:24px;">Get a curated digest of new events matching your
-            interests — delivered straight to your inbox.</p>
-
-          <form id="subscribe-form" class="subscribe-form" autocomplete="off">
-            <div class="subscribe-field">
-              <label class="subscribe-label" for="subscribe-email">Email</label>
-              <input type="email" id="subscribe-email" class="subscribe-input" placeholder="you@email.com" required>
-            </div>
-            <div class="subscribe-field">
-              <label class="subscribe-label" for="subscribe-region">Region</label>
-              <select id="subscribe-region" class="subscribe-select">
-                <option value="nyc">New York City</option>
-                <option value="hoboken-jc">Hoboken / Jersey City</option>
-                <option value="north-nj">North NJ</option>
-                <option value="central-nj">Central NJ</option>
-                <option value="south-nj">South NJ</option>
-                <option value="jersey-shore">Jersey Shore</option>
-                <option value="philly">Philadelphia</option>
-              </select>
-            </div>
-            <div class="subscribe-field">
-              <label class="subscribe-label">Interests <span class="subscribe-hint">(select all that
-                  apply)</span></label>
-              <div class="subscribe-chips">
-                <button type="button" class="subscribe-chip active" data-cat="art">Art</button>
-                <button type="button" class="subscribe-chip active" data-cat="music">Music</button>
-                <button type="button" class="subscribe-chip active" data-cat="culinary">Food & Drink</button>
-                <button type="button" class="subscribe-chip active" data-cat="fashion">Fashion</button>
-                <button type="button" class="subscribe-chip active" data-cat="lifestyle">Lifestyle</button>
-                <button type="button" class="subscribe-chip active" data-cat="community">Community</button>
-                <button type="button" class="subscribe-chip active" data-cat="perks">Perks</button>
-              </div>
-            </div>
-            <button type="submit" class="subscribe-btn" id="subscribe-btn">
-              <span class="subscribe-btn-text">Subscribe</span>
-              <span class="subscribe-btn-loading" style="display:none;">
-                <svg class="subscribe-spinner" viewBox="0 0 24 24" width="16" height="16">
-                  <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-dasharray="31.4" stroke-linecap="round">
-                    <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s"
-                      repeatCount="indefinite" />
-                  </circle>
-                </svg>
-              </span>
-            </button>
-          </form>
-
-          <div id="subscribe-success" class="subscribe-success" style="display:none;">
-            <div class="subscribe-success-icon">✓</div>
-            <div class="subscribe-success-title">You're in.</div>
-            <p class="subscribe-success-text">We'll send you a curated digest when new events match your
-              preferences.</p>
-            <button class="subscribe-again-btn" id="subscribe-again">Update preferences</button>
+            </form>
+            <p class="subscribe-strip-success" id="subscribe-success" style="display:none;">You're in. We'll be in touch.</p>
           </div>
         </section>
 
