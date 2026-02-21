@@ -422,7 +422,6 @@ async function initRegion() {
 function updateRegionUI() {
   const regionNameEl = document.getElementById('current-region-name');
   const regionData = REGIONS[currentRegion];
-
   if (regionNameEl && regionData) {
     regionNameEl.textContent = regionData.shortName;
   }

@@ -562,18 +562,15 @@ body {
   animation: regionOptionTap 0.15s ease;
 }
 
-/* When region picker is open on mobile, hide nav and boost stacking */
+/* When region picker is open on mobile, hide nav and disable backdrop clicks */
 @media (max-width: 767px) {
   body.region-picking .nav-bar {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
   }
-  body.region-picking .hero-region-panel {
-    z-index: 9999;
-  }
   body.region-picking .region-backdrop {
-    z-index: 9998;
+    pointer-events: none;
   }
 }
 
