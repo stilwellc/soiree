@@ -3080,7 +3080,7 @@ button:focus-visible,
 
 /* ── Architecture Section ─────────────────────── */
 .about-arch-section {
-  padding-bottom: 0;
+  padding-bottom: 36px;
 }
 
 .about-arch-header {
