@@ -484,6 +484,87 @@
             No algorithms, no noise. Just the best of what's happening, right now.</p>
         </section>
 
+        <!-- System Architecture — Always visible dashboard -->
+        <section class="about-section about-arch-section">
+          <div class="about-arch-header">
+            <div class="about-arch-header-left">
+              <p class="about-overline" style="margin-bottom:4px;">System Architecture</p>
+              <div class="about-arch-meta">
+                <span class="about-arch-tag">v2.1</span>
+                <span class="about-arch-status"><span class="about-arch-dot"></span>Operational</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tech-dashboard-grid" id="tech-dashboard">
+            <div class="tech-card graph-module">
+              <div class="module-header">
+                <span>TOPOLOGY</span>
+                <span class="module-id">NET-01</span>
+              </div>
+              <div class="graph-wrapper-refined">
+                <canvas id="network-graph"></canvas>
+                <div class="graph-overlay">
+                  <div class="g-stat">
+                    <span class="g-val" id="network-nodes">0</span>
+                    <span class="g-lbl">NODES</span>
+                  </div>
+                  <div class="g-stat">
+                    <span class="g-val" id="network-events">0</span>
+                    <span class="g-lbl">EVENTS</span>
+                  </div>
+                </div>
+              </div>
+              <div class="tech-legend-refined" id="js-tech-legend"></div>
+            </div>
+
+            <div class="tech-card traffic-module">
+              <div class="module-header">
+                <span>TRAFFIC LOAD</span>
+                <span class="module-id">TRF-02</span>
+              </div>
+              <div class="traffic-wrapper-refined" style="position: relative; height: 160px; padding: 0;">
+                <canvas id="traffic-chart" style="width: 100%; height: 100%; display: block;"></canvas>
+                <div class="traffic-overlay" style="position: absolute; top: 16px; right: 20px; text-align: right;">
+                  <div class="traffic-val" id="traffic-rps"
+                    style="font-family: ui-monospace, monospace; font-size: 24px; font-weight: 600; color: rgba(255,255,255,0.9);">
+                    142</div>
+                  <div class="traffic-lbl"
+                    style="font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 1px;">REQ/MIN</div>
+                  <div class="traffic-delta"
+                    style="font-size: 11px; color: #4CAF50; font-family: ui-monospace, monospace;">+12%</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tech-side-column">
+              <div class="tech-card specs-module">
+                <div class="module-header">
+                  <span>SPECIFICATIONS</span>
+                  <span class="module-id">SYS-02</span>
+                </div>
+                <div class="specs-list">
+                  <div class="spec-item"><span class="spec-key">Core</span><span class="spec-val">Node.js +
+                      Puppeteer</span></div>
+                  <div class="spec-item"><span class="spec-key">Database</span><span
+                      class="spec-val">PostgreSQL</span></div>
+                  <div class="spec-item"><span class="spec-key">Sync Cycle</span><span class="spec-val">Daily 06:00
+                      EST</span></div>
+                  <div class="spec-item"><span class="spec-key">Last Sync</span><span class="spec-val"
+                      id="last-scrape">Loading...</span></div>
+                </div>
+              </div>
+              <div class="tech-card log-module">
+                <div class="module-header">
+                  <span>ACTIVITY LOG</span>
+                  <span class="module-id">LOG-03</span>
+                </div>
+                <div class="tech-log-refined" id="js-tech-log"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Subscribe Strip — About Page -->
         <section class="subscribe-section reveal-section" id="subscribe-strip-about">
           <div class="subscribe-section-bg" aria-hidden="true"></div>

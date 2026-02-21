@@ -254,12 +254,7 @@ body {
   margin-top: 6px;
 }
 
-.view-home .hero.hero-landing .hero-location-row {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  margin-top: 8px;
-}
+/* Removed: now handled by base .hero-location-row */
 
 @media (min-width: 768px) {
   .view-home .hero.hero-landing {
@@ -273,7 +268,7 @@ body {
     height: 60px;
     margin-top: 8px;
   }
-  .view-home .hero.hero-landing .hero-location-row {
+  .hero-location-row {
     margin-top: 12px;
   }
 }
@@ -667,6 +662,10 @@ body {
 
 /* Region selector row */
 .hero-location-row {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 8px;
   opacity: 0;
   animation: heroFadeUp 0.9s var(--transition) 0.45s forwards;
 }

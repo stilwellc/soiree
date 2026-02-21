@@ -2608,21 +2608,10 @@ if (document.readyState === 'loading') {
     const freeCheckbox = document.getElementById('free-mode-toggle');
     if (freeCheckbox) freeCheckbox.addEventListener('change', toggleFreeMode);
 
-    // Tech dashboard collapsible toggle
-    const techToggle = document.getElementById('tech-toggle');
+    // Tech dashboard - always visible, initialize graph immediately
     const techDashboard = document.getElementById('tech-dashboard');
-    let techGraphInited = false;
-    if (techToggle && techDashboard) {
-      techToggle.addEventListener('click', () => {
-        const open = techDashboard.style.display !== 'none';
-        techDashboard.style.display = open ? 'none' : 'flex';
-        techToggle.setAttribute('aria-expanded', !open);
-        techToggle.querySelector('.tech-chevron').style.transform = open ? '' : 'rotate(180deg)';
-        if (!open && !techGraphInited) {
-          techGraphInited = true;
-          requestAnimationFrame(() => initNetworkGraph());
-        }
-      });
+    if (techDashboard) {
+      requestAnimationFrame(() => initNetworkGraph());
     }
   });
 } else {
