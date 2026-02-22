@@ -1207,18 +1207,24 @@ function renderFavorites() {
 
 // Render Social Media Posts for Instagram
 function renderSocialPosts() {
-  // Filter events: NYC region, this week, categories: art, perks, culinary
-  const nycEvents = events.filter(event => {
-    const region = getEventRegion(event);
-    return region === 'nyc';
-  });
+  const nycEvents = events.filter(event => getEventRegion(event) === 'nyc');
 
-  // Get this week's events
+  // Date range: today → +7 days
   const today = new Date();
   const endOfWeek = new Date(today);
   endOfWeek.setDate(today.getDate() + 7);
   const todayStr = formatDateLocal(today);
   const endOfWeekStr = formatDateLocal(endOfWeek);
+
+  // Format week label: "Feb 21 – 28, 2026"
+  const weekLabel = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    + ' – ' + endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  // Set week labels
+  ['social-week-art', 'social-week-perks', 'social-week-food'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = weekLabel;
+  });
 
   const thisWeekEvents = nycEvents.filter(event => {
     const eventDate = event.start_date || extractDateFromISO(event.date) || event.date;
@@ -1226,15 +1232,10 @@ function renderSocialPosts() {
     return eventDate >= todayStr && eventDate <= endOfWeekStr;
   });
 
-  // Split by category
-  const artEvents = thisWeekEvents.filter(e => e.category === 'art').slice(0, 6);
-  const perksEvents = thisWeekEvents.filter(e => e.category === 'perks').slice(0, 6);
-  const foodEvents = thisWeekEvents.filter(e => e.category === 'culinary').slice(0, 6);
-
-  // Render each category
-  renderSocialCategory('social-art-events', artEvents);
-  renderSocialCategory('social-perks-events', perksEvents);
-  renderSocialCategory('social-food-events', foodEvents);
+  // Max 8 events per card to guarantee single-screen fit
+  renderSocialCategory('social-art-events', thisWeekEvents.filter(e => e.category === 'art').slice(0, 8));
+  renderSocialCategory('social-perks-events', thisWeekEvents.filter(e => e.category === 'perks').slice(0, 8));
+  renderSocialCategory('social-food-events', thisWeekEvents.filter(e => e.category === 'culinary').slice(0, 8));
 }
 
 function renderSocialCategory(containerId, categoryEvents) {
@@ -1246,39 +1247,22 @@ function renderSocialCategory(containerId, categoryEvents) {
     return;
   }
 
-  container.innerHTML = categoryEvents.map(event => {
-    const date = formatEventDate(event);
-    const time = event.time || '';
-    const location = event.location || '';
+  container.innerHTML = categoryEvents.map((event, i) => {
+    // Short date: "Fri 2/21"
+    let shortDate = '';
+    const dateStr = event.start_date ? event.start_date.split('T')[0] : null;
+    if (dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      const day = dt.toLocaleDateString('en-US', { weekday: 'short' });
+      shortDate = `${day} ${m}/${d}`;
+    }
 
-    return `
-      <div class="social-event-item">
-        <div class="social-event-name">${event.name}</div>
-        <div class="social-event-details">
-          ${date ? `
-            <div class="social-event-detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
-              <span>${date}</span>
-            </div>
-          ` : ''}
-          ${time ? `
-            <div class="social-event-detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              <span>${time}</span>
-            </div>
-          ` : ''}
-        </div>
-        ${location ? `<div class="social-event-location">${location}</div>` : ''}
-      </div>
-    `;
+    return `<div class="social-event-row">
+      <span class="social-event-num">${String(i + 1).padStart(2, '0')}</span>
+      <span class="social-event-name">${event.name}</span>
+      ${shortDate ? `<span class="social-event-meta">${shortDate}</span>` : ''}
+    </div>`;
   }).join('');
 }
 

@@ -4434,171 +4434,185 @@ button:focus-visible,
 }
 
 /* ============================================================================
-   SOCIAL MEDIA VIEW - Instagram screenshot-ready posts
+   SOCIAL MEDIA VIEW — iPhone-screenshot Instagram posts
+   Each .social-post = exactly one screen (100dvh). No scroll needed.
    ============================================================================ */
 
 #social-view {
-  min-height: 100vh;
-  background: var(--dusk);
+  background: #1C1410;
   padding: 0;
+  overflow-x: hidden;
 }
 
 .social-posts-container {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 0;
-  max-width: 100%;
-  margin: 0 auto;
 }
 
-/* Individual post card - iPhone screen-sized for easy screenshots */
+/* ---- Card: one full iPhone screen ---- */
 .social-post {
-  background: linear-gradient(160deg, #1C1410 0%, #2C1E14 50%, #1A1612 100%);
-  border-radius: 0;
-  padding: 48px 32px 32px;
   width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
-  margin: 0;
-  box-shadow: none;
+  height: 100vh;
+  height: 100dvh;
   position: relative;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
 }
 
+/* Grain texture overlay */
 .social-post::before {
   content: '';
   position: absolute;
   inset: 0;
-  opacity: 0.05;
+  opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 220px 220px;
+  background-size: 200px 200px;
   pointer-events: none;
+  z-index: 1;
 }
 
-.social-post-header {
+/* Subtle gradient per card */
+#social-art  { background: linear-gradient(170deg, #1C1410 0%, #22181A 50%, #1A1612 100%); }
+#social-perks { background: linear-gradient(170deg, #1C1410 0%, #1A1C18 50%, #1A1612 100%); }
+#social-food  { background: linear-gradient(170deg, #1C1410 0%, #201814 50%, #1A1612 100%); }
+
+/* Inner flex layout — fills screen, spaces header/list/footer */
+.social-post-inner {
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top, 20px) 28px env(safe-area-inset-bottom, 20px);
+  padding-top: max(env(safe-area-inset-top, 20px), 52px);
+  padding-bottom: max(env(safe-area-inset-bottom, 20px), 28px);
+  box-sizing: border-box;
+}
+
+/* ---- Top: logo + category + date range ---- */
+.social-post-top {
   text-align: center;
-  margin-bottom: 32px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid rgba(196, 149, 106, 0.15);
   flex-shrink: 0;
+  padding-bottom: 20px;
 }
 
 .social-logo {
-  width: 140px;
+  width: 110px;
   height: auto;
-  margin: 0 auto 16px;
+  margin: 0 auto 14px;
   display: block;
   filter: brightness(1.1);
 }
 
-.social-post-title {
+.social-post-category {
   font-family: 'Jost', sans-serif;
-  font-size: 36px;
+  font-size: 28px;
   font-weight: 600;
   color: #FAF8F3;
-  margin-bottom: 6px;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
 }
 
-.social-post-subtitle {
+.social-post-week {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 18px;
+  font-size: 16px;
   font-style: italic;
-  color: #C4956A;
-  letter-spacing: 0.3px;
+  color: var(--dusk);
+  opacity: 0.85;
 }
 
+/* ---- Divider rule ---- */
+.social-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(196,149,106,0.25) 20%, rgba(196,149,106,0.25) 80%, transparent 100%);
+  flex-shrink: 0;
+}
+
+/* ---- Event list — fills the middle, never scrolls ---- */
 .social-events-list {
-  position: relative;
-  z-index: 1;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  flex: 1;
-  overflow-y: auto;
+  justify-content: center;
+  gap: 0;
+  padding: 16px 0;
+  overflow: hidden;
 }
 
-.social-event-item {
-  background: rgba(250, 248, 243, 0.05);
-  border: 1px solid rgba(196, 149, 106, 0.1);
-  border-radius: 12px;
-  padding: 18px;
+.social-event-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(196, 149, 106, 0.08);
+}
+
+.social-event-row:last-child {
+  border-bottom: none;
+}
+
+.social-event-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--dusk);
+  opacity: 0.5;
+  flex-shrink: 0;
+  width: 18px;
+  text-align: right;
 }
 
 .social-event-name {
   font-family: 'Jost', sans-serif;
-  font-size: 18px;
-  font-weight: 500;
-  color: #FAF8F3;
-  margin-bottom: 10px;
-  line-height: 1.3;
-}
-
-.social-event-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  font-family: 'Jost', sans-serif;
-  font-size: 13px;
-  color: rgba(250, 248, 243, 0.7);
-}
-
-.social-event-detail {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.social-event-detail svg {
-  width: 14px;
-  height: 14px;
-  opacity: 0.6;
-}
-
-.social-event-location {
-  font-size: 13px;
-  color: #C4956A;
-  margin-top: 6px;
-  font-family: 'Jost', sans-serif;
-}
-
-.social-post-footer {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  padding-top: 24px;
-  margin-top: 24px;
-  border-top: 1px solid rgba(196, 149, 106, 0.15);
-  flex-shrink: 0;
-}
-
-.social-cta {
-  font-family: 'Jost', sans-serif;
   font-size: 16px;
   font-weight: 500;
+  color: #FAF8F3;
+  flex: 1;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.social-event-meta {
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  color: var(--dusk);
+  opacity: 0.7;
+  flex-shrink: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ---- Bottom: URL + tagline ---- */
+.social-post-bottom {
+  text-align: center;
+  flex-shrink: 0;
+  padding-top: 20px;
+}
+
+.social-url {
+  font-family: 'Jost', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
   color: #C4956A;
   letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.social-tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  font-style: italic;
+  color: rgba(250, 248, 243, 0.4);
 }
 
 .social-empty {
   text-align: center;
-  padding: 60px 24px;
-  color: rgba(250, 248, 243, 0.5);
+  padding: 40px 24px;
+  color: rgba(250, 248, 243, 0.4);
   font-family: 'Jost', sans-serif;
-  font-size: 16px;
-}
-
-/* iPhone screenshot optimizations */
-@media (max-width: 768px) {
-  .social-post {
-    padding: 40px 28px 28px;
-  }
+  font-size: 15px;
+  font-style: italic;
 }
 
 /* Free Mode Toggle (High-End Sub-style) */
