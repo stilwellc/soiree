@@ -4470,10 +4470,23 @@ button:focus-visible,
   z-index: 1;
 }
 
-/* Subtle gradient per card */
-#social-art  { background: linear-gradient(170deg, #1C1410 0%, #22181A 50%, #1A1612 100%); }
-#social-perks { background: linear-gradient(170deg, #1C1410 0%, #1A1C18 50%, #1A1612 100%); }
-#social-food  { background: linear-gradient(170deg, #1C1410 0%, #201814 50%, #1A1612 100%); }
+/* Alternating backgrounds: dark → terracotta → dark */
+#social-art   { background: linear-gradient(170deg, #1C1410 0%, #22181A 40%, #1A1612 100%); }
+#social-perks { background: linear-gradient(170deg, #A87B56 0%, #C4956A 40%, #B38860 100%); }
+#social-food  { background: linear-gradient(170deg, #1C1410 0%, #201814 40%, #1A1612 100%); }
+
+/* Light-background overrides for terracotta card */
+#social-perks .social-post-category,
+#social-perks .social-event-name { color: #1C1410; }
+#social-perks .social-post-week { color: rgba(28, 20, 16, 0.6); }
+#social-perks .social-event-num { color: rgba(28, 20, 16, 0.35); }
+#social-perks .social-event-meta { color: rgba(28, 20, 16, 0.5); }
+#social-perks .social-event-row { border-bottom-color: rgba(28, 20, 16, 0.1); }
+#social-perks .social-rule { background: linear-gradient(90deg, transparent 0%, rgba(28,20,16,0.15) 20%, rgba(28,20,16,0.15) 80%, transparent 100%); }
+#social-perks .social-url { color: #1C1410; }
+#social-perks .social-tagline { color: rgba(28, 20, 16, 0.45); }
+#social-perks .social-empty { color: rgba(28, 20, 16, 0.4); }
+#social-perks .social-logo { filter: brightness(0.15); }
 
 /* Inner flex layout — fills screen, spaces header/list/footer */
 .social-post-inner {
@@ -4504,20 +4517,22 @@ button:focus-visible,
 }
 
 .social-post-category {
-  font-family: 'Jost', sans-serif;
-  font-size: 28px;
-  font-weight: 600;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px;
+  font-weight: 300;
   color: #FAF8F3;
-  letter-spacing: -0.3px;
+  letter-spacing: 1px;
   margin-bottom: 4px;
+  text-transform: uppercase;
 }
 
 .social-post-week {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 16px;
-  font-style: italic;
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
   color: var(--dusk);
-  opacity: 0.85;
+  letter-spacing: 3px;
+  text-transform: uppercase;
 }
 
 /* ---- Divider rule ---- */
@@ -4552,19 +4567,19 @@ button:focus-visible,
 
 .social-event-num {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 13px;
-  font-style: italic;
+  font-size: 14px;
+  font-weight: 300;
   color: var(--dusk);
-  opacity: 0.5;
+  opacity: 0.4;
   flex-shrink: 0;
   width: 18px;
   text-align: right;
 }
 
 .social-event-name {
-  font-family: 'Jost', sans-serif;
-  font-size: 16px;
-  font-weight: 500;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 400;
   color: #FAF8F3;
   flex: 1;
   line-height: 1.35;
@@ -4575,12 +4590,14 @@ button:focus-visible,
 
 .social-event-meta {
   font-family: 'Jost', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 300;
   color: var(--dusk);
-  opacity: 0.7;
+  opacity: 0.55;
   flex-shrink: 0;
   text-align: right;
   white-space: nowrap;
+  letter-spacing: 0.5px;
 }
 
 /* ---- Bottom: URL + tagline ---- */
@@ -4592,18 +4609,20 @@ button:focus-visible,
 
 .social-url {
   font-family: 'Jost', sans-serif;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 500;
   color: #C4956A;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
 }
 
 .social-tagline {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 300;
   font-style: italic;
-  color: rgba(250, 248, 243, 0.4);
+  color: rgba(250, 248, 243, 0.35);
 }
 
 .social-empty {
