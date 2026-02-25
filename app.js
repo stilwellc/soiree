@@ -1237,6 +1237,12 @@ function renderSocialPosts() {
   renderSocialCategory('social-perks-events', thisWeekEvents.filter(e => e.category === 'perks').slice(0, 8));
   renderSocialCategory('social-food-events', thisWeekEvents.filter(e => e.category === 'culinary').slice(0, 8));
 
+  // Set footer taglines with total curated event count
+  const totalCount = thisWeekEvents.length;
+  document.querySelectorAll('.social-tagline').forEach(el => {
+    el.textContent = `Visit for all ${totalCount} curated events this week`;
+  });
+
   // Dynamically distribute vertical space across event rows to fill 4:5 frame
   requestAnimationFrame(() => distributeSocialSpacing());
 }
