@@ -4436,10 +4436,11 @@ button:focus-visible,
 /* ============================================================================
    SOCIAL MEDIA VIEW — iPhone-screenshot Instagram posts
    Each .social-post = exactly one screen (100dvh). No scroll needed.
+   Warm cream editorial design with dark typography.
    ============================================================================ */
 
 #social-view {
-  background: #1C1410;
+  background: #EDE8E0;
   padding: 0;
   overflow-x: hidden;
 }
@@ -4456,6 +4457,7 @@ button:focus-visible,
   height: 100dvh;
   position: relative;
   overflow: hidden;
+  background: #EDE8E0;
 }
 
 /* Grain texture overlay */
@@ -4463,30 +4465,12 @@ button:focus-visible,
   content: '';
   position: absolute;
   inset: 0;
-  opacity: 0.04;
+  opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 200px 200px;
   pointer-events: none;
   z-index: 1;
 }
-
-/* Alternating backgrounds: dark → terracotta → dark */
-#social-art   { background: linear-gradient(170deg, #1C1410 0%, #22181A 40%, #1A1612 100%); }
-#social-perks { background: linear-gradient(170deg, #A87B56 0%, #C4956A 40%, #B38860 100%); }
-#social-food  { background: linear-gradient(170deg, #1C1410 0%, #201814 40%, #1A1612 100%); }
-
-/* Light-background overrides for terracotta card */
-#social-perks .social-post-category,
-#social-perks .social-event-name { color: #1C1410; }
-#social-perks .social-post-week { color: rgba(28, 20, 16, 0.6); }
-#social-perks .social-event-num { color: rgba(28, 20, 16, 0.35); }
-#social-perks .social-event-meta { color: rgba(28, 20, 16, 0.5); }
-#social-perks .social-event-row { border-bottom-color: rgba(28, 20, 16, 0.1); }
-#social-perks .social-rule { background: linear-gradient(90deg, transparent 0%, rgba(28,20,16,0.15) 20%, rgba(28,20,16,0.15) 80%, transparent 100%); }
-#social-perks .social-url { color: #1C1410; }
-#social-perks .social-tagline { color: rgba(28, 20, 16, 0.45); }
-#social-perks .social-empty { color: rgba(28, 20, 16, 0.4); }
-#social-perks .social-logo { filter: brightness(0.15); }
 
 /* Inner flex layout — fills screen, spaces header/list/footer */
 .social-post-inner {
@@ -4495,51 +4479,71 @@ button:focus-visible,
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: env(safe-area-inset-top, 20px) 28px env(safe-area-inset-bottom, 20px);
-  padding-top: max(env(safe-area-inset-top, 20px), 52px);
-  padding-bottom: max(env(safe-area-inset-bottom, 20px), 28px);
+  padding: env(safe-area-inset-top, 20px) 36px env(safe-area-inset-bottom, 20px);
+  padding-top: max(env(safe-area-inset-top, 20px), 56px);
+  padding-bottom: max(env(safe-area-inset-bottom, 20px), 40px);
   box-sizing: border-box;
 }
 
-/* ---- Top: logo + category + date range ---- */
+/* ---- Top: logo + category with rules + date range + vertical line ---- */
 .social-post-top {
   text-align: center;
   flex-shrink: 0;
-  padding-bottom: 20px;
+  padding-bottom: 8px;
 }
 
 .social-logo {
-  width: 110px;
+  width: 160px;
   height: auto;
-  margin: 0 auto 14px;
+  margin: 0 auto 18px;
   display: block;
-  filter: brightness(1.1);
+  filter: brightness(0.1);
 }
 
 .social-post-category {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 36px;
-  font-weight: 300;
-  color: #FAF8F3;
-  letter-spacing: 1px;
-  margin-bottom: 4px;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #1C1410;
+  letter-spacing: 5px;
+  margin-bottom: 12px;
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.social-post-category::before,
+.social-post-category::after {
+  content: '';
+  flex: 1;
+  max-width: 60px;
+  height: 1px;
+  background: rgba(28, 20, 16, 0.25);
 }
 
 .social-post-week {
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   font-weight: 400;
-  color: var(--dusk);
+  color: rgba(28, 20, 16, 0.5);
   letter-spacing: 3px;
   text-transform: uppercase;
+  margin-bottom: 0;
 }
 
-/* ---- Divider rule ---- */
+/* Vertical line separator between header and events */
 .social-rule {
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(196,149,106,0.25) 20%, rgba(196,149,106,0.25) 80%, transparent 100%);
   flex-shrink: 0;
+  width: 1px;
+  height: 40px;
+  margin: 0 auto;
+  background: rgba(28, 20, 16, 0.2);
+}
+
+.social-rule:last-of-type {
+  display: none;
 }
 
 /* ---- Event list — fills the middle, never scrolls ---- */
@@ -4549,16 +4553,16 @@ button:focus-visible,
   flex-direction: column;
   justify-content: center;
   gap: 0;
-  padding: 16px 0;
+  padding: 8px 0;
   overflow: hidden;
 }
 
 .social-event-row {
   display: flex;
   align-items: baseline;
-  gap: 10px;
-  padding: 11px 0;
-  border-bottom: 1px solid rgba(196, 149, 106, 0.08);
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(28, 20, 16, 0.08);
 }
 
 .social-event-row:last-child {
@@ -4567,22 +4571,21 @@ button:focus-visible,
 
 .social-event-num {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 300;
-  color: var(--dusk);
-  opacity: 0.4;
+  color: rgba(28, 20, 16, 0.3);
   flex-shrink: 0;
-  width: 18px;
+  width: 22px;
   text-align: right;
 }
 
 .social-event-name {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 400;
-  color: #FAF8F3;
+  color: #1C1410;
   flex: 1;
-  line-height: 1.35;
+  line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4590,10 +4593,9 @@ button:focus-visible,
 
 .social-event-meta {
   font-family: 'Jost', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 300;
-  color: var(--dusk);
-  opacity: 0.55;
+  color: rgba(28, 20, 16, 0.45);
   flex-shrink: 0;
   text-align: right;
   white-space: nowrap;
@@ -4604,31 +4606,31 @@ button:focus-visible,
 .social-post-bottom {
   text-align: center;
   flex-shrink: 0;
-  padding-top: 20px;
+  padding-top: 28px;
 }
 
 .social-url {
   font-family: 'Jost', sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  color: #C4956A;
-  letter-spacing: 3px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1C1410;
+  letter-spacing: 4px;
   text-transform: uppercase;
   margin-bottom: 6px;
 }
 
 .social-tagline {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 300;
   font-style: italic;
-  color: rgba(250, 248, 243, 0.35);
+  color: rgba(28, 20, 16, 0.45);
 }
 
 .social-empty {
   text-align: center;
   padding: 40px 24px;
-  color: rgba(250, 248, 243, 0.4);
+  color: rgba(28, 20, 16, 0.4);
   font-family: 'Jost', sans-serif;
   font-size: 15px;
   font-style: italic;
