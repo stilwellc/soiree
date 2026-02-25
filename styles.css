@@ -4459,6 +4459,28 @@ button:focus-visible,
   background: #EDE8E0;
 }
 
+/* Alternating card backgrounds: dust → sand → terracotta */
+#social-art   { background: #EDE8E0; }
+#social-perks { background: #E8D5B0; }
+#social-food  { background: #C4956A; }
+
+/* 4:3 crop guide lines — shows where content would clip at 4:3.
+   4:5 height = W × 5/4.  4:3 height = W × 3/4.
+   Excess = W × 1/2, split evenly → each guide sits W×1/4 from edge.
+   As % of 4:5 height: (W×1/4) / (W×5/4) = 20% from top and bottom. */
+.social-post::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 20%;
+  bottom: 20%;
+  border-top: 1px dashed rgba(28, 20, 16, 0.15);
+  border-bottom: 1px dashed rgba(28, 20, 16, 0.15);
+  pointer-events: none;
+  z-index: 3;
+}
+
 /* Grain texture overlay */
 .social-post::before {
   content: '';
@@ -4470,6 +4492,26 @@ button:focus-visible,
   pointer-events: none;
   z-index: 1;
 }
+
+/* ---- Terracotta card: light text overrides ---- */
+#social-food .social-logo { filter: brightness(1.1); }
+#social-food .social-post-category { color: #FAF8F3; }
+#social-food .social-post-category::before,
+#social-food .social-post-category::after { background: rgba(250, 248, 243, 0.3); }
+#social-food .social-post-week { color: rgba(250, 248, 243, 0.6); }
+#social-food .social-rule { background: rgba(250, 248, 243, 0.25); }
+#social-food .social-event-num { color: rgba(250, 248, 243, 0.35); }
+#social-food .social-event-name { color: #FAF8F3; }
+#social-food .social-event-meta { color: rgba(250, 248, 243, 0.55); }
+#social-food .social-event-row { border-bottom-color: rgba(250, 248, 243, 0.1); }
+#social-food .social-url { color: #FAF8F3; }
+#social-food .social-tagline { color: rgba(250, 248, 243, 0.5); }
+#social-food .social-empty { color: rgba(250, 248, 243, 0.45); }
+#social-food::after { border-color: rgba(250, 248, 243, 0.15); }
+
+/* ---- Sand card: slightly adjusted for medium bg ---- */
+#social-perks .social-event-row { border-bottom-color: rgba(28, 20, 16, 0.06); }
+#social-perks::after { border-color: rgba(28, 20, 16, 0.12); }
 
 /* Inner flex layout — fills screen, spaces header/list/footer */
 .social-post-inner {
