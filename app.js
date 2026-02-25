@@ -806,8 +806,8 @@ function clearSearch() {
 
 // Navigation
 // Map view name → URL path
-const VIEW_PATHS = { discover: '/', all: '/all', today: '/today', week: '/week', favorites: '/favorites', about: '/about', social: '/social' };
-const PATH_VIEWS = { '/': 'discover', '/all': 'all', '/today': 'today', '/week': 'week', '/favorites': 'favorites', '/about': 'about', '/social': 'social' };
+const VIEW_PATHS = { discover: '/', all: '/all', today: '/today', week: '/week', favorites: '/favorites', about: '/about', social: '/social', pins: '/pins' };
+const PATH_VIEWS = { '/': 'discover', '/all': 'all', '/today': 'today', '/week': 'week', '/favorites': 'favorites', '/about': 'about', '/social': 'social', '/pins': 'pins' };
 
 function navigateToView(view, opts = {}) {
   const navItem = document.querySelector(`[data-view="${view}"]`);
@@ -834,14 +834,15 @@ function handleNavClick(item, { pushHistory = true } = {}) {
 
   // Find the currently visible view
   const socialView = document.getElementById('social-view');
-  const views = [discoverView, favoritesView, aboutView, socialView];
+  const pinsView = document.getElementById('pins-view');
+  const views = [discoverView, favoritesView, aboutView, socialView, pinsView];
   const visibleView = views.find(v => !v.classList.contains('hidden'));
 
   function showView() {
     const categoryGrid = document.getElementById('category-grid');
     const eventsListEl = document.getElementById('events-list');
 
-    // Restore nav/footer if coming from social view
+    // Restore nav/footer if coming from social/pins view
     document.querySelector('.nav-bar').style.display = '';
     document.querySelector('.app-footer').style.display = '';
 
@@ -852,6 +853,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
       socialView.classList.add('hidden');
+      pinsView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.remove('hidden');
       if (eventsListEl) eventsListEl.classList.add('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
@@ -866,6 +868,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
       socialView.classList.add('hidden');
+      pinsView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
@@ -880,6 +883,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
       socialView.classList.add('hidden');
+      pinsView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
@@ -894,6 +898,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
       socialView.classList.add('hidden');
+      pinsView.classList.add('hidden');
       if (categoryGrid) categoryGrid.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
@@ -905,6 +910,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       favoritesView.classList.remove('hidden');
       aboutView.classList.add('hidden');
       socialView.classList.add('hidden');
+      pinsView.classList.add('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
       if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
       renderFavorites();
@@ -915,23 +921,34 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       favoritesView.classList.add('hidden');
       aboutView.classList.remove('hidden');
       socialView.classList.add('hidden');
+      pinsView.classList.add('hidden');
       loadStats();
     } else if (view === 'social') {
       discoverView.classList.add('hidden');
       favoritesView.classList.add('hidden');
       aboutView.classList.add('hidden');
       socialView.classList.remove('hidden');
+      pinsView.classList.add('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
       if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
-      // Hide nav and footer for clean screenshots
       document.querySelector('.nav-bar').style.display = 'none';
       document.querySelector('.app-footer').style.display = 'none';
       renderSocialPosts();
+    } else if (view === 'pins') {
+      discoverView.classList.add('hidden');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.add('hidden');
+      socialView.classList.add('hidden');
+      pinsView.classList.remove('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
+      document.querySelector('.nav-bar').style.display = 'none';
+      document.querySelector('.app-footer').style.display = 'none';
     }
   }
 
   // If switching to a different view container, fade out then in
-  const targetView = (view === 'favorites') ? favoritesView : (view === 'about') ? aboutView : (view === 'social') ? socialView : discoverView;
+  const targetView = (view === 'favorites') ? favoritesView : (view === 'about') ? aboutView : (view === 'social') ? socialView : (view === 'pins') ? pinsView : discoverView;
   if (visibleView && visibleView !== targetView) {
     visibleView.classList.add('view-fade-out');
     setTimeout(() => {
@@ -1278,6 +1295,7 @@ function distributeSocialSpacing() {
     });
   });
 }
+
 
 function renderSocialCategory(containerId, categoryEvents) {
   const container = document.getElementById(containerId);

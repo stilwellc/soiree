@@ -698,6 +698,89 @@
       </div>
     </div>
 
+    <!-- Pinned Posts View (Hidden - /pins route)
+         Instagram grid order: post 1st → appears rightmost.
+         Post order: Categories → Logo → NYC Curated
+         Grid result: Categories | Logo | NYC Curated  (L→R) -->
+    <div id="pins-view" class="hidden">
+      <div class="pins-container">
+
+        <!-- Card 1 — will appear RIGHTMOST on grid. Post this LAST. -->
+        <div class="pin-card pin-card-1">
+          <!-- Wave: enters from left at ~620, sweeps up to ~520, exits right at ~580 -->
+          <svg class="pin-wave" viewBox="0 0 1080 1350" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="wg1" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#C4956A" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#C4956A" stop-opacity="0.08"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,620 C200,580 350,500 540,520 C730,540 900,600 1080,580
+                     L1080,740 C900,760 730,700 540,680 C350,660 200,740 0,780 Z" fill="url(#wg1)"/>
+          </svg>
+          <div class="pin-inner">
+            <img src="assets/images/nav-logo-transparent.png" alt="" class="pin-heart">
+            <div class="pin-text-stack">
+              <div class="pin-headline">NYC</div>
+              <div class="pin-headline">Curated</div>
+              <div class="pin-rule"></div>
+              <div class="pin-sub">100% Free</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 — will appear CENTER on grid. Post this SECOND. -->
+        <div class="pin-card pin-card-2">
+          <!-- Wave: enters left at ~580 (matches card 3 exit), dips to ~680, exits right at ~620 (matches card 1 entry) -->
+          <svg class="pin-wave" viewBox="0 0 1080 1350" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="wg2" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#C4956A" stop-opacity="0.12"/>
+                <stop offset="50%" stop-color="#C4956A" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#C4956A" stop-opacity="0.12"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,580 C180,620 360,700 540,680 C720,660 900,600 1080,620
+                     L1080,780 C900,760 720,820 540,840 C360,860 180,780 0,740 Z" fill="url(#wg2)"/>
+          </svg>
+          <div class="pin-inner">
+            <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="pin-logo">
+            <div class="pin-rule"></div>
+            <div class="pin-url">soiree.today</div>
+          </div>
+        </div>
+
+        <!-- Card 3 — will appear LEFTMOST on grid. Post this FIRST. -->
+        <div class="pin-card pin-card-3">
+          <!-- Wave: enters left at ~560, sweeps down to ~620, exits right at ~580 (matches card 2 entry) -->
+          <svg class="pin-wave" viewBox="0 0 1080 1350" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="wg3" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#C4956A" stop-opacity="0.08"/>
+                <stop offset="100%" stop-color="#C4956A" stop-opacity="0.3"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,560 C200,580 350,640 540,620 C730,600 900,560 1080,580
+                     L1080,740 C900,720 730,760 540,780 C350,800 200,740 0,720 Z" fill="url(#wg3)"/>
+          </svg>
+          <div class="pin-inner">
+            <img src="assets/images/nav-logo-transparent.png" alt="" class="pin-heart">
+            <div class="pin-cats">
+              <span>Art & Culture</span>
+              <span>Food & Drink</span>
+              <span>Music</span>
+              <span>Perks & Pop-Ups</span>
+              <span>Lifestyle</span>
+              <span>Community</span>
+            </div>
+            <div class="pin-rule"></div>
+            <div class="pin-cats-tagline">Curated weekly in NYC</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Footer (Global) -->
     <footer class="app-footer">
       <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="footer-logo">
