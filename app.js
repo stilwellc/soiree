@@ -1232,10 +1232,36 @@ function renderSocialPosts() {
     return eventDate >= todayStr && eventDate <= endOfWeekStr;
   });
 
-  // Max 8 events per card to guarantee single-screen fit
+  // Max 8 events per card to guarantee fit
   renderSocialCategory('social-art-events', thisWeekEvents.filter(e => e.category === 'art').slice(0, 8));
   renderSocialCategory('social-perks-events', thisWeekEvents.filter(e => e.category === 'perks').slice(0, 8));
   renderSocialCategory('social-food-events', thisWeekEvents.filter(e => e.category === 'culinary').slice(0, 8));
+
+  // Dynamically distribute vertical space across event rows to fill 4:5 frame
+  requestAnimationFrame(() => distributeSocialSpacing());
+}
+
+function distributeSocialSpacing() {
+  document.querySelectorAll('.social-post').forEach(post => {
+    const list = post.querySelector('.social-events-list');
+    const rows = list ? list.querySelectorAll('.social-event-row') : [];
+    if (!rows.length) return;
+
+    // Reset padding so we can measure natural content height
+    rows.forEach(r => r.style.padding = '0');
+
+    const listHeight = list.clientHeight;
+    let contentHeight = 0;
+    rows.forEach(r => { contentHeight += r.scrollHeight; });
+
+    const availableSpace = listHeight - contentHeight;
+    const verticalPad = Math.max(4, Math.floor(availableSpace / (rows.length * 2)));
+
+    rows.forEach(r => {
+      r.style.paddingTop = verticalPad + 'px';
+      r.style.paddingBottom = verticalPad + 'px';
+    });
+  });
 }
 
 function renderSocialCategory(containerId, categoryEvents) {
