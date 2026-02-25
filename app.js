@@ -1247,7 +1247,16 @@ function distributeSocialSpacing() {
     const rows = list ? list.querySelectorAll('.social-event-row') : [];
     if (!rows.length) return;
 
-    // Reset padding so we can measure natural content height
+    const count = rows.length;
+
+    // Scale font size down for dense cards
+    const fontSize = count <= 4 ? 17 : count <= 6 ? 15 : 14;
+    rows.forEach(r => {
+      const name = r.querySelector('.social-event-name');
+      if (name) name.style.fontSize = fontSize + 'px';
+    });
+
+    // Reset padding to measure natural height
     rows.forEach(r => r.style.padding = '0');
 
     const listHeight = list.clientHeight;
@@ -1255,7 +1264,7 @@ function distributeSocialSpacing() {
     rows.forEach(r => { contentHeight += r.scrollHeight; });
 
     const availableSpace = listHeight - contentHeight;
-    const verticalPad = Math.max(4, Math.floor(availableSpace / (rows.length * 2)));
+    const verticalPad = Math.max(2, Math.floor(availableSpace / (count * 2)));
 
     rows.forEach(r => {
       r.style.paddingTop = verticalPad + 'px';

@@ -4464,23 +4464,6 @@ button:focus-visible,
 #social-perks { background: #E8D5B0; }
 #social-food  { background: #C4956A; }
 
-/* 4:3 crop guide lines — shows where content would clip at 4:3.
-   4:5 height = W × 5/4.  4:3 height = W × 3/4.
-   Excess = W × 1/2, split evenly → each guide sits W×1/4 from edge.
-   As % of 4:5 height: (W×1/4) / (W×5/4) = 20% from top and bottom. */
-.social-post::after {
-  content: '';
-  position: absolute;
-  left: 10%;
-  right: 10%;
-  top: 20%;
-  bottom: 20%;
-  border-top: 1px dashed rgba(28, 20, 16, 0.15);
-  border-bottom: 1px dashed rgba(28, 20, 16, 0.15);
-  pointer-events: none;
-  z-index: 3;
-}
-
 /* Grain texture overlay */
 .social-post::before {
   content: '';
@@ -4507,11 +4490,8 @@ button:focus-visible,
 #social-food .social-url { color: #FAF8F3; }
 #social-food .social-tagline { color: rgba(250, 248, 243, 0.5); }
 #social-food .social-empty { color: rgba(250, 248, 243, 0.45); }
-#social-food::after { border-color: rgba(250, 248, 243, 0.15); }
-
 /* ---- Sand card: slightly adjusted for medium bg ---- */
 #social-perks .social-event-row { border-bottom-color: rgba(28, 20, 16, 0.06); }
-#social-perks::after { border-color: rgba(28, 20, 16, 0.12); }
 
 /* Inner flex layout — fills screen, spaces header/list/footer */
 .social-post-inner {
@@ -4520,7 +4500,7 @@ button:focus-visible,
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 48px 36px 36px;
+  padding: 32px 28px 24px;
   box-sizing: border-box;
 }
 
@@ -4532,20 +4512,20 @@ button:focus-visible,
 }
 
 .social-logo {
-  width: 140px;
+  width: 120px;
   height: auto;
-  margin: 0 auto 12px;
+  margin: 0 auto 8px;
   display: block;
   filter: brightness(0.1);
 }
 
 .social-post-category {
   font-family: 'Jost', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
   color: #1C1410;
   letter-spacing: 5px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   text-transform: uppercase;
   display: flex;
   align-items: center;
@@ -4564,19 +4544,18 @@ button:focus-visible,
 
 .social-post-week {
   font-family: 'Jost', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 400;
   color: rgba(28, 20, 16, 0.5);
   letter-spacing: 3px;
   text-transform: uppercase;
-  margin-bottom: 0;
 }
 
 /* Vertical line separator between header and events */
 .social-rule {
   flex-shrink: 0;
   width: 1px;
-  height: 32px;
+  height: 20px;
   margin: 0 auto;
   background: rgba(28, 20, 16, 0.2);
 }
@@ -4620,15 +4599,14 @@ button:focus-visible,
 
 .social-event-name {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 400;
   color: #1C1410;
   flex: 1;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  line-height: 1.25;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .social-event-meta {
@@ -4646,22 +4624,22 @@ button:focus-visible,
 .social-post-bottom {
   text-align: center;
   flex-shrink: 0;
-  padding-top: 20px;
+  padding-top: 12px;
 }
 
 .social-url {
   font-family: 'Jost', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #1C1410;
   letter-spacing: 4px;
   text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .social-tagline {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 300;
   font-style: italic;
   color: rgba(28, 20, 16, 0.45);
