@@ -1418,15 +1418,19 @@ function renderSocialCaption(captionId, allEvents, categoryName, weekLabel) {
 
     btn.querySelector('span').textContent = 'Generating...';
     try {
-      // Clone the social-post at full 1080x1350 off-screen for accurate capture
+      // Clone at the same viewport size, then use scale to produce 1080x1350 output
+      const rect = postEl.getBoundingClientRect();
       const clone = postEl.cloneNode(true);
-      clone.style.cssText = 'position:fixed;left:-9999px;top:0;width:1080px;height:1350px;z-index:-1;';
+      clone.style.cssText = `position:fixed;left:-9999px;top:0;width:${rect.width}px;height:${rect.height}px;z-index:-1;`;
       document.body.appendChild(clone);
 
+      // Scale factor: output 1080px from the element's current rendered width
+      const scaleFactor = 1080 / rect.width;
+
       const canvas = await html2canvas(clone, {
-        width: 1080,
-        height: 1350,
-        scale: 1,
+        width: rect.width,
+        height: rect.height,
+        scale: scaleFactor,
         useCORS: true,
         backgroundColor: '#EDE8E0'
       });
