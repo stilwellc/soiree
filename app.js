@@ -37,6 +37,118 @@ function getEndOfWeekLocal() {
 // Event Data (fallback if API fails)
 let events = [
   {
+    id: 101,
+    name: "Modern Art Collective Opening",
+    category: "art",
+    start_date: "2026-02-25",
+    end_date: "2026-02-25",
+    time: "7:00 PM - 11:00 PM",
+    location: "Chelsea",
+    address: "541 W 25th St, New York, NY",
+    price: "free",
+    region: "nyc",
+    image: "https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=800&q=80",
+    description: "Contemporary art gallery opening featuring emerging NYC artists."
+  },
+  {
+    id: 102,
+    name: "Photography Exhibition: Urban Stories",
+    category: "art",
+    start_date: "2026-02-26",
+    end_date: "2026-02-26",
+    time: "6:00 PM - 10:00 PM",
+    location: "SoHo",
+    address: "112 Spring St, New York, NY",
+    price: "free",
+    region: "nyc",
+    image: "https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=800&q=80",
+    description: "Black and white photography exploring NYC street life."
+  },
+  {
+    id: 103,
+    name: "Abstract Expressionism Show",
+    category: "art",
+    start_date: "2026-02-27",
+    end_date: "2026-02-27",
+    time: "8:00 PM - 11:00 PM",
+    location: "Lower East Side",
+    address: "88 Orchard St, New York, NY",
+    price: "free",
+    region: "nyc",
+    image: "https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=800&q=80",
+    description: "Vibrant abstract works from local artists."
+  },
+  {
+    id: 104,
+    name: "Members-Only Wine Tasting",
+    category: "perks",
+    start_date: "2026-02-25",
+    end_date: "2026-02-25",
+    time: "7:30 PM - 10:00 PM",
+    location: "Tribeca",
+    address: "45 Harrison St, New York, NY",
+    price: "free",
+    region: "nyc",
+    image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&q=80",
+    description: "Exclusive wine tasting with sommelier-guided selections."
+  },
+  {
+    id: 105,
+    name: "VIP Sample Sale",
+    category: "perks",
+    start_date: "2026-02-26",
+    end_date: "2026-02-26",
+    time: "12:00 PM - 8:00 PM",
+    location: "Meatpacking",
+    address: "18 Ninth Ave, New York, NY",
+    price: "free",
+    region: "nyc",
+    image: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=800&q=80",
+    description: "Designer sample sale with up to 70% off."
+  },
+  {
+    id: 106,
+    name: "Artisan Coffee Experience",
+    category: "culinary",
+    start_date: "2026-02-25",
+    end_date: "2026-02-25",
+    time: "10:00 AM - 2:00 PM",
+    location: "Williamsburg",
+    address: "90 Kent Ave, Brooklyn, NY",
+    price: "free",
+    region: "nyc",
+    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80",
+    description: "Learn from master baristas and taste rare coffee varietals."
+  },
+  {
+    id: 107,
+    name: "Chef's Table Dinner",
+    category: "culinary",
+    start_date: "2026-02-26",
+    end_date: "2026-02-26",
+    time: "8:00 PM - 11:00 PM",
+    location: "West Village",
+    address: "45 Grove St, New York, NY",
+    price: "free",
+    region: "nyc",
+    image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80",
+    description: "Intimate 6-course tasting menu by Michelin-starred chef."
+  },
+  {
+    id: 108,
+    name: "Street Food Festival",
+    category: "culinary",
+    start_date: "2026-02-27",
+    end_date: "2026-02-27",
+    time: "12:00 PM - 8:00 PM",
+    location: "Brooklyn Bridge Park",
+    address: "334 Furman St, Brooklyn, NY",
+    price: "free",
+    region: "nyc",
+    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
+    description: "30+ food vendors showcasing NYC's diverse culinary scene."
+  },
+  {
     id: 1,
     name: "Immersive Gallery Opening",
     category: "art",
@@ -1250,9 +1362,18 @@ function renderSocialPosts() {
   });
 
   // Max 8 events per card to guarantee fit
-  renderSocialCategory('social-art-events', thisWeekEvents.filter(e => e.category === 'art').slice(0, 8));
-  renderSocialCategory('social-perks-events', thisWeekEvents.filter(e => e.category === 'perks').slice(0, 8));
-  renderSocialCategory('social-food-events', thisWeekEvents.filter(e => e.category === 'culinary').slice(0, 8));
+  const artEvents = thisWeekEvents.filter(e => e.category === 'art');
+  const perksEvents = thisWeekEvents.filter(e => e.category === 'perks');
+  const foodEvents = thisWeekEvents.filter(e => e.category === 'culinary');
+
+  renderSocialCategory('social-art-events', artEvents.slice(0, 8));
+  renderSocialCategory('social-perks-events', perksEvents.slice(0, 8));
+  renderSocialCategory('social-food-events', foodEvents.slice(0, 8));
+
+  // Generate descriptions and hashtags for each category
+  generateSocialDescription('social-art-description', 'social-art-hashtags', artEvents, 'Art & Culture');
+  generateSocialDescription('social-perks-description', 'social-perks-hashtags', perksEvents, 'Perks');
+  generateSocialDescription('social-food-description', 'social-food-hashtags', foodEvents, 'Food & Drink');
 
   // Set footer taglines with total curated event count
   const totalCount = thisWeekEvents.length;
@@ -1262,6 +1383,14 @@ function renderSocialPosts() {
 
   // Dynamically distribute vertical space across event rows to fill 4:5 frame
   requestAnimationFrame(() => distributeSocialSpacing());
+
+  // Add download button listeners
+  document.querySelectorAll('.social-download-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const postId = btn.dataset.post;
+      downloadSocialImage(postId);
+    });
+  });
 }
 
 function distributeSocialSpacing() {
@@ -1323,6 +1452,86 @@ function renderSocialCategory(containerId, categoryEvents) {
       ${shortDate ? `<span class="social-event-meta">${shortDate}</span>` : ''}
     </div>`;
   }).join('');
+}
+
+function generateSocialDescription(descriptionId, hashtagsId, events, categoryName) {
+  const descEl = document.getElementById(descriptionId);
+  const hashtagsEl = document.getElementById(hashtagsId);
+
+  console.log('generateSocialDescription called:', { descriptionId, hashtagsId, eventCount: events.length, categoryName, descEl, hashtagsEl });
+
+  if (!descEl || !hashtagsEl || events.length === 0) {
+    console.log('Exiting early:', { hasDescEl: !!descEl, hasHashtagsEl: !!hashtagsEl, eventCount: events.length });
+    return;
+  }
+
+  // Generate description highlighting all events
+  const eventNames = events.map(e => e.name);
+  let description = `This week in NYC ${categoryName}: `;
+
+  if (eventNames.length <= 3) {
+    description += eventNames.join(', ');
+  } else {
+    description += `${eventNames.slice(0, 3).join(', ')} and ${eventNames.length - 3} more curated experiences`;
+  }
+
+  description += `. All free entry. Discover the full lineup at soiree.today`;
+
+  descEl.textContent = description;
+
+  // Generate hashtags based on category
+  let hashtags = '#NYC #NewYorkCity #NYCEvents #FreeNYC ';
+
+  if (categoryName === 'Art & Culture') {
+    hashtags += '#NYCArt #ArtGallery #GalleryOpening #ContemporaryArt #ArtLovers #CulturalEvents #NYCCulture';
+  } else if (categoryName === 'Perks') {
+    hashtags += '#NYCPerks #PopUp #ExclusiveEvents #LimitedTime #NYCDeals #MembersOnly #NYCPopUps';
+  } else if (categoryName === 'Food & Drink') {
+    hashtags += '#NYCFood #Foodie #NYCEats #NYCDining #FoodEvents #NYCRestaurants #CulinaryNYC #NYCFoodie';
+  }
+
+  hashtagsEl.textContent = hashtags;
+}
+
+// Download social media image
+async function downloadSocialImage(postId) {
+  const postInner = document.querySelector(`#${postId} .social-post-inner`);
+  if (!postInner) return;
+
+  const btn = document.querySelector(`[data-post="${postId}"]`);
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>Generating...';
+  btn.disabled = true;
+
+  try {
+    const canvas = await html2canvas(postInner, {
+      backgroundColor: '#FAF8F3',
+      scale: 2,
+      width: 1080,
+      height: 1350,
+      logging: false,
+      useCORS: true
+    });
+
+    // Convert to blob and download
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const categoryName = postId.replace('social-', '');
+      link.download = `soiree-${categoryName}-instagram.png`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    });
+  } catch (error) {
+    console.error('Error generating image:', error);
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+    alert('Failed to generate image. Please try again.');
+  }
 }
 
 // Format Date for Display

@@ -68,6 +68,9 @@
         </svg>
         <span class="favorite-badge" style="display: none;">0</span>
       </div>
+      <div class="nav-item" data-view="social" role="button" tabindex="0" aria-label="Social">
+        <span class="nav-label">Social</span>
+      </div>
       <div class="nav-item" data-view="about" role="button" tabindex="0" aria-label="About">
         <span class="nav-label">About</span>
       </div>
@@ -659,6 +662,18 @@
               <div class="social-url">soiree.today</div>
             </div>
           </div>
+          <div class="social-caption-area">
+            <div class="social-description" id="social-art-description"></div>
+            <div class="social-hashtags" id="social-art-hashtags"></div>
+            <button class="social-download-btn" data-post="social-art">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download Image
+            </button>
+          </div>
         </div>
 
         <div class="social-post" id="social-perks">
@@ -676,6 +691,18 @@
               <div class="social-url">soiree.today</div>
             </div>
           </div>
+          <div class="social-caption-area">
+            <div class="social-description" id="social-perks-description"></div>
+            <div class="social-hashtags" id="social-perks-hashtags"></div>
+            <button class="social-download-btn" data-post="social-perks">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download Image
+            </button>
+          </div>
         </div>
 
         <div class="social-post" id="social-food">
@@ -692,6 +719,18 @@
               <div class="social-tagline"></div>
               <div class="social-url">soiree.today</div>
             </div>
+          </div>
+          <div class="social-caption-area">
+            <div class="social-description" id="social-food-description"></div>
+            <div class="social-hashtags" id="social-food-hashtags"></div>
+            <button class="social-download-btn" data-post="social-food">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download Image
+            </button>
           </div>
         </div>
 
@@ -746,6 +785,7 @@
           <div class="pin-inner">
             <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="pin-logo">
             <div class="pin-rule"></div>
+            <div class="pin-cta">Visit us at</div>
             <div class="pin-url">soiree.today</div>
           </div>
         </div>
@@ -764,14 +804,12 @@
                      L1080,740 C900,720 730,760 540,780 C350,800 200,740 0,720 Z" fill="url(#wg3)"/>
           </svg>
           <div class="pin-inner">
-            <img src="assets/images/nav-logo-transparent.png" alt="" class="pin-heart">
             <div class="pin-cats">
-              <span>Art & Culture</span>
-              <span>Food & Drink</span>
-              <span>Music</span>
-              <span>Perks & Pop-Ups</span>
-              <span>Lifestyle</span>
-              <span>Community</span>
+              <span>Gallery Openings</span>
+              <span>Perks & Popups</span>
+              <span>Music Experiences</span>
+              <span>Community Fostering</span>
+              <span>Food & Drink Events</span>
             </div>
             <div class="pin-rule"></div>
             <div class="pin-cats-tagline">Curated weekly in NYC</div>
@@ -803,6 +841,9 @@
   </div>
 
 
+
+  <!-- html2canvas for image downloads -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <!-- App Script -->
   <script src="app.js"></script>
