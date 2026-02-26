@@ -1344,8 +1344,8 @@ function renderSocialCaption(captionId, allEvents, categoryName, weekLabel) {
     return;
   }
 
-  // Build bullet list of ALL events with date + location
-  const bullets = allEvents.map(event => {
+  // Build plain-text caption for clipboard
+  const eventLines = allEvents.map(event => {
     let detail = '';
     const dateStr = event.start_date ? event.start_date.split('T')[0] : null;
     if (dateStr) {
@@ -1354,44 +1354,82 @@ function renderSocialCaption(captionId, allEvents, categoryName, weekLabel) {
       detail = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     }
     if (event.location) detail += (detail ? ' · ' : '') + event.location;
-    if (event.time && event.time !== 'See details') detail += ' · ' + event.time;
+    return `• ${event.name} — ${detail}`;
+  }).join('\n');
 
-    return `<li>
-      <span class="caption-event-name">${event.name}</span><br>
-      <span class="caption-event-detail">${detail}</span>
-    </li>`;
-  }).join('');
-
-  // Category-specific hashtags
   const categoryHashtags = {
     'Art & Culture': '#NYCArt #ArtGallery #GalleryOpening #ContemporaryArt #ArtExhibition #NYCCulture #ArtLovers #NYCArtists #ArtShow #CulturalNYC',
-    'Perks & Pop-Ups': '#NYCPerks #PopUpNYC #SampleSale #NYCDeals #PopUpShop #ExclusiveNYC #LimitedTime #NYCPopUps #FreeStuff #NYCSavings',
+    'Perks & Pop-Ups': '#NYCPerks #PopUpNYC #SampleSale #NYCDeals #PopUpShop #ExclusiveNYC #LimitedTime #NYCPopUps #NYCSavings',
     'Food & Drink': '#NYCFood #NYCFoodie #NYCEats #FoodPopUp #NYCDining #FoodieNYC #NYCRestaurants #FoodFestival #ChefLife #NYCDrinks'
   };
 
-  const baseHashtags = '#NYC #NewYorkCity #NYCEvents #FreeNYC #ThingsToDoNYC #NYCLife #NewYork #FreeEvents #Soiree #SoireeToday';
+  const baseHashtags = '#NYC #NewYorkCity #NYCEvents #ThingsToDoNYC #NYCLife #NewYork #WeekendNYC #Soiree #SoireeToday';
   const catTags = categoryHashtags[categoryName] || '';
 
-  // Suggested tags
-  const tagSuggestions = {
-    'Art & Culture': '@soiree.today @nycart @artnet @contemporaryartdaily',
-    'Perks & Pop-Ups': '@soiree.today @nycdeals @popupnyc',
-    'Food & Drink': '@soiree.today @nycfoodie @eaterny @infatuation'
-  };
-  const tags = tagSuggestions[categoryName] || '@soiree.today';
+  const captionText = `${categoryName} in NYC this week (${weekLabel}) — ${allEvents.length} curated events.\n\n${eventLines}\n\nDiscover the full lineup at soiree.today\n\n${baseHashtags}\n${catTags}`;
+
+  // Determine the social-post ID from the caption ID (e.g. social-art-caption → social-art)
+  const postId = captionId.replace('-caption', '');
 
   el.innerHTML = `
-    <div class="social-caption-header">Copy caption below</div>
-    <div class="social-caption-intro">
-      ${categoryName} in NYC this week (${weekLabel}) — ${allEvents.length} curated events, all free entry. Discover the full lineup at soiree.today
+    <div class="social-caption-buttons">
+      <button class="social-copy-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span>Copy Caption</span>
+      </button>
+      <button class="social-download-btn" data-post-id="${postId}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Download Photo</span>
+      </button>
     </div>
-    <ul class="social-caption-events">${bullets}</ul>
-    <div class="social-caption-tags">Tag: ${tags}</div>
-    <div class="social-caption-hashtags">
-      ${baseHashtags}<br>${catTags}
-    </div>
-    <div class="social-caption-divider"></div>
   `;
+
+  el.querySelector('.social-copy-btn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    try {
+      await navigator.clipboard.writeText(captionText);
+      btn.querySelector('span').textContent = 'Copied!';
+      setTimeout(() => { btn.querySelector('span').textContent = 'Copy Caption'; }, 2000);
+    } catch (err) {
+      btn.querySelector('span').textContent = 'Failed';
+      setTimeout(() => { btn.querySelector('span').textContent = 'Copy Caption'; }, 2000);
+    }
+  });
+
+  el.querySelector('.social-download-btn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const postEl = document.getElementById(postId);
+    const innerEl = postEl ? postEl.querySelector('.social-post-inner') : null;
+    if (!innerEl) return;
+
+    btn.querySelector('span').textContent = 'Generating...';
+    try {
+      const canvas = await html2canvas(innerEl, {
+        width: 1080,
+        height: 1350,
+        scale: 1,
+        useCORS: true,
+        backgroundColor: null
+      });
+      const link = document.createElement('a');
+      link.download = `soiree-${categoryName.toLowerCase().replace(/[^a-z]/g, '-')}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      btn.querySelector('span').textContent = 'Downloaded!';
+      setTimeout(() => { btn.querySelector('span').textContent = 'Download Photo'; }, 2000);
+    } catch (err) {
+      console.error('Download failed:', err);
+      btn.querySelector('span').textContent = 'Failed';
+      setTimeout(() => { btn.querySelector('span').textContent = 'Download Photo'; }, 2000);
+    }
+  });
 }
 
 // Format Date for Display

@@ -4655,70 +4655,52 @@ button:focus-visible,
   font-style: italic;
 }
 
-/* ---- Caption area: pure white, clearly outside the screenshot ---- */
+/* ---- Caption buttons below each card ---- */
 .social-caption {
   background: #FFFFFF;
-  padding: 28px 32px;
+  padding: 16px 0;
+  text-align: center;
+}
+
+.social-caption-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.social-copy-btn,
+.social-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: #1C1410;
+  color: #FAF8F3;
+  border: none;
+  border-radius: 8px;
   font-family: 'Jost', sans-serif;
-  color: #1C1410;
-  line-height: 1.6;
-}
-
-.social-caption-header {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: rgba(28, 20, 16, 0.4);
-  margin-bottom: 12px;
-}
-
-.social-caption-intro {
-  font-size: 15px;
-  margin-bottom: 16px;
-}
-
-.social-caption-events {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 20px 0;
-}
-
-.social-caption-events li {
   font-size: 14px;
-  padding: 4px 0;
-  border-bottom: 1px solid rgba(28, 20, 16, 0.06);
-}
-
-.social-caption-events li:last-child {
-  border-bottom: none;
-}
-
-.social-caption-events .caption-event-name {
   font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.social-caption-events .caption-event-detail {
-  color: rgba(28, 20, 16, 0.5);
-  font-size: 13px;
+.social-copy-btn:hover,
+.social-download-btn:hover {
+  background: #2C2420;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(28, 20, 16, 0.2);
 }
 
-.social-caption-tags {
-  font-size: 14px;
-  color: rgba(28, 20, 16, 0.5);
-  margin-bottom: 12px;
+.social-copy-btn:active,
+.social-download-btn:active {
+  transform: translateY(0);
 }
 
-.social-caption-hashtags {
-  font-size: 13px;
-  color: #0095F6;
-  line-height: 1.8;
-  word-spacing: 2px;
-}
-
-.social-caption-divider {
-  height: 32px;
-  background: #EDE8E0;
+.social-copy-btn svg,
+.social-download-btn svg {
+  flex-shrink: 0;
 }
 
 /* ============================================================================
