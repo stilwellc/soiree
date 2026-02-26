@@ -1361,14 +1361,14 @@ function renderSocialPosts() {
     return eventDate >= todayStr && eventDate <= endOfWeekStr;
   });
 
-  // Max 8 events per card to guarantee fit
+  // Show all events for each category (no limit)
   const artEvents = thisWeekEvents.filter(e => e.category === 'art');
   const perksEvents = thisWeekEvents.filter(e => e.category === 'perks');
   const foodEvents = thisWeekEvents.filter(e => e.category === 'culinary');
 
-  renderSocialCategory('social-art-events', artEvents.slice(0, 8));
-  renderSocialCategory('social-perks-events', perksEvents.slice(0, 8));
-  renderSocialCategory('social-food-events', foodEvents.slice(0, 8));
+  renderSocialCategory('social-art-events', artEvents);
+  renderSocialCategory('social-perks-events', perksEvents);
+  renderSocialCategory('social-food-events', foodEvents);
 
   // Generate descriptions and hashtags for each category
   generateSocialDescription('social-art-description', 'social-art-hashtags', artEvents, 'Art & Culture');
@@ -1401,8 +1401,14 @@ function distributeSocialSpacing() {
 
     const count = rows.length;
 
-    // Scale font size down for dense cards
-    const fontSize = count <= 4 ? 17 : count <= 6 ? 15 : 14;
+    // Scale font size down for dense cards - more aggressive scaling for many events
+    let fontSize = 17;
+    if (count > 12) fontSize = 11;
+    else if (count > 10) fontSize = 12;
+    else if (count > 8) fontSize = 13;
+    else if (count > 6) fontSize = 14;
+    else if (count > 4) fontSize = 15;
+
     rows.forEach(r => {
       const name = r.querySelector('.social-event-name');
       if (name) name.style.fontSize = fontSize + 'px';
@@ -1416,7 +1422,7 @@ function distributeSocialSpacing() {
     rows.forEach(r => { contentHeight += r.scrollHeight; });
 
     const availableSpace = listHeight - contentHeight;
-    const verticalPad = Math.max(2, Math.floor(availableSpace / (count * 2)));
+    const verticalPad = Math.max(1, Math.floor(availableSpace / (count * 2)));
 
     rows.forEach(r => {
       r.style.paddingTop = verticalPad + 'px';

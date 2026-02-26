@@ -4452,8 +4452,10 @@ button:focus-visible,
 
 /* ---- Card: Instagram 4:5 portrait frame ---- */
 .social-post {
-  width: 100%;
-  aspect-ratio: 4 / 5;
+  width: 1080px;
+  height: 1350px;
+  max-width: 100%;
+  margin: 0 auto;
   position: relative;
   overflow: hidden;
   background: #EDE8E0;
