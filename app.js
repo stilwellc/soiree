@@ -1249,10 +1249,20 @@ function renderSocialPosts() {
     return eventDate >= todayStr && eventDate <= endOfWeekStr;
   });
 
-  // Max 8 events per card to guarantee fit
-  renderSocialCategory('social-art-events', thisWeekEvents.filter(e => e.category === 'art').slice(0, 8));
-  renderSocialCategory('social-perks-events', thisWeekEvents.filter(e => e.category === 'perks').slice(0, 8));
-  renderSocialCategory('social-food-events', thisWeekEvents.filter(e => e.category === 'culinary').slice(0, 8));
+  // All events per category for NYC this week
+  const artEvents = thisWeekEvents.filter(e => e.category === 'art');
+  const perksEvents = thisWeekEvents.filter(e => e.category === 'perks');
+  const foodEvents = thisWeekEvents.filter(e => e.category === 'culinary');
+
+  // Max 8 in the card visual; ALL events go in the caption below
+  renderSocialCategory('social-art-events', artEvents.slice(0, 8));
+  renderSocialCategory('social-perks-events', perksEvents.slice(0, 8));
+  renderSocialCategory('social-food-events', foodEvents.slice(0, 8));
+
+  // Generate caption blocks with ALL events + hashtags
+  renderSocialCaption('social-art-caption', artEvents, 'Art & Culture', weekLabel);
+  renderSocialCaption('social-perks-caption', perksEvents, 'Perks & Pop-Ups', weekLabel);
+  renderSocialCaption('social-food-caption', foodEvents, 'Food & Drink', weekLabel);
 
   // Set footer taglines with total curated event count
   const totalCount = thisWeekEvents.length;
@@ -1323,6 +1333,65 @@ function renderSocialCategory(containerId, categoryEvents) {
       ${shortDate ? `<span class="social-event-meta">${shortDate}</span>` : ''}
     </div>`;
   }).join('');
+}
+
+function renderSocialCaption(captionId, allEvents, categoryName, weekLabel) {
+  const el = document.getElementById(captionId);
+  if (!el) return;
+
+  if (allEvents.length === 0) {
+    el.innerHTML = '';
+    return;
+  }
+
+  // Build bullet list of ALL events with date + location
+  const bullets = allEvents.map(event => {
+    let detail = '';
+    const dateStr = event.start_date ? event.start_date.split('T')[0] : null;
+    if (dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      detail = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    if (event.location) detail += (detail ? ' · ' : '') + event.location;
+    if (event.time && event.time !== 'See details') detail += ' · ' + event.time;
+
+    return `<li>
+      <span class="caption-event-name">${event.name}</span><br>
+      <span class="caption-event-detail">${detail}</span>
+    </li>`;
+  }).join('');
+
+  // Category-specific hashtags
+  const categoryHashtags = {
+    'Art & Culture': '#NYCArt #ArtGallery #GalleryOpening #ContemporaryArt #ArtExhibition #NYCCulture #ArtLovers #NYCArtists #ArtShow #CulturalNYC',
+    'Perks & Pop-Ups': '#NYCPerks #PopUpNYC #SampleSale #NYCDeals #PopUpShop #ExclusiveNYC #LimitedTime #NYCPopUps #FreeStuff #NYCSavings',
+    'Food & Drink': '#NYCFood #NYCFoodie #NYCEats #FoodPopUp #NYCDining #FoodieNYC #NYCRestaurants #FoodFestival #ChefLife #NYCDrinks'
+  };
+
+  const baseHashtags = '#NYC #NewYorkCity #NYCEvents #FreeNYC #ThingsToDoNYC #NYCLife #NewYork #FreeEvents #Soiree #SoireeToday';
+  const catTags = categoryHashtags[categoryName] || '';
+
+  // Suggested tags
+  const tagSuggestions = {
+    'Art & Culture': '@soiree.today @nycart @artnet @contemporaryartdaily',
+    'Perks & Pop-Ups': '@soiree.today @nycdeals @popupnyc',
+    'Food & Drink': '@soiree.today @nycfoodie @eaterny @infatuation'
+  };
+  const tags = tagSuggestions[categoryName] || '@soiree.today';
+
+  el.innerHTML = `
+    <div class="social-caption-header">Copy caption below</div>
+    <div class="social-caption-intro">
+      ${categoryName} in NYC this week (${weekLabel}) — ${allEvents.length} curated events, all free entry. Discover the full lineup at soiree.today
+    </div>
+    <ul class="social-caption-events">${bullets}</ul>
+    <div class="social-caption-tags">Tag: ${tags}</div>
+    <div class="social-caption-hashtags">
+      ${baseHashtags}<br>${catTags}
+    </div>
+    <div class="social-caption-divider"></div>
+  `;
 }
 
 // Format Date for Display

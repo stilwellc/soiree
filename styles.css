@@ -4655,6 +4655,72 @@ button:focus-visible,
   font-style: italic;
 }
 
+/* ---- Caption area: pure white, clearly outside the screenshot ---- */
+.social-caption {
+  background: #FFFFFF;
+  padding: 28px 32px;
+  font-family: 'Jost', sans-serif;
+  color: #1C1410;
+  line-height: 1.6;
+}
+
+.social-caption-header {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(28, 20, 16, 0.4);
+  margin-bottom: 12px;
+}
+
+.social-caption-intro {
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+.social-caption-events {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+}
+
+.social-caption-events li {
+  font-size: 14px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(28, 20, 16, 0.06);
+}
+
+.social-caption-events li:last-child {
+  border-bottom: none;
+}
+
+.social-caption-events .caption-event-name {
+  font-weight: 600;
+}
+
+.social-caption-events .caption-event-detail {
+  color: rgba(28, 20, 16, 0.5);
+  font-size: 13px;
+}
+
+.social-caption-tags {
+  font-size: 14px;
+  color: rgba(28, 20, 16, 0.5);
+  margin-bottom: 12px;
+}
+
+.social-caption-hashtags {
+  font-size: 13px;
+  color: #0095F6;
+  line-height: 1.8;
+  word-spacing: 2px;
+}
+
+.social-caption-divider {
+  height: 32px;
+  background: #EDE8E0;
+}
+
 /* ============================================================================
    PINNED POSTS VIEW — 3 Instagram 4:5 title cards (1080×1350px)
    A terracotta wave ribbon flows across all 3 when pinned on IG grid.
