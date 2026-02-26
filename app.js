@@ -1411,34 +1411,58 @@ function renderSocialCaption(captionId, allEvents, categoryName, weekLabel) {
   el.querySelector('.social-download-btn').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     const postEl = document.getElementById(postId);
-    const innerEl = postEl ? postEl.querySelector('.social-post-inner') : null;
-    if (!innerEl) return;
+    if (!postEl) return;
 
     const previewContainer = el.querySelector('.social-preview-image');
     const previewImg = el.querySelector('.social-preview-img');
 
     btn.querySelector('span').textContent = 'Generating...';
     try {
-      const canvas = await html2canvas(innerEl, {
+      // Clone the social-post at full 1080x1350 off-screen for accurate capture
+      const clone = postEl.cloneNode(true);
+      clone.style.cssText = 'position:fixed;left:-9999px;top:0;width:1080px;height:1350px;z-index:-1;';
+      document.body.appendChild(clone);
+
+      const canvas = await html2canvas(clone, {
         width: 1080,
         height: 1350,
         scale: 1,
         useCORS: true,
-        backgroundColor: null
+        backgroundColor: '#EDE8E0'
       });
-      const dataUrl = canvas.toDataURL('image/png');
 
-      // Show the image inline for long-press saving (iOS)
-      previewImg.src = dataUrl;
-      previewContainer.style.display = 'block';
+      document.body.removeChild(clone);
 
-      btn.querySelector('span').textContent = 'Save Photo';
+      const fileName = `soiree-${categoryName.toLowerCase().replace(/[^a-z]/g, '-')}.png`;
+
+      // Try Web Share API first (works on iOS — opens native share sheet with "Save to Photos")
+      if (navigator.canShare) {
+        canvas.toBlob(async (blob) => {
+          const file = new File([blob], fileName, { type: 'image/png' });
+          try {
+            await navigator.share({ files: [file] });
+            btn.querySelector('span').textContent = 'Save Photo';
+          } catch (shareErr) {
+            // User cancelled share — show inline fallback
+            showPreviewFallback(canvas, previewImg, previewContainer, btn);
+          }
+        }, 'image/png');
+      } else {
+        showPreviewFallback(canvas, previewImg, previewContainer, btn);
+      }
     } catch (err) {
       console.error('Download failed:', err);
       btn.querySelector('span').textContent = 'Failed';
       setTimeout(() => { btn.querySelector('span').textContent = 'Save Photo'; }, 2000);
     }
   });
+
+  function showPreviewFallback(canvas, previewImg, previewContainer, btn) {
+    const dataUrl = canvas.toDataURL('image/png');
+    previewImg.src = dataUrl;
+    previewContainer.style.display = 'block';
+    btn.querySelector('span').textContent = 'Save Photo';
+  }
 
   el.querySelector('.social-preview-close').addEventListener('click', () => {
     el.querySelector('.social-preview-image').style.display = 'none';
