@@ -1792,15 +1792,7 @@ function handleRSVP(eventId) {
   showToast(`You're on the list for ${event.name}`);
 }
 
-function updateModalFavoriteBtn(eventId) {
-  const isFavorited = favorites.includes(eventId);
-  const btn = document.querySelector('.modal-actions .btn-secondary');
-  if (btn) {
-    btn.textContent = isFavorited ? 'Remove from Favorites' : 'Add to Favorites';
-  }
-}
-
-// Update the new modal favorite button state
+// Update the modal favorite button state
 function updateModalFavBtn(eventId) {
   const isFavorited = favorites.includes(eventId);
   const btn = document.getElementById('modal-fav-btn');
@@ -1910,18 +1902,9 @@ async function loadStats() {
 
 async function loadTechStats() {
   try {
-    // Measure API response time
-    const startTime = performance.now();
     const response = await fetch(`${API_BASE_URL}/api/events`);
-    const endTime = performance.now();
     const data = await response.json();
 
-    // Update API speed (element may not exist in current layout)
-    const apiSpeed = Math.round(endTime - startTime);
-    const apiSpeedEl = document.getElementById('api-speed');
-    if (apiSpeedEl) apiSpeedEl.textContent = `~${apiSpeed}ms`;
-
-    // Get last scrape time from most recent event
     if (data.success && data.events && data.events.length > 0) {
       const mostRecent = data.events.reduce((latest, event) => {
         const eventTime = new Date(event.scraped_at || event.created_at);
@@ -1945,34 +1928,11 @@ async function loadTechStats() {
       }
 
       document.getElementById('last-scrape').textContent = timeText;
-
-      // Count unique sources (approximate based on URL patterns)
-      const sources = new Set();
-      data.events.forEach(event => {
-        if (event.url) {
-          try {
-            const hostname = new URL(event.url).hostname;
-            sources.add(hostname);
-          } catch (e) { }
-        }
-      });
-
-      const sourceCountEl = document.getElementById('source-count');
-      if (sources.size > 0 && sourceCountEl) {
-        sourceCountEl.textContent = `${sources.size} curated sources`;
-      }
-      // Update the about page metrics bar source count
-      const statSourcesEl = document.getElementById('stat-sources');
-      if (sources.size > 0 && statSourcesEl) {
-        statSourcesEl.textContent = `${sources.size}+`;
-      }
     }
   } catch (error) {
     console.error('Error loading tech stats:', error);
     const lastScrapeEl = document.getElementById('last-scrape');
     if (lastScrapeEl) lastScrapeEl.textContent = 'Recently';
-    const apiSpeedFallback = document.getElementById('api-speed');
-    if (apiSpeedFallback) apiSpeedFallback.textContent = '~200ms';
   }
 }
 
@@ -2747,15 +2707,6 @@ async function initNetworkGraph() {
     }
   }
 
-  // Regions count
-  const regions = new Set();
-  allEvents.forEach(e => {
-    const loc = e.location.toLowerCase();
-    if (loc.includes('hoboken') || loc.includes('jersey city')) regions.add('Hoboken/JC');
-    else regions.add('NYC');
-  });
-  const regionsEl = document.getElementById('network-regions');
-  if (regionsEl) regionsEl.textContent = regions.size;
 }
 
 /* Free Mode Logic */
@@ -2944,44 +2895,32 @@ function updateValueStrip() {
   }
 }
 
-// ── Email Subscription ──────────────────────────────
+// ── About Page Subscribe Strip ──────────────────────────────
 function initSubscribeForm() {
   const form = document.getElementById('subscribe-form');
   const successEl = document.getElementById('subscribe-success');
-  const againBtn = document.getElementById('subscribe-again');
+  const btn = document.getElementById('subscribe-btn');
   if (!form) return;
 
-  // Chip toggles
-  form.querySelectorAll('.subscribe-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      chip.classList.toggle('active');
-    });
-  });
-
-  // Pre-fill region from current selection
   const regionSelect = document.getElementById('subscribe-region');
   if (regionSelect && currentRegion) {
-    const option = regionSelect.querySelector(`option[value="${currentRegion}"]`);
-    if (option) regionSelect.value = currentRegion;
+    const opt = regionSelect.querySelector(`option[value="${currentRegion}"]`);
+    if (opt) regionSelect.value = currentRegion;
   }
 
-  // Submit
+  form.querySelectorAll('.subscribe-strip-chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('active'));
+  });
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = document.getElementById('subscribe-btn');
-    const btnText = btn.querySelector('.subscribe-btn-text');
-    const btnLoad = btn.querySelector('.subscribe-btn-loading');
     const email = document.getElementById('subscribe-email').value.trim();
-    const region = regionSelect ? regionSelect.value : 'nyc';
-    const categories = Array.from(form.querySelectorAll('.subscribe-chip.active'))
-      .map(c => c.dataset.cat);
-
     if (!email) return;
 
-    btn.disabled = true;
-    btnText.style.display = 'none';
-    btnLoad.style.display = 'inline-flex';
+    const region = regionSelect ? regionSelect.value : currentRegion;
+    const categories = [...form.querySelectorAll('.subscribe-strip-chip.active')].map(c => c.dataset.cat);
 
+    btn.disabled = true;
     try {
       const resp = await fetch(`${API_BASE_URL}/api/subscribe`, {
         method: 'POST',
@@ -2989,30 +2928,18 @@ function initSubscribeForm() {
         body: JSON.stringify({ email, region, categories })
       });
       const data = await resp.json();
-
       if (data.success) {
         form.style.display = 'none';
         successEl.style.display = 'block';
       } else {
         alert(data.error || 'Something went wrong. Please try again.');
+        btn.disabled = false;
       }
-    } catch (err) {
-      console.error('Subscribe error:', err);
+    } catch {
       alert('Network error. Please try again.');
-    } finally {
       btn.disabled = false;
-      btnText.style.display = 'inline';
-      btnLoad.style.display = 'none';
     }
   });
-
-  // "Update preferences" button
-  if (againBtn) {
-    againBtn.addEventListener('click', () => {
-      successEl.style.display = 'none';
-      form.style.display = 'flex';
-    });
-  }
 }
 
 // Initialize when DOM is ready
@@ -3041,6 +2968,14 @@ if (document.readyState === 'loading') {
   initSubscribeForm();
   initSubscribeStrip();
   initSubscribeStripEvents();
-}
-// v1.0.2
+  initScrollReveal();
+  updateValueStrip();
 
+  const freeCheckbox = document.getElementById('free-mode-toggle');
+  if (freeCheckbox) freeCheckbox.addEventListener('change', toggleFreeMode);
+
+  const techDashboard = document.getElementById('tech-dashboard');
+  if (techDashboard) {
+    requestAnimationFrame(() => initNetworkGraph());
+  }
+}
