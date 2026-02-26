@@ -4703,6 +4703,45 @@ button:focus-visible,
   flex-shrink: 0;
 }
 
+.social-preview-image {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.social-preview-hint {
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+.social-preview-img {
+  width: 100%;
+  max-width: 540px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.social-preview-close {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 20px;
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.social-preview-close:hover {
+  border-color: #999;
+  color: #333;
+}
+
 /* ============================================================================
    PINNED POSTS VIEW — 3 Instagram 4:5 title cards (1080×1350px)
    A terracotta wave ribbon flows across all 3 when pinned on IG grid.

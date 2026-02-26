@@ -1386,8 +1386,13 @@ function renderSocialCaption(captionId, allEvents, categoryName, weekLabel) {
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        <span>Download Photo</span>
+        <span>Save Photo</span>
       </button>
+    </div>
+    <div class="social-preview-image" style="display:none;">
+      <p class="social-preview-hint">Long-press the image below to save to Photos</p>
+      <img class="social-preview-img" alt="Soirée ${categoryName}">
+      <button class="social-preview-close">Dismiss</button>
     </div>
   `;
 
@@ -1409,6 +1414,9 @@ function renderSocialCaption(captionId, allEvents, categoryName, weekLabel) {
     const innerEl = postEl ? postEl.querySelector('.social-post-inner') : null;
     if (!innerEl) return;
 
+    const previewContainer = el.querySelector('.social-preview-image');
+    const previewImg = el.querySelector('.social-preview-img');
+
     btn.querySelector('span').textContent = 'Generating...';
     try {
       const canvas = await html2canvas(innerEl, {
@@ -1418,17 +1426,22 @@ function renderSocialCaption(captionId, allEvents, categoryName, weekLabel) {
         useCORS: true,
         backgroundColor: null
       });
-      const link = document.createElement('a');
-      link.download = `soiree-${categoryName.toLowerCase().replace(/[^a-z]/g, '-')}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      btn.querySelector('span').textContent = 'Downloaded!';
-      setTimeout(() => { btn.querySelector('span').textContent = 'Download Photo'; }, 2000);
+      const dataUrl = canvas.toDataURL('image/png');
+
+      // Show the image inline for long-press saving (iOS)
+      previewImg.src = dataUrl;
+      previewContainer.style.display = 'block';
+
+      btn.querySelector('span').textContent = 'Save Photo';
     } catch (err) {
       console.error('Download failed:', err);
       btn.querySelector('span').textContent = 'Failed';
-      setTimeout(() => { btn.querySelector('span').textContent = 'Download Photo'; }, 2000);
+      setTimeout(() => { btn.querySelector('span').textContent = 'Save Photo'; }, 2000);
     }
+  });
+
+  el.querySelector('.social-preview-close').addEventListener('click', () => {
+    el.querySelector('.social-preview-image').style.display = 'none';
   });
 }
 
