@@ -4212,6 +4212,66 @@ button:focus-visible,
   }
 }
 
+/* Instagram CTA */
+.ig-cta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  padding: 14px 28px 14px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.ig-cta-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(196, 149, 106, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(196, 149, 106, 0.15);
+}
+
+.ig-cta-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  color: white;
+  flex-shrink: 0;
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.ig-cta-link:hover .ig-cta-icon {
+  transform: scale(1.08);
+}
+
+.ig-cta-handle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: -0.3px;
+  transition: color 0.3s ease;
+}
+
+.ig-cta-link:hover .ig-cta-handle {
+  color: var(--dusk);
+}
+
+@media (min-width: 768px) {
+  .ig-cta-handle {
+    font-size: 28px;
+  }
+  .ig-cta-icon {
+    width: 52px;
+    height: 52px;
+  }
+}
+
 .subscribe-strip-form {
   display: flex;
   flex-direction: column;
