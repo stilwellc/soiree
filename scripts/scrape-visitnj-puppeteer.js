@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const { parseDateText } = require('../api/lib/dateParser.js');
+const { parseDateText } = require('../lib/dateParser.js');
 
 /**
  * Scrape events from Visit NJ using Puppeteer (JavaScript rendering)

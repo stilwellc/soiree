@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 const { Pool } = require('pg');
-const { parseDateText } = require('../api/lib/dateParser.js');
-const { createNormalizedEvent } = require('../api/lib/normalize.js');
+const { parseDateText } = require('../lib/dateParser.js');
+const { createNormalizedEvent } = require('../lib/normalize.js');
 require('dotenv').config({ path: '.env.local' });
 
 // Ensure we have DB connection string

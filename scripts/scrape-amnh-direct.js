@@ -8,7 +8,7 @@
 require('dotenv').config({ path: '.env.local' });
 const { Pool } = require('pg');
 const puppeteer = require('puppeteer');
-const { parseDateText } = require('../api/lib/dateParser.js');
+const { parseDateText } = require('../lib/dateParser.js');
 
 const pool = new Pool({
     connectionString: process.env.POSTGRES_URL,

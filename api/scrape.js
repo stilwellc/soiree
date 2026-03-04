@@ -1,8 +1,8 @@
 const { Pool } = require('pg');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const { parseDateText } = require('./lib/dateParser.js');
-const { createNormalizedEvent, generateHighlights } = require('./lib/normalize.js');
+const { parseDateText } = require('../lib/dateParser.js');
+const { createNormalizedEvent, generateHighlights } = require('../lib/normalize.js');
 const { scrapeWithPuppeteer, CONFIGS } = require('../scripts/scrape-puppeteer.js');
 
 const pool = new Pool({

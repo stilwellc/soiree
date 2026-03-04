@@ -1,6 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
-const { parseDateText } = require('../api/lib/dateParser.js');
+const { parseDateText } = require('../lib/dateParser.js');
 
 /**
  * Scrape free events from Time Out New York

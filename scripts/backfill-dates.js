@@ -6,7 +6,7 @@
  */
 
 const { Pool } = require('pg');
-const { parseDateText } = require('../api/lib/dateParser.js');
+const { parseDateText } = require('../lib/dateParser.js');
 require('dotenv').config({ path: '.env.local' });
 
 const pool = new Pool({

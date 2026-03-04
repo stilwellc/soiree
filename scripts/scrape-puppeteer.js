@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
-const { parseDateText } = require('../api/lib/dateParser.js');
-const { generateHighlights } = require('../api/lib/normalize.js');
+const { parseDateText } = require('../lib/dateParser.js');
+const { generateHighlights } = require('../lib/normalize.js');
 
 /**
  * Generic Puppeteer scraper for JavaScript-heavy event sites
