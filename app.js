@@ -2821,6 +2821,24 @@ function renderCategoryGalleries() {
 // Keep old name as alias so region-change call still works
 function updateCategoryCounts() { renderCategoryGalleries(); }
 
+// ── Instagram Grid ───────────────────────────────────
+function initInstagramGrid() {
+  const grids = document.querySelectorAll('.ig-grid');
+  if (grids.length === 0) return;
+
+  fetch('/api/instagram-feed')
+    .then(r => r.json())
+    .then(data => {
+      if (!data.posts || data.posts.length === 0) return;
+      grids.forEach(grid => {
+        grid.innerHTML = data.posts.map(p =>
+          `<a href="${p.permalink}" target="_blank" rel="noopener"><img src="${p.media_url}" alt="" loading="lazy"></a>`
+        ).join('');
+      });
+    })
+    .catch(() => {});
+}
+
 // ── Inline Subscribe Strip ───────────────────────────
 function initSubscribeStrip() {
   const form = document.getElementById('subscribe-strip-form');
@@ -3024,6 +3042,7 @@ if (document.readyState === 'loading') {
     initSubscribeStrip();
     initSubscribeStripEvents();
     initScrollReveal();
+    initInstagramGrid();
     updateValueStrip();
 
     const freeCheckbox = document.getElementById('free-mode-toggle');
