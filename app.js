@@ -2823,6 +2823,16 @@ function updateCategoryCounts() { renderCategoryGalleries(); }
 
 // ── Instagram Grid ───────────────────────────────────
 function initInstagramGrid() {
+  const igUrl = 'https://www.instagram.com/yourdailysoiree/';
+
+  // Make entire subscribe section clickable
+  document.querySelectorAll('#subscribe-strip-home, #subscribe-strip-about').forEach(section => {
+    section.addEventListener('click', (e) => {
+      if (e.target.closest('a')) return;
+      window.open(igUrl, '_blank', 'noopener');
+    });
+  });
+
   const grids = document.querySelectorAll('.ig-grid');
   if (grids.length === 0) return;
 
