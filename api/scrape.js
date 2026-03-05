@@ -1516,6 +1516,12 @@ module.exports = async function handler(req, res) {
       `, [inserted]);
     }
 
+    // Log scrape activity
+    await pool.query(
+      `INSERT INTO activity_log (type, event_count) VALUES ('scrape', $1)`,
+      [events.length]
+    ).catch(() => {}); // don't fail scrape if log table doesn't exist yet
+
     const result = await pool.query('SELECT COUNT(*) as count FROM events');
 
     return res.status(200).json({

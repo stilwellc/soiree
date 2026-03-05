@@ -30,6 +30,17 @@ module.exports = async function handler(req, res) {
       ALTER TABLE stats ADD COLUMN IF NOT EXISTS total_events_scraped INTEGER DEFAULT 0
     `);
 
+    // Activity log table for tracking scrape + instagram post events
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS activity_log (
+        id SERIAL PRIMARY KEY,
+        type VARCHAR(20) NOT NULL,
+        event_count INTEGER DEFAULT 0,
+        detail TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     // Initialize stats if not exists
     await pool.query(`
       INSERT INTO stats (id, page_views)
@@ -61,6 +72,15 @@ module.exports = async function handler(req, res) {
     `);
     const uniqueEventCount = parseInt(uniqueEventsResult.rows[0]?.count || 0);
 
+    // Activity timeline (last 30 days)
+    const { rows: timeline } = await pool.query(`
+      SELECT DATE(created_at) as date, type, SUM(event_count)::int as count
+      FROM activity_log
+      WHERE created_at >= NOW() - INTERVAL '30 days'
+      GROUP BY DATE(created_at), type
+      ORDER BY date ASC
+    `);
+
     return res.status(200).json({
       success: true,
       stats: {
@@ -68,7 +88,8 @@ module.exports = async function handler(req, res) {
         totalEvents: eventCount,
         uniqueEvents: uniqueEventCount,
         totalEventsScraped
-      }
+      },
+      timeline
     });
   } catch (error) {
     console.error('Stats API Error:', error);

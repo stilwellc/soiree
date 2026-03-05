@@ -280,6 +280,12 @@ module.exports = async function handler(req, res) {
       const mediaId = await postCarousel(igUserId, imageUrls, caption, token);
       console.log(`${region.label} published! Media ID: ${mediaId}`);
 
+      // Log instagram post activity
+      await pool.query(
+        `INSERT INTO activity_log (type, event_count, detail) VALUES ('instagram', $1, $2)`,
+        [totalRegionEvents, region.label]
+      ).catch(() => {});
+
       results.push({
         region: region.label,
         mediaId,

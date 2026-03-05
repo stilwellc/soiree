@@ -2159,6 +2159,136 @@ function lightenHex(hex, amount) {
 }
 
 
+// ── Activity Chart (scrape + instagram timeline) ──────────────────
+async function initActivityChart() {
+  const canvas = document.getElementById('activity-chart');
+  if (!canvas || canvas.hasAttribute('data-init')) return;
+  canvas.setAttribute('data-init', 'true');
+
+  // Fetch timeline data
+  let timeline = [];
+  try {
+    const resp = await fetch(`${API_BASE_URL}/api/stats`);
+    const data = await resp.json();
+    if (data.timeline) timeline = data.timeline;
+  } catch (e) { /* ignore */ }
+
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width || 300;
+  const h = rect.height || 140;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+
+  // Build 30-day date array
+  const days = [];
+  const now = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+
+  // Map timeline data to day buckets
+  const scrapeByDay = {};
+  const igByDay = {};
+  for (const entry of timeline) {
+    const dateStr = typeof entry.date === 'string' ? entry.date.slice(0, 10) : new Date(entry.date).toISOString().slice(0, 10);
+    if (entry.type === 'scrape') scrapeByDay[dateStr] = (scrapeByDay[dateStr] || 0) + Number(entry.count);
+    if (entry.type === 'instagram') igByDay[dateStr] = (igByDay[dateStr] || 0) + Number(entry.count);
+  }
+
+  const scrapeData = days.map(d => scrapeByDay[d] || 0);
+  const igData = days.map(d => igByDay[d] || 0);
+  const maxVal = Math.max(1, ...scrapeData, ...igData);
+
+  // Colors
+  const scrapeColor = '#7C6AE8';
+  const scrapeGlow = 'rgba(124, 106, 232, 0.2)';
+  const igColor = '#FF6B9D';
+  const igGlow = 'rgba(255, 107, 157, 0.25)';
+  const gridColor = 'rgba(255, 255, 255, 0.05)';
+  const labelColor = 'rgba(255, 255, 255, 0.25)';
+
+  // Chart margins
+  const ml = 4, mr = 4, mt = 8, mb = 18;
+  const cw = w - ml - mr;
+  const ch = h - mt - mb;
+  const barW = Math.max(2, (cw / days.length) * 0.35);
+  const gap = 2;
+
+  // Clear
+  ctx.clearRect(0, 0, w, h);
+
+  // Grid lines (3 horizontal)
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i < 4; i++) {
+    const y = mt + (ch / 3) * i;
+    ctx.beginPath();
+    ctx.moveTo(ml, y);
+    ctx.lineTo(w - mr, y);
+    ctx.stroke();
+  }
+
+  // Draw bars
+  for (let i = 0; i < days.length; i++) {
+    const x = ml + (i / (days.length - 1)) * cw;
+    const sv = scrapeData[i];
+    const iv = igData[i];
+
+    // Scrape bar
+    if (sv > 0) {
+      const bh = (sv / maxVal) * ch;
+      const y = mt + ch - bh;
+
+      // Glow
+      ctx.shadowColor = scrapeGlow;
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = scrapeColor;
+      ctx.beginPath();
+      ctx.roundRect(x - barW - gap / 2, y, barW, bh, [2, 2, 0, 0]);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Instagram bar
+    if (iv > 0) {
+      const bh = Math.max(6, (iv / maxVal) * ch);
+      const y = mt + ch - bh;
+
+      ctx.shadowColor = igGlow;
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = igColor;
+      ctx.beginPath();
+      ctx.roundRect(x + gap / 2, y, barW, bh, [2, 2, 0, 0]);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // Date labels (show every ~7 days)
+  ctx.fillStyle = labelColor;
+  ctx.font = '9px Jost, sans-serif';
+  ctx.textAlign = 'center';
+  for (let i = 0; i < days.length; i += 7) {
+    const x = ml + (i / (days.length - 1)) * cw;
+    const d = new Date(days[i] + 'T12:00:00');
+    const label = `${d.getMonth() + 1}/${d.getDate()}`;
+    ctx.fillText(label, x, h - 2);
+  }
+
+  // Empty state
+  if (timeline.length === 0) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.font = 'italic 12px Jost, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Collecting activity data...', w / 2, h / 2);
+  }
+}
+
 async function initNetworkGraph() {
   const canvas = document.getElementById('network-graph');
   if (!canvas) return;
@@ -3058,10 +3188,11 @@ if (document.readyState === 'loading') {
     const freeCheckbox = document.getElementById('free-mode-toggle');
     if (freeCheckbox) freeCheckbox.addEventListener('change', toggleFreeMode);
 
-    // Tech dashboard - always visible, initialize graph immediately
+    // Tech dashboard - always visible, initialize graph + activity chart
     const techDashboard = document.getElementById('tech-dashboard');
     if (techDashboard) {
       requestAnimationFrame(() => initNetworkGraph());
+      initActivityChart();
     }
   });
 } else {

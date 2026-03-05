@@ -451,25 +451,6 @@
               <div class="tech-legend-refined" id="js-tech-legend"></div>
             </div>
 
-            <div class="tech-card traffic-module">
-              <div class="module-header">
-                <span>TRAFFIC LOAD</span>
-                <span class="module-id">TRF-02</span>
-              </div>
-              <div class="traffic-wrapper-refined" style="position: relative; height: 160px; padding: 0;">
-                <canvas id="traffic-chart" style="width: 100%; height: 100%; display: block;"></canvas>
-                <div class="traffic-overlay" style="position: absolute; top: 16px; right: 20px; text-align: right;">
-                  <div class="traffic-val" id="traffic-rps"
-                    style="font-family: ui-monospace, monospace; font-size: 24px; font-weight: 600; color: rgba(255,255,255,0.9);">
-                    142</div>
-                  <div class="traffic-lbl"
-                    style="font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 1px;">REQ/MIN</div>
-                  <div class="traffic-delta"
-                    style="font-size: 11px; color: #4CAF50; font-family: ui-monospace, monospace;">+12%</div>
-                </div>
-              </div>
-            </div>
-
             <div class="tech-side-column">
               <div class="tech-card specs-module">
                 <div class="module-header">
@@ -487,12 +468,18 @@
                       id="last-scrape">Loading...</span></div>
                 </div>
               </div>
-              <div class="tech-card log-module">
+              <div class="tech-card activity-module">
                 <div class="module-header">
-                  <span>ACTIVITY LOG</span>
-                  <span class="module-id">LOG-03</span>
+                  <span>ACTIVITY</span>
+                  <span class="module-id">ACT-01</span>
                 </div>
-                <div class="tech-log-refined" id="js-tech-log"></div>
+                <div class="activity-chart-wrapper">
+                  <canvas id="activity-chart"></canvas>
+                </div>
+                <div class="activity-legend">
+                  <span class="activity-legend-item"><span class="legend-dot" style="background:#7C6AE8;"></span>Scrapes</span>
+                  <span class="activity-legend-item"><span class="legend-dot" style="background:#FF6B9D;"></span>Instagram</span>
+                </div>
               </div>
             </div>
           </div>
