@@ -4192,7 +4192,7 @@ button:focus-visible,
 .subscribe-section-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(160deg, rgba(176, 130, 90, 0.55) 0%, rgba(196, 149, 106, 0.6) 50%, rgba(165, 120, 82, 0.55) 100%);
+  background: linear-gradient(160deg, #FAF8F3 0%, #F4EAD8 40%, #EDD9BC 75%, #E5CCA8 100%);
   border-radius: 24px;
   z-index: 0;
 }
@@ -4228,7 +4228,7 @@ button:focus-visible,
   font-family: 'Cormorant Garamond', serif;
   font-size: 34px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(0, 0, 0, 0.85);
   letter-spacing: -0.5px;
   line-height: 1.1;
   margin: 0 0 14px;
@@ -4236,14 +4236,14 @@ button:focus-visible,
 
 .subscribe-section-heading em {
   font-style: italic;
-  color: #FFF5EB;
+  color: var(--dusk);
 }
 
 .subscribe-section-text {
   font-family: 'Jost', sans-serif;
   font-size: 14px;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(0, 0, 0, 0.5);
   line-height: 1.6;
   margin: 0 0 20px;
   max-width: 380px;
@@ -4302,7 +4302,7 @@ button:focus-visible,
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #fff;
+  background: rgba(0, 0, 0, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4319,7 +4319,7 @@ button:focus-visible,
   font-family: 'Jost', sans-serif;
   font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(0, 0, 0, 0.85);
   flex: 1;
   text-align: left;
 }

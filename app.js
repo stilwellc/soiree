@@ -2956,7 +2956,7 @@ function initInstagramGrid() {
   const igUrl = 'https://www.instagram.com/yourdailysoiree/';
 
   // Make entire subscribe section clickable
-  document.querySelectorAll('#subscribe-strip-home, #subscribe-strip-about').forEach(section => {
+  document.querySelectorAll('#subscribe-strip-home, #subscribe-strip-about, #subscribe-strip-events').forEach(section => {
     section.addEventListener('click', (e) => {
       if (e.target.closest('a')) return;
       window.open(igUrl, '_blank', 'noopener');
