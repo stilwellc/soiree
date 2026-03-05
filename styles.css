@@ -56,10 +56,7 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
-  }
-
-  .graph-module {
-    grid-column: 1 / -1;
+    align-items: start;
   }
 }
 
@@ -3608,7 +3605,7 @@ button:focus-visible,
 }
 
 .graph-module {
-  min-height: 400px;
+  min-height: 320px;
   display: flex;
   flex-direction: column;
   background: #080d18;
@@ -3787,7 +3784,7 @@ button:focus-visible,
 
 #network-graph {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
 }
 
@@ -4195,7 +4192,7 @@ button:focus-visible,
 .subscribe-section-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(160deg, rgba(65, 40, 22, 0.72) 0%, rgba(80, 48, 26, 0.72) 50%, rgba(58, 36, 20, 0.72) 100%);
+  background: linear-gradient(160deg, rgba(176, 130, 90, 0.55) 0%, rgba(196, 149, 106, 0.6) 50%, rgba(165, 120, 82, 0.55) 100%);
   border-radius: 24px;
   z-index: 0;
 }
@@ -4239,7 +4236,7 @@ button:focus-visible,
 
 .subscribe-section-heading em {
   font-style: italic;
-  color: var(--dusk);
+  color: #FFF5EB;
 }
 
 .subscribe-section-text {

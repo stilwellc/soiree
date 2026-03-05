@@ -2298,7 +2298,7 @@ async function initNetworkGraph() {
   const rect = canvas.getBoundingClientRect();
   const width = rect.width || 360; // fallback if layout hasn't settled
   const isMobile = width < 480;
-  const height = isMobile ? Math.round(width * 0.85) : 440;
+  const height = isMobile ? Math.round(width * 0.85) : Math.round(width * 0.9);
 
   // Fetch ALL events from API (not filtered by region)
   let allEvents = [];
