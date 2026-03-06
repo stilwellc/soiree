@@ -240,15 +240,15 @@ body {
 }
 
 .view-home .hero.hero-landing .hero-title {
-  font-size: 64px;
-  letter-spacing: -3px;
+  font-size: 54px;
+  letter-spacing: -2.5px;
   line-height: 0.95;
   margin-bottom: 0;
 }
 
 .view-home .hero.hero-landing .hero-title-logo {
-  height: 50px;
-  margin-top: 6px;
+  height: 42px;
+  margin-top: 5px;
 }
 
 /* Removed: now handled by base .hero-location-row */
@@ -275,12 +275,12 @@ body {
     padding: 10px 20px 6px;
   }
   .view-home .hero.hero-landing .hero-title {
-    font-size: 52px;
-    letter-spacing: -2px;
+    font-size: 44px;
+    letter-spacing: -1.7px;
   }
   .view-home .hero.hero-landing .hero-title-logo {
-    height: 38px;
-    margin-top: 4px;
+    height: 32px;
+    margin-top: 3px;
   }
 }
 
