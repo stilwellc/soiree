@@ -320,15 +320,9 @@ body {
   background: linear-gradient(to bottom, transparent, rgba(250, 248, 243, 0.85));
 }
 
-/* Grain / linen texture overlay */
+/* Grain texture — disabled for cleaner look */
 .hero-grain {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  opacity: 0.045;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 220px 220px;
-  pointer-events: none;
+  display: none;
 }
 
 .hero-content {
@@ -1434,14 +1428,7 @@ body {
 }
 
 .filter-chip::before {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--chip-color, var(--accent));
-  opacity: 0.35;
-  flex-shrink: 0;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: none;
 }
 
 .filter-chip.active {
@@ -1453,8 +1440,7 @@ body {
 }
 
 .filter-chip.active::before {
-  opacity: 1;
-  box-shadow: 0 0 8px var(--chip-color, var(--gold));
+  display: none;
 }
 
 .filter-chip:hover:not(.active) {
@@ -1513,8 +1499,7 @@ body {
   }
 
   .filter-chip::before {
-    width: 5px;
-    height: 5px;
+    display: none;
   }
 }
 
@@ -1525,7 +1510,7 @@ body {
 
 .event-card {
   background: #1C1C1E;
-  border-radius: 36px;
+  border-radius: 24px;
   overflow: hidden;
   margin-bottom: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
@@ -1533,25 +1518,13 @@ body {
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
   position: relative;
   animation: cardAppear 0.7s var(--transition) both;
-  border: 3px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
 }
 
-.event-card:nth-child(1) {
+.event-card:nth-child(n) {
   animation-delay: 0.4s;
-}
-
-.event-card:nth-child(2) {
-  animation-delay: 0.5s;
-}
-
-.event-card:nth-child(3) {
-  animation-delay: 0.6s;
-}
-
-.event-card:nth-child(n+4) {
-  animation-delay: 0.7s;
 }
 
 @keyframes cardAppear {
@@ -2531,7 +2504,6 @@ body {
   border-radius: 50%;
   animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   margin: 0 auto 20px;
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
 }
 
 @keyframes spin {
