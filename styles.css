@@ -1540,8 +1540,8 @@ body {
 }
 
 .event-card-header {
-  height: 120px;
-  padding: 20px;
+  height: 100px;
+  padding: 16px;
   position: relative;
   display: flex;
   align-items: flex-start;
@@ -1916,8 +1916,8 @@ body {
 /* Event name — positioned in header, right-aligned */
 .event-name {
   font-family: 'Jost', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   color: white;
   text-align: right;
   line-height: 1.2;
@@ -2012,7 +2012,7 @@ body {
 /* Mobile card scaling */
 @media (max-width: 480px) {
   .event-name {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .event-card-label {
@@ -3862,7 +3862,7 @@ button:focus-visible,
 
 .cat-gallery-header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   padding: 0 24px 12px;
   border-bottom: 1px solid rgba(196, 149, 106, 0.15);
