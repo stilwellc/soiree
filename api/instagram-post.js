@@ -90,11 +90,12 @@ function formatEventDetail(event) {
 const WEEKEND_HASHTAGS = '#NYC #NewYorkCity #WeekendNYC #ThingsToDoNYC #JerseyCity #Hoboken #WeekendVibes #FreeThingsToDo #NYCEvents #NYCWeekend #Soiree #SoireeToday #FreeNYC #FreeJC #WeekendRoundUp';
 
 const DAY_EMOJIS = {
-  'Friday': '\ud83c\udf1f',
-  'Saturday': '\u2728',
-  'Sunday': '\u2615',
-  'Jersey City': '\ud83c\udfd9\ufe0f',
-  'Hoboken': '\ud83c\udf09',
+  'New York · Friday': '\ud83c\udf1f',
+  'New York · Saturday': '\u2728',
+  'New York · Sunday': '\u2615',
+  'Hoboken & JC · Friday': '\ud83c\udfd9\ufe0f',
+  'Hoboken & JC · Saturday': '\ud83c\udf09',
+  'Hoboken & JC · Sunday': '\u2600\ufe0f',
 };
 
 function buildWeekendCaption(slides, weekendLabel, totalEvents) {
@@ -192,32 +193,32 @@ async function handleWeekendRoundup(req, res, isDryRun) {
 
   // Split events by region
   const nycEvents = allEvents.filter(e => getEventRegion(e) === 'nyc');
-  const jcEvents = allEvents.filter(e => getEventRegion(e) === 'hoboken-jc' && getCity(e) === 'jersey-city');
-  const hobokenEvents = allEvents.filter(e => getEventRegion(e) === 'hoboken-jc' && getCity(e) === 'hoboken');
+  const hjcEvents = allEvents.filter(e => getEventRegion(e) === 'hoboken-jc');
 
-  // Split NYC events by day
-  const nycFri = nycEvents.filter(e => {
+  // Helper to filter by day
+  const byDay = (events, dayStr) => events.filter(e => {
     const d = e.start_date instanceof Date ? e.start_date : new Date(e.start_date);
-    return formatDateLocal(d) === friStr;
+    return formatDateLocal(d) === dayStr;
   });
-  const nycSat = nycEvents.filter(e => {
-    const d = e.start_date instanceof Date ? e.start_date : new Date(e.start_date);
-    return formatDateLocal(d) === satStr;
-  });
-  const nycSun = nycEvents.filter(e => {
-    const d = e.start_date instanceof Date ? e.start_date : new Date(e.start_date);
-    return formatDateLocal(d) === sunStr;
-  });
+
+  // Split by day
+  const nycFri = byDay(nycEvents, friStr);
+  const nycSat = byDay(nycEvents, satStr);
+  const nycSun = byDay(nycEvents, sunStr);
+  const hjcFri = byDay(hjcEvents, friStr);
+  const hjcSat = byDay(hjcEvents, satStr);
+  const hjcSun = byDay(hjcEvents, sunStr);
 
   const totalEvents = allEvents.length;
 
-  // Slides: Friday NYC, Saturday NYC, Sunday NYC, Jersey City, Hoboken
+  // Slides: NYC Fri/Sat/Sun, then Hoboken & JC Fri/Sat/Sun
   const slides = [
-    { displayName: 'Friday', events: nycFri },
-    { displayName: 'Saturday', events: nycSat },
-    { displayName: 'Sunday', events: nycSun },
-    { displayName: 'Jersey City', events: jcEvents },
-    { displayName: 'Hoboken', events: hobokenEvents },
+    { displayName: 'New York · Friday', events: nycFri },
+    { displayName: 'New York · Saturday', events: nycSat },
+    { displayName: 'New York · Sunday', events: nycSun },
+    { displayName: 'Hoboken & JC · Friday', events: hjcFri },
+    { displayName: 'Hoboken & JC · Saturday', events: hjcSat },
+    { displayName: 'Hoboken & JC · Sunday', events: hjcSun },
   ];
 
   console.log(`Slides: ${slides.map(s => `${s.displayName}=${s.events.length}`).join(', ')}`);
