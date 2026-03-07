@@ -3964,8 +3964,8 @@ button:focus-visible,
 
 /* Compact header for gallery context */
 .cat-gallery-row .event-card-header {
-  height: 90px;
-  padding: 14px 14px;
+  height: 72px;
+  padding: 12px 14px;
 }
 
 /* Tighter label */
@@ -3987,10 +3987,10 @@ button:focus-visible,
 
 /* Compact footer */
 .cat-gallery-row .event-card-footer {
-  padding: 6px 14px 14px;
+  padding: 4px 14px 12px;
 }
 .cat-gallery-row .event-footer-big {
-  font-size: 22px;
+  font-size: 13px;
 }
 .cat-gallery-row .event-footer-small {
   font-size: 11px;
