@@ -227,7 +227,7 @@ async function handleWeekendRoundup(req, res, isDryRun) {
   console.log('Generating weekend card images...');
   const cards = await Promise.all(
     slides.map(({ displayName, events }) =>
-      generateSocialCard(displayName, events, weekendLabel, totalEvents)
+      generateSocialCard(displayName, events, weekendLabel, totalEvents, { metaField: 'location' })
     )
   );
 
