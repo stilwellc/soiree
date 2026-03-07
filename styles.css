@@ -1983,10 +1983,10 @@ body {
 
 .event-footer-big {
   font-family: 'Jost', sans-serif;
-  font-size: 32px;
-  font-weight: 300;
+  font-size: 16px;
+  font-weight: 600;
   color: white;
-  letter-spacing: -0.5px;
+  letter-spacing: 0px;
   line-height: 1;
 }
 
@@ -2032,7 +2032,7 @@ body {
   }
 
   .event-footer-big {
-    font-size: 22px;
+    font-size: 14px;
   }
 
   .event-footer-small {
@@ -4013,7 +4013,7 @@ button:focus-visible,
 .subscribe-section {
   position: relative;
   margin: 8px 16px 0;
-  padding: 32px 24px 28px;
+  padding: 40px 28px 36px;
   overflow: hidden;
   border-radius: 24px;
   cursor: pointer;

@@ -85,6 +85,218 @@ function formatEventDetail(event) {
   return detail;
 }
 
+// ── Weekend Roundup helpers ──────────────────────────────────────
+
+const WEEKEND_HASHTAGS = '#NYC #NewYorkCity #WeekendNYC #ThingsToDoNYC #JerseyCity #Hoboken #WeekendVibes #FreeThingsToDo #NYCEvents #NYCWeekend #Soiree #SoireeToday #FreeNYC #FreeJC #WeekendRoundUp';
+
+const DAY_EMOJIS = {
+  'Friday': '\ud83c\udf1f',
+  'Saturday': '\u2728',
+  'Sunday': '\u2615',
+  'Jersey City': '\ud83c\udfd9\ufe0f',
+  'Hoboken': '\ud83c\udf09',
+};
+
+function buildWeekendCaption(slides, weekendLabel, totalEvents) {
+  const MAX_EVENTS_PER_SECTION = 5;
+  const sections = [];
+
+  for (const { displayName, events } of slides) {
+    if (events.length === 0) continue;
+    const emoji = DAY_EMOJIS[displayName] || '';
+    const shown = events.slice(0, MAX_EVENTS_PER_SECTION);
+    const lines = shown.map(e => {
+      let detail = '';
+      if (e.location) detail = e.location;
+      return `\u2022 ${e.name}${detail ? ' \u2014 ' + detail : ''}`;
+    }).join('\n');
+    const more = events.length > MAX_EVENTS_PER_SECTION
+      ? `\n  + ${events.length - MAX_EVENTS_PER_SECTION} more on soiree.today`
+      : '';
+    sections.push(`${emoji} ${displayName}\n${lines}${more}`);
+  }
+
+  if (sections.length === 0) return null;
+
+  let caption = [
+    `Weekend Round Up \u2014 ${totalEvents} free events this weekend (${weekendLabel})`,
+    '',
+    sections.join('\n\n'),
+    '',
+    'Full lineup at soiree.today',
+    '',
+    WEEKEND_HASHTAGS,
+  ].join('\n').trim();
+
+  // Trim if over 2200 chars — drop hashtags first, then truncate sections
+  if (caption.length > 2200) {
+    caption = [
+      `Weekend Round Up \u2014 ${totalEvents} free events this weekend (${weekendLabel})`,
+      '',
+      sections.join('\n\n'),
+      '',
+      'Full lineup at soiree.today',
+    ].join('\n').trim();
+  }
+
+  return caption;
+}
+
+async function handleWeekendRoundup(req, res, isDryRun) {
+  // Calculate Fri/Sat/Sun dates for this weekend
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0=Sun, 5=Fri, 6=Sat
+
+  // Find this coming Friday (or today if already Fri/Sat/Sun)
+  let friday;
+  if (dayOfWeek === 5) friday = new Date(today);
+  else if (dayOfWeek === 6) { friday = new Date(today); friday.setDate(today.getDate() - 1); }
+  else if (dayOfWeek === 0) { friday = new Date(today); friday.setDate(today.getDate() - 2); }
+  else { friday = new Date(today); friday.setDate(today.getDate() + (5 - dayOfWeek)); }
+
+  const saturday = new Date(friday); saturday.setDate(friday.getDate() + 1);
+  const sunday = new Date(friday); sunday.setDate(friday.getDate() + 2);
+
+  const friStr = formatDateLocal(friday);
+  const satStr = formatDateLocal(saturday);
+  const sunStr = formatDateLocal(sunday);
+
+  const weekendLabel = friday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    + ' \u2013 ' + sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  console.log(`Weekend Roundup: ${weekendLabel} (${friStr} to ${sunStr})`);
+
+  // Fetch Fri-Sun events
+  const { rows: allEvents } = await pool.query(
+    `SELECT * FROM events
+     WHERE start_date >= $1 AND start_date <= $2
+     ORDER BY start_date ASC, created_at DESC`,
+    [friStr, sunStr]
+  );
+
+  console.log(`Found ${allEvents.length} weekend events`);
+
+  if (allEvents.length === 0) {
+    return res.status(200).json({ success: true, skipped: true, reason: 'No weekend events' });
+  }
+
+  const token = (process.env.INSTAGRAM_ACCESS_TOKEN || '').trim();
+  const igUserId = (process.env.INSTAGRAM_USER_ID || '').trim();
+  if (!isDryRun) {
+    if (!token) throw new Error('Missing INSTAGRAM_ACCESS_TOKEN env var');
+    if (!igUserId) throw new Error('Missing INSTAGRAM_USER_ID env var');
+  }
+
+  const dateSlug = friStr.replace(/-/g, '');
+  const runId = Date.now();
+
+  // Split events by region
+  const nycEvents = allEvents.filter(e => getEventRegion(e) === 'nyc');
+  const jcEvents = allEvents.filter(e => getEventRegion(e) === 'hoboken-jc' && getCity(e) === 'jersey-city');
+  const hobokenEvents = allEvents.filter(e => getEventRegion(e) === 'hoboken-jc' && getCity(e) === 'hoboken');
+
+  // Split NYC events by day
+  const nycFri = nycEvents.filter(e => {
+    const d = e.start_date instanceof Date ? e.start_date : new Date(e.start_date);
+    return formatDateLocal(d) === friStr;
+  });
+  const nycSat = nycEvents.filter(e => {
+    const d = e.start_date instanceof Date ? e.start_date : new Date(e.start_date);
+    return formatDateLocal(d) === satStr;
+  });
+  const nycSun = nycEvents.filter(e => {
+    const d = e.start_date instanceof Date ? e.start_date : new Date(e.start_date);
+    return formatDateLocal(d) === sunStr;
+  });
+
+  const totalEvents = allEvents.length;
+
+  // Slides: Friday NYC, Saturday NYC, Sunday NYC, Jersey City, Hoboken
+  const slides = [
+    { displayName: 'Friday', events: nycFri },
+    { displayName: 'Saturday', events: nycSat },
+    { displayName: 'Sunday', events: nycSun },
+    { displayName: 'Jersey City', events: jcEvents },
+    { displayName: 'Hoboken', events: hobokenEvents },
+  ];
+
+  console.log(`Slides: ${slides.map(s => `${s.displayName}=${s.events.length}`).join(', ')}`);
+
+  // Generate card images for each slide
+  console.log('Generating weekend card images...');
+  const cards = await Promise.all(
+    slides.map(({ displayName, events }) =>
+      generateSocialCard(displayName, events, weekendLabel, totalEvents)
+    )
+  );
+
+  // Upload images
+  console.log('Uploading weekend images to Vercel Blob...');
+  const imageUrls = [];
+
+  // Slide 1: cover image
+  const coverBuffer = await readFile(join(process.cwd(), 'assets', 'images', 'weekend-roundup-cover.png'));
+  const coverBlob = await put(
+    'instagram/weekend-roundup-cover.png',
+    coverBuffer,
+    { access: 'public', contentType: 'image/png', addRandomSuffix: false, allowOverwrite: true }
+  );
+  console.log(`  Cover: ${coverBlob.url}`);
+  imageUrls.push(coverBlob.url);
+
+  // Slides 2-6: generated cards
+  for (let i = 0; i < cards.length; i++) {
+    const slug = slides[i].displayName.toLowerCase().replace(/[^a-z]/g, '-');
+    const blob = await put(
+      `instagram/${dateSlug}-weekend-${slug}-${runId}.png`,
+      cards[i],
+      { access: 'public', contentType: 'image/png', addRandomSuffix: false }
+    );
+    console.log(`  ${slides[i].displayName}: ${blob.url}`);
+    imageUrls.push(blob.url);
+  }
+
+  // Build caption
+  const caption = buildWeekendCaption(slides, weekendLabel, totalEvents);
+  console.log(`Weekend caption length: ${caption.length} / 2200 chars`);
+
+  if (isDryRun) {
+    return res.status(200).json({
+      success: true,
+      dryRun: true,
+      mode: 'weekend',
+      weekendLabel,
+      totalEvents,
+      slides: slides.map(s => ({ name: s.displayName, count: s.events.length })),
+      imageUrls,
+      caption,
+      captionLength: caption.length,
+    });
+  }
+
+  // Post carousel
+  console.log('Posting weekend roundup carousel to Instagram...');
+  const mediaId = await postCarousel(igUserId, imageUrls, caption, token);
+  console.log(`Weekend roundup published! Media ID: ${mediaId}`);
+
+  // Log activity
+  await pool.query(
+    `INSERT INTO activity_log (type, event_count, detail) VALUES ('instagram', $1, $2)`,
+    [totalEvents, 'Weekend Roundup']
+  ).catch(() => {});
+
+  return res.status(200).json({
+    success: true,
+    mode: 'weekend',
+    mediaId,
+    weekendLabel,
+    totalEvents,
+    imageUrls,
+  });
+}
+
+// ── Weekly post helpers ─────────────────────────────────────────
+
 function buildCaption(categoryEvents, weekLabel, regionId, regionLabel) {
   const sections = [];
 
@@ -154,6 +366,17 @@ module.exports = async function handler(req, res) {
 
   if (!cronHeader && authHeader !== `Bearer ${process.env.SCRAPE_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Route to weekend roundup if mode=weekend
+  if (req.query.mode === 'weekend') {
+    try {
+      return await handleWeekendRoundup(req, res, isDryRun);
+    } catch (error) {
+      console.error('Weekend roundup error:', error);
+      const detail = error.response?.data?.error || error.response?.data || null;
+      return res.status(500).json({ success: false, error: error.message, detail });
+    }
   }
 
   try {
