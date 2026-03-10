@@ -638,6 +638,7 @@ body {
   .region-backdrop {
     background: transparent;
     z-index: 9;
+    pointer-events: none;
   }
   /* Reset stagger animations on desktop */
   .region-panel-list .region-panel-option,
