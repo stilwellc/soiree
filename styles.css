@@ -587,6 +587,7 @@ body {
 @media (min-width: 768px) {
   .hero-location-row {
     position: relative;
+    z-index: 11;
   }
   .hero-region-panel {
     position: absolute;
