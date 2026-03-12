@@ -4841,11 +4841,11 @@ button:focus-visible,
   margin: 24px auto;
 }
 
-/* ---- Card 1: NYC Curated ---- */
+/* ---- Card 1: Both Sides of the Hudson Curated ---- */
 
 .pin-headline {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 64px;
+  font-size: 46px;
   font-weight: 300;
   color: #FAF8F3;
   letter-spacing: 3px;
