@@ -281,7 +281,7 @@ let manualRegionOverride = localStorage.getItem('soireeManualRegion') === 'true'
 let freeMode = false;
 
 // Unified Gallery State
-let galleryFilter = 'all';
+let galleryFilter = 'art';
 let galleryEvents = [];
 let stackIndex = 0;
 let featuredIndex = 0;
