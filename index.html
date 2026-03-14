@@ -227,18 +227,12 @@
       <section class="filters event-controls" role="radiogroup" aria-label="Event categories">
         <button class="filter-chip active" data-filter="all" data-color="#D4AF37" role="radio"
           aria-checked="true">All</button>
-        <button class="filter-chip" data-filter="art" data-color="#A0686B" role="radio" aria-checked="false">Art &
-          Culture</button>
-        <button class="filter-chip" data-filter="culinary" data-color="#A8906E" role="radio" aria-checked="false">Food &
-          Drink</button>
-        <button class="filter-chip" data-filter="music" data-color="#6B6B6B" role="radio"
-          aria-checked="false">Music</button>
+        <button class="filter-chip" data-filter="art" data-color="#A0686B" role="radio"
+          aria-checked="false">Art</button>
         <button class="filter-chip" data-filter="perks" data-color="#8B6347" role="radio"
-          aria-checked="false">Perks</button>
-        <button class="filter-chip" data-filter="lifestyle" data-color="#C9A18E" role="radio"
-          aria-checked="false">Lifestyle</button>
+          aria-checked="false">Perks & Pop-Ups</button>
         <button class="filter-chip" data-filter="community" data-color="#8BA89B" role="radio"
-          aria-checked="false">Community</button>
+          aria-checked="false">Culture & Community</button>
       </section>
 
       <!-- Category Galleries (home view) -->
@@ -247,7 +241,7 @@
         <div class="cat-gallery-section reveal-section" data-cat="art">
           <div class="cat-gallery-header">
             <div>
-              <div class="cat-gallery-title">Art &amp; Culture</div>
+              <div class="cat-gallery-title">Art</div>
             </div>
             <button class="cat-gallery-see-all" data-cat="art">Explore
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -259,13 +253,25 @@
         <div class="cat-gallery-section reveal-section" data-cat="perks">
           <div class="cat-gallery-header">
             <div>
-              <div class="cat-gallery-title">Perks</div>
+              <div class="cat-gallery-title">Perks &amp; Pop-Ups</div>
             </div>
             <button class="cat-gallery-see-all" data-cat="perks">Explore
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
           </div>
           <div class="cat-gallery-row" id="gallery-perks"></div>
+        </div>
+
+        <div class="cat-gallery-section reveal-section" data-cat="community">
+          <div class="cat-gallery-header">
+            <div>
+              <div class="cat-gallery-title">Culture &amp; Community</div>
+            </div>
+            <button class="cat-gallery-see-all" data-cat="community">Explore
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div class="cat-gallery-row" id="gallery-community"></div>
         </div>
 
         <!-- Instagram CTA — Full-bleed editorial -->
@@ -478,7 +484,7 @@
           <div class="social-post-inner">
             <div class="social-post-top">
               <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="social-logo">
-              <div class="social-post-category">Art & Culture</div>
+              <div class="social-post-category">Art</div>
               <div class="social-post-week" id="social-week-art"></div>
             </div>
             <div class="social-rule"></div>
@@ -510,15 +516,15 @@
         </div>
         <div class="social-caption" id="social-perks-caption"></div>
 
-        <div class="social-post" id="social-food">
+        <div class="social-post" id="social-community">
           <div class="social-post-inner">
             <div class="social-post-top">
               <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="social-logo">
-              <div class="social-post-category">Food & Drink</div>
-              <div class="social-post-week" id="social-week-food"></div>
+              <div class="social-post-category">Culture & Community</div>
+              <div class="social-post-week" id="social-week-community"></div>
             </div>
             <div class="social-rule"></div>
-            <div class="social-events-list" id="social-food-events"></div>
+            <div class="social-events-list" id="social-community-events"></div>
             <div class="social-rule"></div>
             <div class="social-post-bottom">
               <div class="social-tagline"></div>
@@ -526,7 +532,7 @@
             </div>
           </div>
         </div>
-        <div class="social-caption" id="social-food-caption"></div>
+        <div class="social-caption" id="social-community-caption"></div>
 
       </div>
     </div>

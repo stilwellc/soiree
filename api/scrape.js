@@ -29,30 +29,30 @@ function getFallbackEvents() {
     },
     {
       name: "Free Jazz in Central Park",
-      category: "music",
+      category: "community",
       date: "Friday Evening",
       time: "7:00 PM - 9:00 PM",
       location: "Central Park",
       address: "Rumsey Playfield, Central Park",
       price: "free",
       spots: 200,
-      image: getEventImage("Free Jazz in Central Park", "music"),
+      image: getEventImage("Free Jazz in Central Park", "community"),
       description: "Evening of smooth jazz under the stars.",
-      highlights: generateHighlights("Free Jazz in Central Park", "Evening of smooth jazz under the stars.", "music", "Central Park", "Fallback"),
+      highlights: generateHighlights("Free Jazz in Central Park", "Evening of smooth jazz under the stars.", "community", "Central Park", "Fallback"),
       url: "https://www.nycforfree.co/events"
     },
     {
       name: "DUMBO Food Market",
-      category: "culinary",
+      category: "community",
       date: "Sunday",
       time: "11:00 AM - 6:00 PM",
       location: "DUMBO, Brooklyn",
       address: "Pearl Plaza, Brooklyn, NY",
       price: "free",
       spots: 300,
-      image: getEventImage("DUMBO Food Market", "culinary"),
+      image: getEventImage("DUMBO Food Market", "community"),
       description: "Sample artisanal foods from local vendors.",
-      highlights: generateHighlights("DUMBO Food Market", "Sample artisanal foods from local vendors.", "culinary", "DUMBO, Brooklyn", "Fallback"),
+      highlights: generateHighlights("DUMBO Food Market", "Sample artisanal foods from local vendors.", "community", "DUMBO, Brooklyn", "Fallback"),
       url: "https://www.nycforfree.co/events"
     }
   ];
@@ -69,16 +69,14 @@ function categorizeEvent(title, description, location) {
   const text = (title + ' ' + (description || '')).toLowerCase();
   const loc = (location || '').toLowerCase();
 
-  // --- Location-based hints (museums = art) ---
+  // --- Location-based hints (museums, galleries = art) ---
   const museumLocations = ['moma', 'met', 'metropolitan', 'whitney', 'guggenheim',
     'new museum', 'museum', 'gallery', 'brooklyn museum', 'amnh'];
   if (museumLocations.some(m => loc.includes(m))) {
-    // Even at a museum, food events stay food
-    if (text.match(/\b(cook|chef|tasting|dinner|brunch|food)\b/)) return 'culinary';
     return 'art';
   }
 
-  // --- Perks (events offering complimentary items: samples, gifts, tastings) ---
+  // --- Perks & Pop-Ups (freebies, brand activations, pop-ups, sample sales) ---
   if (text.match(/free\s+(sample|gift|coffee|latte|drink|treat|tote|shirt|t-shirt|merch|product|item|goodie|makeup|lipstick|skincare|fragrance|ice cream|donut|doughnut|pizza|slice|cookie|cupcake|smoothie|juice|chai|matcha|espresso|bagel|croissant|muffin|chocolate|beer|wine|cocktail|seltzer|swag)/i) ||
     text.match(/\b(complimentary|giveaway|swag|goodie bag|gift bag|gift with purchase|free gifts?|free tasting)\b/i) ||
     text.match(/while supplies last/i) ||
@@ -86,45 +84,22 @@ function categorizeEvent(title, description, location) {
     return 'perks';
   }
 
-  // --- Film / screening detection (directed by, director's cut, year patterns) ---
+  // --- Perks: brand pop-ups, beauty/wellness activations, sample sales, shopping ---
+  if (text.match(/pop-up|popup|sample sale|launch celebration|grand opening|experience|charm bar/i) ||
+    text.match(/\b(beauty|skincare|spa|k-beauty|cosmetic|makeup|fragrance|self-care)\b/) ||
+    text.match(/\b(fashion|runway|designer|couture|clothing|apparel|boutique|wardrobe|lookbook|catwalk|textile)\b/)) {
+    return 'perks';
+  }
+
+  // --- Art (galleries, exhibits, film, theater, photography, design) ---
   if (text.match(/directed by|director's cut|screening|^\d{4}\.\s|film series|\bfilms?\b.*\b\d{4}\b/)) {
     return 'art';
   }
-
-  // --- Art & Culture ---
   if (text.match(/\b(art|gallery|exhibit|exhibition|paint|sculpture|artist|mural|craft|pottery|drawing|illustration|installation|visual|theater|theatre|cinema|film|movie|photography|graffiti|contemporary|abstract|coloring|screening|animation|collection|calligraphy|prints|portrait|studio tour|open studio|architecture tour)\b/) || text.match(/street art|ice sculpture/)) {
     return 'art';
   }
 
-  // --- Music & Nightlife ---
-  if (text.match(/\b(music|concert|jazz|dj|band|singer|live|festival|stage|soundtrack|album|vinyl|orchestra|choir|acoustic|symphony|karaoke|rap|rock|indie|electronic|classical|ballet|choreograph|ep release|nightlife|party|rave)\b/) || text.match(/live music|hip hop|release party/)) {
-    return 'music';
-  }
-
-  // --- Food & Drink ---
-  if (text.match(/\b(food|culinary|market|tasting|restaurant|cook|dining|kitchen|chef|menu|wine|coffee|cafe|bakery|brunch|dinner|lunch|breakfast|cocktail|beer|eat|eating|flavor|recipe|gourmet|pizza|burger|chicken|sushi|ramen|bbq|brewery|pub|tavern|bistro|eatery|slice|taco|sandwich|foodie|cuisine|pastry|dessert|appetizer|treat|snack|chocolate|muffin|sundae|smoothie|gnocchi|hot chocolate|ice cream|cookie|doughnut|donut)\b/) || text.match(/grand opening.*(express|grill|kitchen|cafe|deli|restaurant|bar|eatery|bistro|bakery)/i)) {
-    return 'culinary';
-  }
-
-  // --- Fashion ---
-  if (text.match(/\b(fashion|runway|designer|couture|clothing|apparel|boutique|wardrobe|outfit|lookbook|vogue|catwalk|textile)\b/)) {
-    return 'fashion';
-  }
-
-  // --- Lifestyle (beauty, wellness, fitness, brand pop-ups, shopping) ---
-  if (text.match(/\b(yoga|fitness|workout|meditation|wellness|beauty|skincare|spa|k-beauty|cosmetic|makeup|fragrance|self-care|pilates|barre|cycling|running|marathon|gym)\b/) || text.match(/pop-up|popup|launch celebration|grand opening|experience|charm bar|scavenger hunt/)) {
-    return 'lifestyle';
-  }
-
-  // --- Community (family, kids, sports, volunteering, parades, celebrations) ---
-  if (text.match(/\b(family|kids|children|volunteer|parade|camp|fair|story time|storytime|tweens|teens|workshop|seminar|lecture|networking|meetup|discussion|panel|book club|reading|world cup|soccer|basketball|baseball|sports bar|fan village)\b/) || text.match(/valentine|galentine|lunar new year|australia day|wikipedia day/)) {
-    return 'community';
-  }
-
-  // --- Default: try to infer from title patterns ---
-  // Brand names with event-like suffixes
-  if (text.match(/\b(celebration|anniversary|birthday|bash|launch)\b/)) return 'community';
-
+  // --- Culture & Community (music, food, family, sports, workshops, parades, everything else) ---
   return 'community';
 }
 
@@ -134,18 +109,6 @@ function getEventImage(title, category) {
   // This provides high-quality, professionally curated images
 
   const categoryImages = {
-    music: [
-      'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1200&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1200&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1200&h=800&fit=crop'
-    ],
-    culinary: [
-      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1200&h=800&fit=crop'
-    ],
     art: [
       'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=1200&h=800&fit=crop',
       'https://images.unsplash.com/photo-1536924940846-227afb31e2a5?w=1200&h=800&fit=crop',
@@ -158,16 +121,10 @@ function getEventImage(title, category) {
       'https://images.unsplash.com/photo-1607082349566-187342175e2f?w=1200&h=800&fit=crop',
       'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=1200&h=800&fit=crop'
     ],
-    lifestyle: [
-      'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=1200&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1540555700478-4be289fbec6f?w=1200&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=1200&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=800&fit=crop'
-    ],
     community: [
       'https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&h=800&fit=crop',
       'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=1200&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&h=800&fit=crop',
       'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1200&h=800&fit=crop'
     ]
   };

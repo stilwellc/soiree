@@ -58,7 +58,7 @@ let events = [
   {
     id: 2,
     name: "Rooftop Jazz Session",
-    category: "music",
+    category: "community",
     date: "Tomorrow",
     time: "6:30 PM - 10:00 PM",
     location: "Williamsburg",
@@ -77,7 +77,7 @@ let events = [
   {
     id: 3,
     name: "Chef's Table Pop-Up",
-    category: "culinary",
+    category: "community",
     date: "Friday",
     time: "8:00 PM - 12:00 AM",
     location: "SoHo",
@@ -96,7 +96,7 @@ let events = [
   {
     id: 4,
     name: "Underground Fashion Showcase",
-    category: "fashion",
+    category: "perks",
     date: "Saturday",
     time: "9:00 PM - 1:00 AM",
     location: "Meatpacking District",
@@ -134,7 +134,7 @@ let events = [
   {
     id: 6,
     name: "Acoustic Songwriters Circle",
-    category: "music",
+    category: "community",
     date: "Monday",
     time: "7:30 PM - 10:30 PM",
     location: "East Village",
@@ -153,7 +153,7 @@ let events = [
   {
     id: 7,
     name: "Farm-to-Table Dinner Series",
-    category: "culinary",
+    category: "community",
     date: "Tuesday",
     time: "7:00 PM - 11:00 PM",
     location: "DUMBO",
@@ -172,7 +172,7 @@ let events = [
   {
     id: 8,
     name: "Experimental Electronic Showcase",
-    category: "music",
+    category: "community",
     date: "Wednesday",
     time: "10:00 PM - 2:00 AM",
     location: "Bushwick",
@@ -210,7 +210,7 @@ let events = [
   {
     id: 10,
     name: "Sustainable Fashion Panel",
-    category: "fashion",
+    category: "perks",
     date: "Next Friday",
     time: "6:00 PM - 8:30 PM",
     location: "Tribeca",
@@ -229,7 +229,7 @@ let events = [
   {
     id: 11,
     name: "Molecular Mixology Workshop",
-    category: "culinary",
+    category: "community",
     date: "Next Saturday",
     time: "5:00 PM - 8:00 PM",
     location: "Midtown",
@@ -248,7 +248,7 @@ let events = [
   {
     id: 12,
     name: "World Music Fusion Night",
-    category: "music",
+    category: "community",
     date: "Next Sunday",
     time: "8:00 PM - 12:00 AM",
     location: "Queens",
@@ -1238,7 +1238,7 @@ function renderSocialPosts() {
     + ' – ' + endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   // Set week labels
-  ['social-week-art', 'social-week-perks', 'social-week-food'].forEach(id => {
+  ['social-week-art', 'social-week-perks', 'social-week-community'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = weekLabel;
   });
@@ -1252,17 +1252,17 @@ function renderSocialPosts() {
   // All events per category for NYC this week
   const artEvents = thisWeekEvents.filter(e => e.category === 'art');
   const perksEvents = thisWeekEvents.filter(e => e.category === 'perks');
-  const foodEvents = thisWeekEvents.filter(e => e.category === 'culinary');
+  const communityEvents = thisWeekEvents.filter(e => e.category === 'community');
 
   // Max 8 in the card visual; ALL events go in the caption below
   renderSocialCategory('social-art-events', artEvents.slice(0, 8));
   renderSocialCategory('social-perks-events', perksEvents.slice(0, 8));
-  renderSocialCategory('social-food-events', foodEvents.slice(0, 8));
+  renderSocialCategory('social-community-events', communityEvents.slice(0, 8));
 
   // Generate caption blocks with ALL events + hashtags
-  renderSocialCaption('social-art-caption', artEvents, 'Art & Culture', weekLabel);
+  renderSocialCaption('social-art-caption', artEvents, 'Art', weekLabel);
   renderSocialCaption('social-perks-caption', perksEvents, 'Perks & Pop-Ups', weekLabel);
-  renderSocialCaption('social-food-caption', foodEvents, 'Food & Drink', weekLabel);
+  renderSocialCaption('social-community-caption', communityEvents, 'Culture & Community', weekLabel);
 
   // Set footer taglines with total curated event count
   const totalCount = thisWeekEvents.length;
@@ -1358,9 +1358,9 @@ function renderSocialCaption(captionId, allEvents, categoryName, weekLabel) {
   }).join('\n');
 
   const categoryHashtags = {
-    'Art & Culture': '#NYCArt #ArtGallery #GalleryOpening #ContemporaryArt #ArtExhibition #NYCCulture #ArtLovers #NYCArtists #ArtShow #CulturalNYC',
+    'Art': '#NYCArt #ArtGallery #GalleryOpening #ContemporaryArt #ArtExhibition #NYCCulture #ArtLovers #NYCArtists #ArtShow #CulturalNYC',
     'Perks & Pop-Ups': '#NYCPerks #PopUpNYC #SampleSale #NYCDeals #PopUpShop #ExclusiveNYC #LimitedTime #NYCPopUps #NYCSavings',
-    'Food & Drink': '#NYCFood #NYCFoodie #NYCEats #FoodPopUp #NYCDining #FoodieNYC #NYCRestaurants #FoodFestival #ChefLife #NYCDrinks'
+    'Culture & Community': '#NYCCommunity #NYCLocal #ThingsToDoNYC #NYCWeekend #NYCFree #NYCEvents #NYCLife #CommunityNYC #FreeNYC #NYCFun'
   };
 
   const baseHashtags = '#NYC #NewYorkCity #NYCEvents #ThingsToDoNYC #NYCLife #NewYork #WeekendNYC #Soiree #SoireeToday';
@@ -1980,13 +1980,9 @@ async function loadTechStats() {
 // Utilities
 function getCategoryName(category) {
   const names = {
-    art: 'Art & Culture',
-    music: 'Music',
-    culinary: 'Food & Drink',
-    fashion: 'Fashion',
-    perks: 'Perks',
-    lifestyle: 'Lifestyle',
-    community: 'Community'
+    art: 'Art',
+    perks: 'Perks & Pop-Ups',
+    community: 'Culture & Community'
   };
   return names[category] || category;
 }
@@ -2476,23 +2472,15 @@ async function initNetworkGraph() {
   // Category definitions (middle ring)
   const CATEGORY_COLORS = {
     art: '#9B8FE8',
-    music: '#F07CAD',
-    culinary: '#F0A050',
-    fashion: '#C8A0C8',
     perks: '#50B8D8',
-    lifestyle: '#70C080',
     community: '#E88060'
   };
   const CATEGORY_LABELS = {
     art: 'ART',
-    music: 'MUSIC',
-    culinary: 'FOOD',
-    fashion: 'FASHION',
     perks: 'PERKS',
-    lifestyle: 'LIFE',
-    community: 'COMM.'
+    community: 'CULTURE'
   };
-  const ALL_CATEGORIES = ['art', 'music', 'culinary', 'fashion', 'perks', 'lifestyle', 'community'];
+  const ALL_CATEGORIES = ['art', 'perks', 'community'];
 
   // Group events by category
   const categoryMap = new Map();
@@ -2898,7 +2886,7 @@ function toggleFreeMode() {
 }
 
 // ── Category Galleries ───────────────────────────────
-const GALLERY_CATEGORIES = ['art', 'culinary', 'perks'];
+const GALLERY_CATEGORIES = ['art', 'perks', 'community'];
 
 function renderCategoryGalleries() {
   GALLERY_CATEGORIES.forEach(cat => {

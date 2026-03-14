@@ -12,9 +12,9 @@ const pool = new Pool({
 
 // Category config: DB category value → display name + card order
 const CATEGORIES = [
-  { dbCategory: 'art', displayName: 'Art & Culture' },
+  { dbCategory: 'art', displayName: 'Art' },
   { dbCategory: 'perks', displayName: 'Perks & Pop-Ups' },
-  { dbCategory: 'culinary', displayName: 'Food & Drink' },
+  { dbCategory: 'community', displayName: 'Culture & Community' },
 ];
 
 // Region classification (mirrors client-side getEventRegion in app.js)
@@ -57,14 +57,14 @@ const REGION_HASHTAGS = {
 // Per-region category hashtags (5 each × 3 categories = 15)
 const CATEGORY_HASHTAGS = {
   'hoboken-jc': {
-    'Art & Culture': '#JCArt #HobokenArt #HudsonCountyArts #JCArtWalk #NJArt',
+    'Art': '#JCArt #HobokenArt #HudsonCountyArts #JCArtWalk #NJArt',
     'Perks & Pop-Ups': '#JCPopUp #HobokenDeals #JerseyDeals #HobokenPopUp #JCDeals',
-    'Food & Drink': '#JCEats #HobokenFood #JCFoodie #HobokenEats #HobokenFoodie',
+    'Culture & Community': '#JCCommunity #HobokenEvents #JCLocal #HobokenLife #HudsonCountyNJ',
   },
   'nyc': {
-    'Art & Culture': '#NYCArt #ArtGallery #NYCCulture #ArtExhibition #ArtLovers',
+    'Art': '#NYCArt #ArtGallery #NYCCulture #ArtExhibition #ArtLovers',
     'Perks & Pop-Ups': '#NYCPerks #PopUpNYC #SampleSale #NYCDeals #PopUpShop',
-    'Food & Drink': '#NYCFood #NYCFoodie #NYCEats #NYCDining #FoodieNYC',
+    'Culture & Community': '#NYCCommunity #NYCLocal #ThingsToDoNYC #NYCWeekend #NYCFree',
   },
 };
 

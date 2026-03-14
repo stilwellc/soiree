@@ -95,11 +95,8 @@ async function scrapeTimeOutNYC() {
 function categorizeEvent(title, description) {
     const text = (title + ' ' + description).toLowerCase();
 
-    if (text.match(/\b(museum|gallery|exhibit|art|sculpture|paint)\b/)) return 'art';
-    if (text.match(/\b(music|concert|jazz|band|singer|festival)\b/)) return 'music';
-    if (text.match(/\b(food|restaurant|dining|culinary|chef|tasting)\b/)) return 'culinary';
-    if (text.match(/\b(park|outdoor|hike|walk|nature|garden)\b/)) return 'community';
-    if (text.match(/\b(theater|theatre|show|performance|comedy)\b/)) return 'art';
+    if (text.match(/\b(museum|gallery|exhibit|art|sculpture|paint|theater|theatre|show|performance|comedy|film|cinema|photography)\b/)) return 'art';
+    if (text.match(/pop-up|popup|sample sale|free\s+(sample|gift|coffee|treat|swag)|giveaway|complimentary/i)) return 'perks';
 
     return 'community';
 }
