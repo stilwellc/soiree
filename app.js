@@ -280,6 +280,14 @@ let detectedRegion = null;
 let manualRegionOverride = localStorage.getItem('soireeManualRegion') === 'true';
 let freeMode = false;
 
+// Unified Gallery State
+let galleryFilter = 'all';
+let galleryEvents = [];
+let stackIndex = 0;
+let featuredIndex = 0;
+let isSwipeAnimating = false;
+const SWIPE_THRESHOLD = 80;
+
 // Region Definitions
 const REGIONS = {
   'nyc': { name: 'New York City', shortName: 'NYC', coords: { lat: 40.7128, lng: -74.0060 } },
@@ -839,7 +847,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
   const visibleView = views.find(v => !v.classList.contains('hidden'));
 
   function showView() {
-    const categoryGrid = document.getElementById('category-grid');
+    const unifiedGallery = document.getElementById('unified-gallery');
     const eventsListEl = document.getElementById('events-list');
 
     // Restore nav/footer if coming from social/pins view
@@ -854,7 +862,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       aboutView.classList.add('hidden');
       socialView.classList.add('hidden');
       pinsView.classList.add('hidden');
-      if (categoryGrid) categoryGrid.classList.remove('hidden');
+      if (unifiedGallery) unifiedGallery.classList.remove('hidden');
       if (eventsListEl) eventsListEl.classList.add('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
       if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
@@ -869,7 +877,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       aboutView.classList.add('hidden');
       socialView.classList.add('hidden');
       pinsView.classList.add('hidden');
-      if (categoryGrid) categoryGrid.classList.add('hidden');
+      if (unifiedGallery) unifiedGallery.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
       if (subscribeStripEvents) subscribeStripEvents.classList.remove('hidden');
@@ -884,7 +892,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       aboutView.classList.add('hidden');
       socialView.classList.add('hidden');
       pinsView.classList.add('hidden');
-      if (categoryGrid) categoryGrid.classList.add('hidden');
+      if (unifiedGallery) unifiedGallery.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
       if (subscribeStripEvents) subscribeStripEvents.classList.remove('hidden');
@@ -899,7 +907,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       aboutView.classList.add('hidden');
       socialView.classList.add('hidden');
       pinsView.classList.add('hidden');
-      if (categoryGrid) categoryGrid.classList.add('hidden');
+      if (unifiedGallery) unifiedGallery.classList.add('hidden');
       if (eventsListEl) eventsListEl.classList.remove('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
       if (subscribeStripEvents) subscribeStripEvents.classList.remove('hidden');
@@ -1842,6 +1850,11 @@ function toggleFavorite(eventId) {
     renderFavorites();
   } else {
     renderEvents();
+  }
+
+  // Refresh desktop gallery sidebar favorite states (mobile stack re-renders on its own)
+  if (window.innerWidth >= 768 && document.getElementById('gallery-featured')) {
+    renderFeaturedLayout();
   }
 }
 
@@ -2885,60 +2898,374 @@ function toggleFreeMode() {
   showToast(freeMode ? 'Showing free events only' : 'Showing all events');
 }
 
-// ── Category Galleries ───────────────────────────────
-const GALLERY_CATEGORIES = ['art', 'perks', 'community'];
+// ── Unified Gallery (Card Stack + Featured) ─────────────────
+function getGalleryEvents() {
+  const pool = events.filter(e => {
+    const matchesRegion = matchesCurrentRegion(e);
+    const matchesCat = galleryFilter === 'all' || e.category === galleryFilter;
+    return matchesRegion && matchesCat;
+  });
+  return pool.sort(() => Math.random() - 0.5).slice(0, 15);
+}
 
-function renderCategoryGalleries() {
-  GALLERY_CATEGORIES.forEach(cat => {
-    const row = document.getElementById(`gallery-${cat}`);
-    if (!row) return;
+function renderUnifiedGallery() {
+  galleryEvents = getGalleryEvents();
+  stackIndex = 0;
+  featuredIndex = 0;
 
-    // Pick up to 5 random region-matched events for this category
-    const pool = events.filter(e => e.category === cat && matchesCurrentRegion(e));
-    const picked = pool.length <= 5 ? pool : pool.sort(() => Math.random() - 0.5).slice(0, 5);
+  const isMobile = window.innerWidth < 768;
+  if (isMobile) {
+    renderStack();
+  } else {
+    renderFeaturedLayout();
+  }
 
-    if (picked.length === 0) {
-      row.innerHTML = `<div class="cat-gallery-empty">No events found in this area</div>`;
-      return;
+  // Update tab active states
+  document.querySelectorAll('.gallery-tab').forEach(tab => {
+    const isActive = tab.dataset.filter === galleryFilter;
+    tab.classList.toggle('active', isActive);
+    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+}
+
+// ── Mobile Card Stack ──
+function renderStack() {
+  const container = document.getElementById('gallery-stack-cards');
+  const counter = document.getElementById('gallery-stack-counter');
+  const emptyEl = document.getElementById('gallery-stack-empty');
+  const actions = document.querySelector('.gallery-stack-actions');
+  if (!container) return;
+
+  if (galleryEvents.length === 0) {
+    container.innerHTML = '';
+    if (counter) counter.textContent = '';
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    if (actions) actions.style.display = 'none';
+    return;
+  }
+
+  if (emptyEl) emptyEl.classList.add('hidden');
+  if (actions) actions.style.display = '';
+  updateStackCounter();
+  renderStackCards();
+}
+
+function updateStackCounter() {
+  const counter = document.getElementById('gallery-stack-counter');
+  if (counter && galleryEvents.length > 0) {
+    const current = Math.min(stackIndex + 1, galleryEvents.length);
+    counter.textContent = `${current} of ${galleryEvents.length}`;
+  }
+}
+
+function renderStackCards() {
+  const container = document.getElementById('gallery-stack-cards');
+  if (!container) return;
+  container.innerHTML = '';
+  isSwipeAnimating = false;
+
+  if (stackIndex >= galleryEvents.length) {
+    showStackComplete();
+    return;
+  }
+
+  const maxVisible = 3;
+  for (let i = 0; i < maxVisible; i++) {
+    const eventIdx = stackIndex + i;
+    if (eventIdx >= galleryEvents.length) break;
+
+    const event = galleryEvents[eventIdx];
+    const wrapper = document.createElement('div');
+    wrapper.className = 'stack-card';
+    wrapper.dataset.depth = i;
+    wrapper.dataset.eventId = event.id;
+    wrapper.innerHTML = `
+      <div class="stack-card-overlay stack-card-overlay--like"></div>
+      <div class="stack-card-overlay stack-card-overlay--skip"></div>
+      ${createEventCard(event, 0)}
+    `;
+    container.appendChild(wrapper);
+
+    if (i === 0) {
+      attachSwipeHandlers(wrapper, event);
+    }
+  }
+}
+
+function showStackComplete() {
+  const container = document.getElementById('gallery-stack-cards');
+  const actions = document.querySelector('.gallery-stack-actions');
+  const counter = document.getElementById('gallery-stack-counter');
+  if (container) {
+    container.innerHTML = `
+      <div class="gallery-stack-done">
+        <div class="gallery-done-check">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <div class="gallery-done-text">You've seen them all!</div>
+        <button class="gallery-done-reset">Start Over</button>
+      </div>
+    `;
+    const resetBtn = container.querySelector('.gallery-done-reset');
+    if (resetBtn) resetBtn.addEventListener('click', resetStack);
+  }
+  if (actions) actions.style.display = 'none';
+  if (counter) counter.textContent = '';
+}
+
+function resetStack() {
+  stackIndex = 0;
+  galleryEvents = getGalleryEvents();
+  renderStack();
+}
+
+// ── Swipe Handler ──
+function attachSwipeHandlers(cardEl, event) {
+  let startX = 0, startY = 0, currentX = 0;
+  let isDragging = false, directionLocked = null, hasMoved = false;
+  const likeOverlay = cardEl.querySelector('.stack-card-overlay--like');
+  const skipOverlay = cardEl.querySelector('.stack-card-overlay--skip');
+
+  function onStart(x, y) {
+    if (isSwipeAnimating) return;
+    startX = x; startY = y; currentX = x;
+    isDragging = true; directionLocked = null; hasMoved = false;
+    cardEl.style.transition = 'none';
+  }
+
+  function onMove(x, y) {
+    if (!isDragging) return;
+    const dx = x - startX;
+    const dy = y - startY;
+
+    if (!directionLocked && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+      directionLocked = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical';
     }
 
-    row.innerHTML = picked.map((event, i) => createEventCard(event, i)).join('');
+    if (directionLocked === 'vertical') { isDragging = false; return; }
 
-    // Wire up card click → modal (same as main list)
-    row.querySelectorAll('.event-card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (!e.target.closest('.favorite-btn')) {
-          openModal(parseInt(card.dataset.id));
-        }
-      });
-    });
-    row.querySelectorAll('.favorite-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleFavorite(parseInt(btn.dataset.id));
-      });
-    });
+    if (directionLocked === 'horizontal') {
+      hasMoved = true;
+      currentX = x;
+      const rotate = dx * 0.08;
+      cardEl.style.transform = `translateX(${dx}px) rotate(${rotate}deg)`;
+
+      const progress = Math.min(Math.abs(dx) / SWIPE_THRESHOLD, 1);
+      if (dx > 0) {
+        likeOverlay.style.opacity = progress * 0.8;
+        skipOverlay.style.opacity = 0;
+      } else {
+        skipOverlay.style.opacity = progress * 0.8;
+        likeOverlay.style.opacity = 0;
+      }
+    }
+  }
+
+  function onEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    const dx = currentX - startX;
+
+    if (Math.abs(dx) > SWIPE_THRESHOLD) {
+      completeSwipe(dx > 0 ? 'right' : 'left', cardEl, event);
+    } else if (!hasMoved) {
+      openModal(event.id);
+      resetCardPosition(cardEl, likeOverlay, skipOverlay);
+    } else {
+      resetCardPosition(cardEl, likeOverlay, skipOverlay);
+    }
+  }
+
+  // Touch events (iOS Safari)
+  cardEl.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    onStart(t.clientX, t.clientY);
+  }, { passive: true });
+
+  cardEl.addEventListener('touchmove', (e) => {
+    const t = e.touches[0];
+    onMove(t.clientX, t.clientY);
+    if (directionLocked === 'horizontal') e.preventDefault();
+  }, { passive: false });
+
+  cardEl.addEventListener('touchend', onEnd, { passive: true });
+
+  // Mouse events (desktop testing)
+  cardEl.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.favorite-btn')) return;
+    e.preventDefault();
+    onStart(e.clientX, e.clientY);
+    const onMouseMove = (ev) => onMove(ev.clientX, ev.clientY);
+    const onMouseUp = () => {
+      onEnd();
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
   });
 
-  // "See all" buttons → navigate to Today filtered by category
-  document.querySelectorAll('.cat-gallery-see-all').forEach(btn => {
-    if (btn._soireeHandlerAttached) return;
-    btn._soireeHandlerAttached = true;
-    btn.addEventListener('click', () => {
-      const cat = btn.dataset.cat;
-      document.querySelectorAll('.filter-chip').forEach(c => {
-        const matches = c.dataset.filter === cat;
-        c.classList.toggle('active', matches);
-        c.setAttribute('aria-checked', matches ? 'true' : 'false');
-      });
-      currentFilter = cat;
-      navigateToView('all');
+  // Favorite button inside card
+  cardEl.querySelectorAll('.favorite-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFavorite(parseInt(btn.dataset.id));
     });
   });
 }
 
+function resetCardPosition(cardEl, likeOverlay, skipOverlay) {
+  cardEl.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
+  cardEl.style.transform = '';
+  if (likeOverlay) likeOverlay.style.opacity = 0;
+  if (skipOverlay) skipOverlay.style.opacity = 0;
+}
+
+function completeSwipe(direction, cardEl, event) {
+  isSwipeAnimating = true;
+  cardEl.classList.add(direction === 'right' ? 'swiping-right' : 'swiping-left');
+
+  if (direction === 'right' && !favorites.includes(event.id)) {
+    toggleFavorite(event.id);
+  }
+
+  setTimeout(() => {
+    stackIndex++;
+    updateStackCounter();
+    renderStackCards();
+  }, 350);
+}
+
+// ── Stack Action Buttons ──
+function initStackActions() {
+  const skipBtn = document.getElementById('stack-skip');
+  const favBtn = document.getElementById('stack-fav');
+
+  if (skipBtn) {
+    skipBtn.addEventListener('click', () => {
+      const frontCard = document.querySelector('.stack-card[data-depth="0"]');
+      if (!frontCard || isSwipeAnimating) return;
+      const eventId = parseInt(frontCard.dataset.eventId);
+      const event = galleryEvents.find(e => e.id === eventId);
+      if (event) completeSwipe('left', frontCard, event);
+    });
+  }
+
+  if (favBtn) {
+    favBtn.addEventListener('click', () => {
+      const frontCard = document.querySelector('.stack-card[data-depth="0"]');
+      if (!frontCard || isSwipeAnimating) return;
+      const eventId = parseInt(frontCard.dataset.eventId);
+      const event = galleryEvents.find(e => e.id === eventId);
+      if (event) completeSwipe('right', frontCard, event);
+    });
+  }
+}
+
+// ── Desktop: Featured + Sidebar ──
+function renderFeaturedLayout() {
+  const mainEl = document.getElementById('gallery-featured-main');
+  const sidebarEl = document.getElementById('gallery-featured-sidebar');
+  const emptyEl = document.getElementById('gallery-featured-empty');
+  if (!mainEl || !sidebarEl) return;
+
+  if (galleryEvents.length === 0) {
+    mainEl.innerHTML = '';
+    sidebarEl.innerHTML = '';
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    return;
+  }
+  if (emptyEl) emptyEl.classList.add('hidden');
+
+  renderFeaturedCard(featuredIndex);
+
+  sidebarEl.innerHTML = galleryEvents.map((ev, i) => {
+    const isFavorited = favorites.includes(ev.id);
+    const isActive = i === featuredIndex;
+    const displayName = ev.name.replace(/American Museum of Natural History/gi, 'AMNH');
+    return `
+      <div class="sidebar-card ${isActive ? 'active' : ''}" data-event-id="${ev.id}" data-index="${i}">
+        <div class="sidebar-card-swatch">
+          <div class="event-card-header" data-category="${ev.category}"></div>
+        </div>
+        <div class="sidebar-card-info">
+          <div class="sidebar-card-name">${displayName}</div>
+          <div class="sidebar-card-meta">${formatBadgeDate(ev)} · ${ev.location}</div>
+        </div>
+        <button class="sidebar-card-fav ${isFavorited ? 'favorited' : ''}" data-id="${ev.id}" aria-label="${isFavorited ? 'Remove from' : 'Add to'} favorites">
+          <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  // Wire sidebar clicks
+  sidebarEl.querySelectorAll('.sidebar-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.sidebar-card-fav')) return;
+      const idx = parseInt(card.dataset.index);
+      featuredIndex = idx;
+      renderFeaturedCard(idx);
+      sidebarEl.querySelectorAll('.sidebar-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+    });
+  });
+
+  // Wire sidebar favorite buttons
+  sidebarEl.querySelectorAll('.sidebar-card-fav').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFavorite(parseInt(btn.dataset.id));
+    });
+  });
+}
+
+function renderFeaturedCard(index) {
+  const mainEl = document.getElementById('gallery-featured-main');
+  if (!mainEl || !galleryEvents[index]) return;
+  const event = galleryEvents[index];
+  mainEl.innerHTML = createEventCard(event, 0);
+
+  const card = mainEl.querySelector('.event-card');
+  if (card) {
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.favorite-btn')) openModal(event.id);
+    });
+  }
+  mainEl.querySelectorAll('.favorite-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFavorite(parseInt(btn.dataset.id));
+    });
+  });
+}
+
+// ── Gallery Tabs ──
+function initGalleryTabs() {
+  document.querySelectorAll('.gallery-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      galleryFilter = tab.dataset.filter;
+      renderUnifiedGallery();
+    });
+  });
+}
+
+// ── Responsive re-render on breakpoint cross ──
+let lastGalleryMode = window.innerWidth < 768 ? 'mobile' : 'desktop';
+window.addEventListener('resize', () => {
+  const newMode = window.innerWidth < 768 ? 'mobile' : 'desktop';
+  if (newMode !== lastGalleryMode) {
+    lastGalleryMode = newMode;
+    renderUnifiedGallery();
+  }
+});
+
 // Keep old name as alias so region-change call still works
-function updateCategoryCounts() { renderCategoryGalleries(); }
+function updateCategoryCounts() { renderUnifiedGallery(); }
 
 // ── Instagram Grid ───────────────────────────────────
 function initInstagramGrid() {
@@ -3172,6 +3499,8 @@ if (document.readyState === 'loading') {
     initSubscribeStripEvents();
     initScrollReveal();
     initInstagramGrid();
+    initGalleryTabs();
+    initStackActions();
     updateValueStrip();
 
     const freeCheckbox = document.getElementById('free-mode-toggle');

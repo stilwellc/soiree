@@ -235,63 +235,80 @@
           aria-checked="false">Culture & Community</button>
       </section>
 
-      <!-- Category Galleries (home view) -->
-      <div id="category-grid" class="category-galleries" aria-label="Browse by category">
+      <!-- Unified Gallery (home view) -->
+      <div id="unified-gallery" class="unified-gallery" aria-label="Browse events">
 
-        <div class="cat-gallery-section reveal-section" data-cat="art">
-          <div class="cat-gallery-header">
-            <div>
-              <div class="cat-gallery-title">Art</div>
-            </div>
-            <button class="cat-gallery-see-all" data-cat="art">Explore
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </button>
-          </div>
-          <div class="cat-gallery-row" id="gallery-art"></div>
+        <!-- Category tabs -->
+        <div class="gallery-tabs" role="tablist" aria-label="Event categories">
+          <button class="gallery-tab active" data-filter="all" role="tab" aria-selected="true">All</button>
+          <button class="gallery-tab" data-filter="art" role="tab" aria-selected="false">Art</button>
+          <button class="gallery-tab" data-filter="perks" role="tab" aria-selected="false">Perks &amp; Pop-Ups</button>
+          <button class="gallery-tab" data-filter="community" role="tab" aria-selected="false">Culture &amp; Community</button>
         </div>
 
-        <div class="cat-gallery-section reveal-section" data-cat="perks">
-          <div class="cat-gallery-header">
-            <div>
-              <div class="cat-gallery-title">Perks &amp; Pop-Ups</div>
-            </div>
-            <button class="cat-gallery-see-all" data-cat="perks">Explore
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <!-- Mobile: Card Stack -->
+        <div class="gallery-stack" id="gallery-stack">
+          <div class="gallery-stack-counter" id="gallery-stack-counter"></div>
+          <div class="gallery-stack-cards" id="gallery-stack-cards"></div>
+          <div class="gallery-stack-actions">
+            <button class="stack-action stack-action-skip" id="stack-skip" aria-label="Skip event">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <button class="stack-action stack-action-fav" id="stack-fav" aria-label="Favorite event">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
             </button>
           </div>
-          <div class="cat-gallery-row" id="gallery-perks"></div>
+          <div class="gallery-stack-empty hidden" id="gallery-stack-empty">
+            <div class="gallery-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+            <div class="gallery-empty-title">No events here yet</div>
+            <div class="gallery-empty-text">Try a different category</div>
+          </div>
         </div>
 
-        <div class="cat-gallery-section reveal-section" data-cat="community">
-          <div class="cat-gallery-header">
-            <div>
-              <div class="cat-gallery-title">Culture &amp; Community</div>
+        <!-- Desktop: Featured + Sidebar -->
+        <div class="gallery-featured" id="gallery-featured">
+          <div class="gallery-featured-main" id="gallery-featured-main"></div>
+          <div class="gallery-featured-sidebar" id="gallery-featured-sidebar"></div>
+          <div class="gallery-featured-empty hidden" id="gallery-featured-empty">
+            <div class="gallery-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
             </div>
-            <button class="cat-gallery-see-all" data-cat="community">Explore
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </button>
+            <div class="gallery-empty-title">No events found</div>
+            <div class="gallery-empty-text">Try a different category or region</div>
           </div>
-          <div class="cat-gallery-row" id="gallery-community"></div>
         </div>
-
-        <!-- Instagram CTA — Full-bleed editorial -->
-        <section class="subscribe-section reveal-section" id="subscribe-strip-home">
-          <div class="subscribe-section-bg" aria-hidden="true"></div>
-          <div class="subscribe-section-content" style="text-align:center; max-width:540px; margin:0 auto;">
-            <h2 class="subscribe-section-heading" style="text-align:center;">Right where <em>you swipe.</em></h2>
-            <div class="ig-profile-header">
-              <div class="ig-profile-avatar">
-                <img src="assets/images/nav-logo-transparent.png" alt="">
-              </div>
-              <span class="ig-profile-name">yourdailysoiree</span>
-              <a href="https://www.instagram.com/yourdailysoiree/" target="_blank" rel="noopener" class="ig-follow-btn">Follow</a>
-            </div>
-            <div class="ig-grid" id="ig-grid-home"></div>
-            <p class="subscribe-section-text" style="text-align:center; max-width:none; margin:24px auto 0;">New event roundups every Tuesday on Instagram.</p>
-          </div>
-        </section>
 
       </div>
+
+      <!-- Instagram CTA — Full-bleed editorial -->
+      <section class="subscribe-section reveal-section" id="subscribe-strip-home">
+        <div class="subscribe-section-bg" aria-hidden="true"></div>
+        <div class="subscribe-section-content" style="text-align:center; max-width:540px; margin:0 auto;">
+          <h2 class="subscribe-section-heading" style="text-align:center;">Right where <em>you swipe.</em></h2>
+          <div class="ig-profile-header">
+            <div class="ig-profile-avatar">
+              <img src="assets/images/nav-logo-transparent.png" alt="">
+            </div>
+            <span class="ig-profile-name">yourdailysoiree</span>
+            <a href="https://www.instagram.com/yourdailysoiree/" target="_blank" rel="noopener" class="ig-follow-btn">Follow</a>
+          </div>
+          <div class="ig-grid" id="ig-grid-home"></div>
+          <p class="subscribe-section-text" style="text-align:center; max-width:none; margin:24px auto 0;">New event roundups every Tuesday on Instagram.</p>
+        </div>
+      </section>
 
       <!-- Events List (Today / This Week views) -->
       <section class="events hidden" id="events-list" aria-label="Event listings">
