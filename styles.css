@@ -2072,14 +2072,14 @@ body {
 .modal-hero {
   position: relative;
   width: 100%;
-  height: 260px;
+  height: 320px;
   overflow: hidden;
   flex-shrink: 0;
 }
 
 @media (min-width: 600px) {
   .modal-hero {
-    height: 300px;
+    height: 360px;
     border-radius: 28px 28px 0 0;
   }
 }
@@ -2097,24 +2097,24 @@ body {
   inset: 0;
   background-size: cover;
   background-position: center;
-  transition: transform 0.6s ease;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-overlay.active .modal-hero-bg {
-  transform: scale(1.04);
+  transform: scale(1.06);
 }
 
-/* Gradient overlays on hero */
+/* Gradient overlays on hero — deep cinematic fade */
 .modal-hero-gradient {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, rgba(245, 240, 232, 0.95) 0%, rgba(245, 240, 232, 0.4) 35%, transparent 65%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, transparent 30%);
+    linear-gradient(to top, rgba(10, 8, 5, 0.92) 0%, rgba(10, 8, 5, 0.5) 40%, rgba(10, 8, 5, 0.1) 70%, transparent 100%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, transparent 40%);
   pointer-events: none;
 }
 
-/* Category badge on hero */
+/* Category badge on hero — glass pill */
 .modal-hero-category {
   position: absolute;
   top: 56px;
@@ -2125,36 +2125,37 @@ body {
   letter-spacing: 2px;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  padding: 5px 14px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 14px;
   border-radius: 20px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
-/* Title block on hero */
+/* Title block on hero — white on dark gradient */
 .modal-hero-title-block {
   position: absolute;
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
 }
 
 .modal-hero-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 600;
-  color: var(--deep);
-  line-height: 1.15;
-  letter-spacing: -0.3px;
+  color: white;
+  line-height: 1.12;
+  letter-spacing: -0.5px;
   margin: 0 0 8px;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
 @media (min-width: 600px) {
   .modal-hero-title {
-    font-size: 34px;
+    font-size: 38px;
   }
 }
 
@@ -2162,11 +2163,11 @@ body {
 .modal-source-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   font-weight: 500;
-  color: var(--accent);
+  color: rgba(255, 255, 255, 0.6);
   letter-spacing: 0.2px;
 }
 
@@ -2175,59 +2176,57 @@ body {
   height: 5px;
   border-radius: 50%;
   background: var(--gold);
-  opacity: 0.8;
+  opacity: 0.9;
   flex-shrink: 0;
 }
 
-/* ---- Quick Actions Bar ---- */
+/* ---- Quick Actions Bar — glass toolbar overlapping hero ---- */
 .modal-actions-bar {
   display: flex;
-  gap: 10px;
-  padding: 16px 20px 0;
+  gap: 8px;
+  padding: 12px 16px;
   align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: -28px;
+  position: relative;
+  z-index: 10;
 }
 
 .modal-action-btn {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 9px 16px;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 40px;
   cursor: pointer;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   font-weight: 600;
-  color: var(--dark);
+  color: rgba(255, 255, 255, 0.85);
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
 }
 
 .modal-action-btn svg {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
-  stroke: var(--accent);
-  transition: stroke 0.2s ease;
+  stroke: rgba(255, 255, 255, 0.6);
+  transition: all 0.2s ease;
 }
 
 .modal-action-btn:hover {
-  background: rgba(28, 20, 16, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  color: white;
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.22);
   transform: translateY(-1px);
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .modal-action-btn:hover svg {
@@ -2239,87 +2238,82 @@ body {
 }
 
 .modal-action-btn.favorited {
-  background: rgba(255, 245, 224, 0.75);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border-color: rgba(212, 175, 55, 0.25);
-  color: #B8860B;
-  box-shadow:
-    0 1px 4px rgba(212, 175, 55, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  background: rgba(212, 175, 55, 0.2);
+  border-color: rgba(212, 175, 55, 0.3);
+  color: var(--gold);
 }
 
 .modal-action-btn.favorited svg {
-  stroke: #D4AF37;
-  fill: #D4AF37;
+  stroke: var(--gold);
+  fill: var(--gold);
 }
 
 .modal-action-btn.favorited:hover {
-  background: #D4AF37;
-  color: white;
-  border-color: transparent;
+  background: rgba(212, 175, 55, 0.35);
+  border-color: rgba(212, 175, 55, 0.5);
 }
 
 .modal-action-btn.favorited:hover svg {
-  stroke: white;
-  fill: white;
+  stroke: var(--gold);
+  fill: var(--gold);
 }
 
 /* ---- Info Pills ---- */
 .modal-info-pills {
   display: flex;
-  gap: 8px;
-  padding: 14px 20px 0;
+  gap: 10px;
+  padding: 20px 24px 0;
   flex-wrap: wrap;
 }
 
 .modal-info-pill {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 14px;
+  gap: 10px;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
   box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
   min-width: 0;
-  flex-shrink: 1;
+  flex: 1;
+  min-width: 140px;
 }
 
 .modal-info-pill svg {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   stroke: var(--gold);
-  stroke-width: 2;
+  stroke-width: 1.8;
 }
 
 .modal-pill-content {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  gap: 2px;
 }
 
 .modal-pill-label {
   font-family: 'Jost', sans-serif;
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 1.2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--accent);
   line-height: 1;
-  margin-bottom: 2px;
 }
 
 .modal-pill-value {
   font-family: 'Jost', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--dark);
+  color: var(--deep);
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -2328,10 +2322,10 @@ body {
 
 .modal-pill-sub {
   font-family: 'Jost', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--accent);
-  line-height: 1.2;
+  line-height: 1.25;
   margin-top: 1px;
   white-space: nowrap;
   overflow: hidden;
@@ -2342,33 +2336,41 @@ body {
 .modal-free-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 10px 16px;
-  background: rgba(232, 245, 224, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(76, 175, 80, 0.15);
-  border-radius: 14px;
+  gap: 6px;
+  padding: 14px 18px;
+  background: rgba(232, 245, 224, 0.55);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(76, 175, 80, 0.12);
+  border-radius: 16px;
   font-family: 'Jost', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: #2E7D32;
   letter-spacing: 0.3px;
   box-shadow:
-    0 1px 4px rgba(76, 175, 80, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    0 2px 8px rgba(76, 175, 80, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
   flex-shrink: 0;
 }
 
 .modal-free-pill::before {
   content: '✦';
-  font-size: 9px;
+  font-size: 10px;
   color: #4CAF50;
 }
 
 /* ---- Body Content ---- */
 .modal-body-content {
-  padding: 20px 20px 0;
+  padding: 20px 24px 0;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  margin: 16px 20px 0;
+  padding: 20px 22px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .modal-section-label {
@@ -2378,8 +2380,8 @@ body {
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--accent);
-  opacity: 0.7;
-  margin-bottom: 10px;
+  opacity: 0.6;
+  margin-bottom: 12px;
   display: block;
 }
 
@@ -2387,45 +2389,43 @@ body {
   font-family: 'Cormorant Garamond', serif;
   font-size: 18px;
   font-weight: 400;
-  line-height: 1.65;
+  line-height: 1.7;
   color: var(--deep);
   margin: 0;
 }
 
 /* ---- Highlights ---- */
 .modal-highlights-section {
-  padding: 20px 20px 0;
-  margin-top: 4px;
+  padding: 0 20px;
+  margin-top: 16px;
 }
 
 .modal-highlights-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .modal-highlight-item {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 13px 16px;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.4);
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: none;
   transition: all 0.2s ease;
 }
 
 .modal-highlight-item:hover {
-  background: rgba(255, 255, 255, 0.75);
-  border-color: rgba(212, 175, 55, 0.2);
-  box-shadow:
-    0 2px 12px rgba(212, 175, 55, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.6);
   transform: translateX(2px);
 }
 
@@ -2460,14 +2460,14 @@ body {
 
 /* ---- CTA Section ---- */
 .modal-cta-section {
-  padding: 20px;
-  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  padding: 20px 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
 
 .modal-cta-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.08), transparent);
-  margin-bottom: 16px;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.06), transparent);
+  margin-bottom: 20px;
 }
 
 .modal-cta-btn {
@@ -2500,9 +2500,23 @@ body {
 .modal-cta-btn::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
   pointer-events: none;
+  animation: ctaShimmer 3s ease-in-out infinite;
+}
+
+@keyframes ctaShimmer {
+  0%, 100% {
+    left: -100%;
+  }
+
+  50% {
+    left: 150%;
+  }
 }
 
 .modal-cta-btn:hover {
@@ -2511,7 +2525,7 @@ body {
     0 8px 32px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   background: rgba(17, 17, 17, 0.95);
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .modal-cta-btn:active {
