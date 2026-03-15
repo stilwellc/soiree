@@ -1965,10 +1965,12 @@ body {
   pointer-events: all;
 }
 
-/* The sheet itself */
+/* The sheet itself — frosted glass surface */
 .modal {
-  background: #F5F0E8;
-  border-radius: 20px 20px 0 0;
+  background: rgba(245, 240, 232, 0.82);
+  backdrop-filter: blur(60px) saturate(180%);
+  -webkit-backdrop-filter: blur(60px) saturate(180%);
+  border-radius: 24px 24px 0 0;
   width: 100%;
   max-width: 520px;
   max-height: 92dvh;
@@ -1977,7 +1979,9 @@ body {
   position: relative;
   transform: translateY(100%);
   transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
-  box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.15);
+  box-shadow:
+    0 -8px 60px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
@@ -1999,7 +2003,7 @@ body {
   }
 
   .modal {
-    border-radius: 20px;
+    border-radius: 24px;
     max-height: 88dvh;
     transform: translateY(40px) scale(0.97);
     opacity: 0;
@@ -2029,13 +2033,15 @@ body {
   }
 }
 
-/* Close button */
+/* Close button — glass */
 .modal-close {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   width: 32px;
   height: 32px;
   border-radius: 10px;
@@ -2046,11 +2052,17 @@ body {
   z-index: 30;
   transition: all 0.2s ease;
   color: var(--deep);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .modal-close:hover {
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.6);
   transform: scale(1.05);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .modal-close svg {
@@ -2079,7 +2091,7 @@ body {
   }
 }
 
-/* Category swatch — colored icon square */
+/* Category swatch — glass icon square with category accent */
 .modal-hero-swatch {
   width: 52px;
   height: 52px;
@@ -2088,31 +2100,37 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .modal-hero-swatch svg {
   width: 22px;
   height: 22px;
-  opacity: 0.7;
+  opacity: 0.85;
 }
 
 .modal-hero-swatch[data-category="art"] {
-  background: #EDE8E0;
+  background: rgba(160, 104, 107, 0.15);
 }
 .modal-hero-swatch[data-category="art"] svg {
   stroke: #A0686B;
 }
 .modal-hero-swatch[data-category="perks"] {
-  background: #E8D5B0;
+  background: rgba(184, 149, 106, 0.15);
 }
 .modal-hero-swatch[data-category="perks"] svg {
-  stroke: #8B6347;
+  stroke: #B8956A;
 }
 .modal-hero-swatch[data-category="community"] {
-  background: #D4E0D8;
+  background: rgba(139, 168, 155, 0.15);
 }
 .modal-hero-swatch[data-category="community"] svg {
-  stroke: #5A7D6A;
+  stroke: #6B8B7B;
 }
 
 @media (min-width: 600px) {
@@ -2127,7 +2145,7 @@ body {
   }
 }
 
-/* Category badge — inline pill */
+/* Category badge — glass pill */
 .modal-hero-category {
   font-family: 'Jost', sans-serif;
   font-size: 9px;
@@ -2135,9 +2153,12 @@ body {
   letter-spacing: 1.8px;
   text-transform: uppercase;
   color: var(--accent);
-  background: rgba(139, 115, 85, 0.08);
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   display: inline-block;
   line-height: 1;
 }
@@ -2188,13 +2209,14 @@ body {
   flex-shrink: 0;
 }
 
-/* ---- Quick Actions Bar — clean divider row ---- */
+/* ---- Quick Actions Bar — glass divider row ---- */
 .modal-actions-bar {
   display: flex;
   gap: 6px;
   padding: 0 20px 16px;
   align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
   margin-bottom: 0;
 }
 
@@ -2208,18 +2230,23 @@ body {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 7px 12px;
-  background: rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 10px;
+  padding: 7px 14px;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
   cursor: pointer;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--deep);
   transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .modal-action-btn svg {
@@ -2231,8 +2258,11 @@ body {
 }
 
 .modal-action-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
-  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .modal-action-btn:hover svg {
@@ -2282,13 +2312,18 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  border-radius: 14px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 16px;
   min-width: 0;
   flex: 1;
   min-width: 140px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .modal-info-pill svg {
@@ -2341,21 +2376,26 @@ body {
   text-overflow: ellipsis;
 }
 
-/* Free badge pill */
+/* Free badge pill — glass */
 .modal-free-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 12px 14px;
-  background: rgba(232, 245, 224, 0.5);
-  border: 1px solid rgba(76, 175, 80, 0.08);
-  border-radius: 14px;
+  gap: 6px;
+  padding: 14px 16px;
+  background: rgba(76, 175, 80, 0.08);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(76, 175, 80, 0.15);
+  border-radius: 16px;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   font-weight: 600;
   color: #2E7D32;
   letter-spacing: 0.3px;
   flex-shrink: 0;
+  box-shadow:
+    0 2px 8px rgba(76, 175, 80, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .modal-free-pill::before {
@@ -2366,17 +2406,24 @@ body {
   background: #4CAF50;
 }
 
-/* ---- Body Content ---- */
+/* ---- Body Content — glass panel ---- */
 .modal-body-content {
   margin: 16px 20px 0;
-  padding: 0;
-  background: none;
-  border: none;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 18px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 @media (min-width: 600px) {
   .modal-body-content {
     margin: 16px 24px 0;
+    padding: 22px 24px;
   }
 }
 
@@ -2417,16 +2464,27 @@ body {
 .modal-highlights-grid {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 18px;
+  padding: 6px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .modal-highlight-item {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  transition: none;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 13px;
+  border: none;
+  transition: background 0.15s ease;
 }
 
 .modal-highlight-item:last-child {
@@ -2434,7 +2492,7 @@ body {
 }
 
 .modal-highlight-item:hover {
-  transform: none;
+  background: rgba(255, 255, 255, 0.55);
 }
 
 .modal-highlight-check {
@@ -2463,7 +2521,7 @@ body {
   color: var(--deep);
   line-height: 1.45;
   flex: 1;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 /* ---- CTA Section ---- */
@@ -2492,29 +2550,50 @@ body {
   gap: 8px;
   width: 100%;
   padding: 16px 24px;
-  background: var(--deep);
+  background: rgba(28, 20, 16, 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   color: white;
-  border: none;
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
   font-family: 'Jost', sans-serif;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   letter-spacing: 0.5px;
   position: relative;
   overflow: hidden;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .modal-cta-btn::before {
-  display: none;
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  pointer-events: none;
+  animation: ctaShimmer 4s ease-in-out infinite;
+}
+
+@keyframes ctaShimmer {
+  0%, 100% { left: -100%; }
+  50% { left: 150%; }
 }
 
 .modal-cta-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(28, 20, 16, 0.25);
-  background: #111;
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: rgba(17, 17, 17, 0.92);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .modal-cta-btn:active {
@@ -2529,11 +2608,11 @@ body {
 }
 
 .modal-cta-btn.rsvp-btn {
-  background: var(--deep);
+  background: rgba(28, 20, 16, 0.88);
 }
 
 .modal-cta-btn.rsvp-btn:hover {
-  background: #111;
+  background: rgba(17, 17, 17, 0.92);
 }
 
 /* Shared btn classes kept for compatibility */
