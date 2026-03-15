@@ -2079,32 +2079,52 @@ body {
   }
 }
 
-/* Thumbnail — contained, rounded */
-.modal-hero-thumb {
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
+/* Category swatch — colored icon square */
+.modal-hero-swatch {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   flex-shrink: 0;
-  background-size: cover;
-  background-position: center;
-  box-shadow:
-    0 2px 12px rgba(0, 0, 0, 0.08),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-hero-swatch svg {
+  width: 22px;
+  height: 22px;
+  opacity: 0.7;
+}
+
+.modal-hero-swatch[data-category="art"] {
+  background: #EDE8E0;
+}
+.modal-hero-swatch[data-category="art"] svg {
+  stroke: #A0686B;
+}
+.modal-hero-swatch[data-category="perks"] {
+  background: #E8D5B0;
+}
+.modal-hero-swatch[data-category="perks"] svg {
+  stroke: #8B6347;
+}
+.modal-hero-swatch[data-category="community"] {
+  background: #D4E0D8;
+}
+.modal-hero-swatch[data-category="community"] svg {
+  stroke: #5A7D6A;
 }
 
 @media (min-width: 600px) {
-  .modal-hero-thumb {
-    width: 80px;
-    height: 80px;
-    border-radius: 18px;
+  .modal-hero-swatch {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
   }
-}
-
-/* Hide old full-bleed elements */
-.modal-hero-bg,
-.modal-hero-img,
-.modal-hero-gradient {
-  display: none;
+  .modal-hero-swatch svg {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 /* Category badge — inline pill */
