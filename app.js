@@ -1617,30 +1617,38 @@ function createEventCard(event, index) {
   const animationDelay = index < 3 ? `style="animation-delay: ${0.4 + index * 0.1}s"` : '';
   const isFree = FREE_SOURCES.includes(event.source);
   const badgeDate = formatBadgeDate(event);
-  const timeText = event.time && event.time !== 'See details' ? event.time : 'Event';
+  const timeText = event.time && event.time !== 'See details' ? event.time : '';
   const displayName = event.name.replace(/American Museum of Natural History/gi, 'AMNH');
+  const categoryName = getCategoryName(event.category);
 
   return `
     <div class="event-card" data-id="${event.id}" data-category="${event.category}" data-start-date="${event.start_date || ''}" data-end-date="${event.end_date || ''}" ${animationDelay} role="article" tabindex="0">
-      <div class="event-card-header">
-        <div class="event-name">${displayName}</div>
-        <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" data-id="${event.id}" aria-label="${isFavorited ? 'Remove from' : 'Add to'} favorites">
-          <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-          </svg>
-        </button>
-      </div>
-      <div class="event-card-label">
-        <div class="event-label-title">${event.location}</div>
-        <div class="event-label-subtitle">${getCategoryName(event.category)}</div>
-      </div>
-      <div class="event-card-body"></div>
-      <div class="event-card-footer">
-        <div class="event-footer-left">
-          <span class="event-footer-big">${badgeDate}</span>
-          <span class="event-footer-small">${timeText}</span>
+      <div class="event-card-accent"></div>
+      <div class="event-card-inner">
+        <div class="event-card-top">
+          <div class="event-card-meta">
+            <span class="event-card-category">${categoryName}</span>
+            <span class="event-card-date">${badgeDate}${timeText ? ' · ' + timeText : ''}</span>
+          </div>
+          <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" data-id="${event.id}" aria-label="${isFavorited ? 'Remove from' : 'Add to'} favorites">
+            <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
         </div>
-        <div class="event-footer-right">${isFree ? 'Free' : formatEventDate(event)}</div>
+        <div class="event-card-body">
+          <h3 class="event-name">${displayName}</h3>
+        </div>
+        <div class="event-card-footer">
+          <div class="event-footer-location">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span>${event.location}</span>
+          </div>
+          ${isFree ? '<span class="event-footer-free">Free</span>' : ''}
+        </div>
       </div>
     </div>
   `;
@@ -3230,10 +3238,8 @@ function renderFeaturedLayout() {
     const isActive = i === featuredIndex;
     const displayName = ev.name.replace(/American Museum of Natural History/gi, 'AMNH');
     return `
-      <div class="sidebar-card ${isActive ? 'active' : ''}" data-event-id="${ev.id}" data-index="${i}">
-        <div class="sidebar-card-swatch">
-          <div class="event-card-header" data-category="${ev.category}"></div>
-        </div>
+      <div class="sidebar-card ${isActive ? 'active' : ''}" data-event-id="${ev.id}" data-index="${i}" data-category="${ev.category}">
+        <div class="sidebar-card-accent" data-category="${ev.category}"></div>
         <div class="sidebar-card-info">
           <div class="sidebar-card-name">${displayName}</div>
           <div class="sidebar-card-meta">${formatBadgeDate(ev)} · ${ev.location}</div>
