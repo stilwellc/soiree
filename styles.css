@@ -1965,9 +1965,9 @@ body {
   pointer-events: all;
 }
 
-/* The sheet itself — frosted glass surface */
+/* The sheet itself — dark frosted glass surface */
 .modal {
-  background: rgba(245, 240, 232, 0.82);
+  background: rgba(22, 18, 14, 0.88);
   backdrop-filter: blur(60px) saturate(180%);
   -webkit-backdrop-filter: blur(60px) saturate(180%);
   border-radius: 24px 24px 0 0;
@@ -1980,8 +1980,8 @@ body {
   transform: translateY(100%);
   transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
   box-shadow:
-    0 -8px 60px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    0 -8px 60px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
@@ -2021,7 +2021,7 @@ body {
 .modal-handle {
   width: 32px;
   height: 4px;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 2px;
   margin: 8px auto 0;
   flex-shrink: 0;
@@ -2033,15 +2033,15 @@ body {
   }
 }
 
-/* Close button — glass */
+/* Close button — dark glass */
 .modal-close {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px) saturate(150%);
   -webkit-backdrop-filter: blur(12px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   width: 32px;
   height: 32px;
   border-radius: 10px;
@@ -2051,24 +2051,19 @@ body {
   cursor: pointer;
   z-index: 30;
   transition: all 0.2s ease;
-  color: var(--deep);
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: white;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .modal-close:hover {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.15);
   transform: scale(1.05);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .modal-close svg {
   width: 14px;
   height: 14px;
-  stroke: var(--deep);
+  stroke: white;
   stroke-width: 2;
   opacity: 0.5;
 }
@@ -2091,7 +2086,7 @@ body {
   }
 }
 
-/* Category swatch — glass icon square with category accent */
+/* Category swatch — dark glass icon square with category accent */
 .modal-hero-swatch {
   width: 52px;
   height: 52px;
@@ -2100,37 +2095,33 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(12px) saturate(150%);
-  -webkit-backdrop-filter: blur(12px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .modal-hero-swatch svg {
   width: 22px;
   height: 22px;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .modal-hero-swatch[data-category="art"] {
-  background: rgba(160, 104, 107, 0.15);
+  background: rgba(160, 104, 107, 0.2);
 }
 .modal-hero-swatch[data-category="art"] svg {
-  stroke: #A0686B;
+  stroke: #C8888B;
 }
 .modal-hero-swatch[data-category="perks"] {
-  background: rgba(184, 149, 106, 0.15);
+  background: rgba(184, 149, 106, 0.2);
 }
 .modal-hero-swatch[data-category="perks"] svg {
-  stroke: #B8956A;
+  stroke: #D4B088;
 }
 .modal-hero-swatch[data-category="community"] {
-  background: rgba(139, 168, 155, 0.15);
+  background: rgba(139, 168, 155, 0.2);
 }
 .modal-hero-swatch[data-category="community"] svg {
-  stroke: #6B8B7B;
+  stroke: #9BC0AD;
 }
 
 @media (min-width: 600px) {
@@ -2145,18 +2136,16 @@ body {
   }
 }
 
-/* Category badge — glass pill */
+/* Category badge — dark glass pill */
 .modal-hero-category {
   font-family: 'Jost', sans-serif;
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 1.8px;
   text-transform: uppercase;
-  color: var(--accent);
-  background: rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 4px 10px;
   border-radius: 8px;
   display: inline-block;
@@ -2177,7 +2166,7 @@ body {
   font-family: 'Cormorant Garamond', serif;
   font-size: 26px;
   font-weight: 600;
-  color: var(--deep);
+  color: white;
   line-height: 1.12;
   letter-spacing: -0.3px;
   margin: 0;
@@ -2197,7 +2186,7 @@ body {
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   font-weight: 400;
-  color: var(--accent);
+  color: rgba(255, 255, 255, 0.4);
   letter-spacing: 0.2px;
 }
 
@@ -2209,14 +2198,13 @@ body {
   flex-shrink: 0;
 }
 
-/* ---- Quick Actions Bar — glass divider row ---- */
+/* ---- Quick Actions Bar — dark glass divider row ---- */
 .modal-actions-bar {
   display: flex;
   gap: 6px;
   padding: 0 20px 16px;
   align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   margin-bottom: 0;
 }
 
@@ -2231,42 +2219,35 @@ body {
   align-items: center;
   gap: 5px;
   padding: 7px 14px;
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(12px) saturate(150%);
-  -webkit-backdrop-filter: blur(12px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   cursor: pointer;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   font-weight: 500;
-  color: var(--deep);
+  color: rgba(255, 255, 255, 0.7);
   transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .modal-action-btn svg {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  stroke: var(--accent);
+  stroke: rgba(255, 255, 255, 0.45);
   transition: all 0.2s ease;
 }
 
 .modal-action-btn:hover {
-  background: rgba(255, 255, 255, 0.65);
-  border-color: rgba(255, 255, 255, 0.7);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.16);
 }
 
 .modal-action-btn:hover svg {
-  stroke: var(--deep);
+  stroke: rgba(255, 255, 255, 0.7);
 }
 
 .modal-action-btn:active {
@@ -2274,8 +2255,8 @@ body {
 }
 
 .modal-action-btn.favorited {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.2);
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.25);
   color: var(--gold);
 }
 
@@ -2285,8 +2266,8 @@ body {
 }
 
 .modal-action-btn.favorited:hover {
-  background: rgba(212, 175, 55, 0.18);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(212, 175, 55, 0.25);
+  border-color: rgba(212, 175, 55, 0.35);
 }
 
 .modal-action-btn.favorited:hover svg {
@@ -2313,26 +2294,22 @@ body {
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   min-width: 0;
   flex: 1;
   min-width: 140px;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .modal-info-pill svg {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  stroke: var(--accent);
+  stroke: var(--dusk);
   stroke-width: 1.8;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .modal-pill-content {
@@ -2348,8 +2325,7 @@ body {
   font-weight: 600;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: var(--accent);
-  opacity: 0.6;
+  color: rgba(255, 255, 255, 0.35);
   line-height: 1;
 }
 
@@ -2357,7 +2333,7 @@ body {
   font-family: 'Jost', sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: var(--deep);
+  color: rgba(255, 255, 255, 0.9);
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -2368,7 +2344,7 @@ body {
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   font-weight: 400;
-  color: var(--accent);
+  color: rgba(255, 255, 255, 0.4);
   line-height: 1.25;
   margin-top: 1px;
   white-space: nowrap;
@@ -2376,26 +2352,22 @@ body {
   text-overflow: ellipsis;
 }
 
-/* Free badge pill — glass */
+/* Free badge pill — dark glass */
 .modal-free-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 14px 16px;
-  background: rgba(76, 175, 80, 0.08);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid rgba(76, 175, 80, 0.15);
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.2);
   border-radius: 16px;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   font-weight: 600;
-  color: #2E7D32;
+  color: #66BB6A;
   letter-spacing: 0.3px;
   flex-shrink: 0;
-  box-shadow:
-    0 2px 8px rgba(76, 175, 80, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 0 rgba(76, 175, 80, 0.06);
 }
 
 .modal-free-pill::before {
@@ -2403,21 +2375,17 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #4CAF50;
+  background: #66BB6A;
 }
 
-/* ---- Body Content — glass panel ---- */
+/* ---- Body Content — dark glass panel ---- */
 .modal-body-content {
   margin: 16px 20px 0;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 18px;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 @media (min-width: 600px) {
@@ -2433,8 +2401,7 @@ body {
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--accent);
-  opacity: 0.5;
+  color: rgba(255, 255, 255, 0.3);
   margin-bottom: 8px;
   display: block;
 }
@@ -2444,9 +2411,8 @@ body {
   font-size: 17px;
   font-weight: 400;
   line-height: 1.65;
-  color: var(--deep);
+  color: rgba(255, 255, 255, 0.75);
   margin: 0;
-  opacity: 0.85;
 }
 
 /* ---- Highlights ---- */
@@ -2465,15 +2431,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 18px;
   padding: 6px;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .modal-highlight-item {
@@ -2481,7 +2443,7 @@ body {
   align-items: flex-start;
   gap: 10px;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 13px;
   border: none;
   transition: background 0.15s ease;
@@ -2492,14 +2454,14 @@ body {
 }
 
 .modal-highlight-item:hover {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .modal-highlight-check {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--deep);
+  background: var(--dusk);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2518,10 +2480,9 @@ body {
   font-family: 'Jost', sans-serif;
   font-size: 13px;
   font-weight: 400;
-  color: var(--deep);
+  color: rgba(255, 255, 255, 0.7);
   line-height: 1.45;
   flex: 1;
-  opacity: 0.85;
 }
 
 /* ---- CTA Section ---- */
@@ -2539,7 +2500,7 @@ body {
 
 .modal-cta-divider {
   height: 1px;
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   margin-bottom: 20px;
 }
 
@@ -2550,11 +2511,9 @@ body {
   gap: 8px;
   width: 100%;
   padding: 16px 24px;
-  background: rgba(28, 20, 16, 0.88);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.1);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
   font-family: 'Jost', sans-serif;
   font-size: 14px;
@@ -2565,9 +2524,7 @@ body {
   letter-spacing: 0.5px;
   position: relative;
   overflow: hidden;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .modal-cta-btn::before {
@@ -2589,11 +2546,9 @@ body {
 
 .modal-cta-btn:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  background: rgba(17, 17, 17, 0.92);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .modal-cta-btn:active {
@@ -2608,11 +2563,11 @@ body {
 }
 
 .modal-cta-btn.rsvp-btn {
-  background: rgba(28, 20, 16, 0.88);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .modal-cta-btn.rsvp-btn:hover {
-  background: rgba(17, 17, 17, 0.92);
+  background: rgba(255, 255, 255, 0.16);
 }
 
 /* Shared btn classes kept for compatibility */
