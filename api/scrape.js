@@ -64,6 +64,83 @@ function getFallbackEvents() {
   });
 }
 
+// Clean and sanitize scraped event descriptions
+// Removes marketing junk, repeated sentences, HTML artifacts, and truncates gracefully
+function cleanDescription(text) {
+  if (!text || typeof text !== 'string') return '';
+
+  let desc = text;
+
+  // Strip HTML tags that leaked through
+  desc = desc.replace(/<[^>]+>/g, ' ');
+
+  // Decode common HTML entities
+  desc = desc.replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&#\d+;/g, ' ')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+
+  // Remove URLs
+  desc = desc.replace(/https?:\/\/\S+/g, '');
+
+  // Remove common scraping junk phrases
+  const junkPatterns = [
+    /read more\.?\.?\.?/gi,
+    /click here\.?/gi,
+    /learn more\.?/gi,
+    /sign up (now|today|here)\.?/gi,
+    /register (now|today|here)\.?/gi,
+    /book (now|today|here|your)\.?/gi,
+    /rsvp (now|today|here)\.?/gi,
+    /buy tickets?\.?/gi,
+    /get tickets?\.?/gi,
+    /subscribe to our\.*/gi,
+    /follow us on\.*/gi,
+    /share this event\.?/gi,
+    /add to calendar\.?/gi,
+    /\bvia\s+\w+\s*$/gi,
+    /photo\s*(credit|by|courtesy)[^.]*\.?/gi,
+    /image\s*(credit|by|courtesy)[^.]*\.?/gi,
+    /\(photo[^)]*\)/gi,
+    /all rights reserved\.?/gi,
+    /©.*/gi,
+  ];
+
+  for (const pattern of junkPatterns) {
+    desc = desc.replace(pattern, '');
+  }
+
+  // Collapse whitespace
+  desc = desc.replace(/\s+/g, ' ').trim();
+
+  // Remove duplicate sentences (common when paragraphs get joined)
+  const sentences = desc.split(/(?<=[.!?])\s+/);
+  const seen = new Set();
+  const unique = [];
+  for (const s of sentences) {
+    const normalized = s.toLowerCase().trim();
+    if (normalized.length < 5) continue;
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    unique.push(s);
+  }
+  desc = unique.join(' ');
+
+  // Truncate to ~500 chars at a sentence boundary for clean display
+  if (desc.length > 500) {
+    const truncated = desc.substring(0, 500);
+    const lastPeriod = truncated.lastIndexOf('.');
+    const lastExcl = truncated.lastIndexOf('!');
+    const lastQ = truncated.lastIndexOf('?');
+    const breakPoint = Math.max(lastPeriod, lastExcl, lastQ);
+    if (breakPoint > 200) {
+      desc = desc.substring(0, breakPoint + 1);
+    } else {
+      desc = truncated.trim();
+    }
+  }
+
+  return desc.trim();
+}
+
 // Category mapping based on title, description, and location
 function categorizeEvent(title, description, location) {
   const text = (title + ' ' + (description || '')).toLowerCase();
@@ -1302,6 +1379,11 @@ async function scrapeAllEvents() {
     // Batched at 8 concurrent requests to stay within Vercel timeout
     console.log('Enriching events with detail page descriptions...');
     await enrichWithDetailPages(allEvents, 8);
+
+    // Clean up all descriptions — remove junk, dedup sentences, truncate
+    for (const event of allEvents) {
+      event.description = cleanDescription(event.description);
+    }
 
     return allEvents;
   } catch (error) {

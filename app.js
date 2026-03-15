@@ -1482,6 +1482,50 @@ function renderSocialCaption(captionId, allEvents, categoryName, weekLabel) {
 }
 
 // Format Date for Display
+// Clean up scraped descriptions for display — strips junk, deduplicates, truncates
+function sanitizeDescription(text) {
+  if (!text || typeof text !== 'string') return '';
+  let desc = text
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&#\d+;/g, ' ')
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/read more\.?\.?\.?/gi, '')
+    .replace(/click here\.?/gi, '')
+    .replace(/learn more\.?/gi, '')
+    .replace(/sign up (now|today|here)\.?/gi, '')
+    .replace(/register (now|today|here)\.?/gi, '')
+    .replace(/buy tickets?\.?/gi, '')
+    .replace(/get tickets?\.?/gi, '')
+    .replace(/follow us on\.*/gi, '')
+    .replace(/share this event\.?/gi, '')
+    .replace(/add to calendar\.?/gi, '')
+    .replace(/all rights reserved\.?/gi, '')
+    .replace(/©.*/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Remove duplicate sentences
+  const sentences = desc.split(/(?<=[.!?])\s+/);
+  const seen = new Set();
+  const unique = [];
+  for (const s of sentences) {
+    const norm = s.toLowerCase().trim();
+    if (norm.length < 5 || seen.has(norm)) continue;
+    seen.add(norm);
+    unique.push(s);
+  }
+  desc = unique.join(' ');
+
+  // Truncate at sentence boundary around 500 chars
+  if (desc.length > 500) {
+    const cut = desc.substring(0, 500);
+    const bp = Math.max(cut.lastIndexOf('.'), cut.lastIndexOf('!'), cut.lastIndexOf('?'));
+    desc = bp > 200 ? desc.substring(0, bp + 1) : cut.trim();
+  }
+
+  return desc;
+}
+
 function formatEventDate(event) {
   // If we have structured dates, format them nicely
   if (event.start_date) {
@@ -1729,7 +1773,7 @@ function openModal(eventId) {
     <!-- Description -->
     <div class="modal-body-content">
       <span class="modal-section-label">About This Event</span>
-      <p class="modal-description">${event.description}</p>
+      <p class="modal-description">${sanitizeDescription(event.description)}</p>
     </div>
 
     <!-- Highlights -->
