@@ -1731,12 +1731,11 @@ function openModal(eventId) {
   const modalContent = `
     <div class="modal-handle"></div>
 
-    <!-- Hero -->
+    <!-- Hero — compact header with thumbnail -->
     <div class="modal-hero">
-      <div class="modal-hero-bg" style="background-image: url('${event.image || ''}')"></div>
-      <div class="modal-hero-gradient"></div>
-      <span class="modal-hero-category">${categoryName}</span>
+      ${event.image ? `<div class="modal-hero-thumb" style="background-image: url('${event.image}')"></div>` : ''}
       <div class="modal-hero-title-block">
+        <span class="modal-hero-category">${categoryName}</span>
         <h2 class="modal-hero-title" id="modal-dynamic-title">${event.name}</h2>
         ${event.source ? `<div class="modal-source-badge"><span class="modal-source-dot"></span>${event.source}</div>` : ''}
       </div>
