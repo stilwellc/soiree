@@ -1549,11 +1549,35 @@ async function scrapeGalleries() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function scrapeAllEvents() {
+// Scrape by group: 'main' = listing sites + enrichment, 'galleries' = all 30 galleries
+// Splitting into groups keeps each invocation under Vercel's 60s timeout.
+async function scrapeByGroup(group) {
   try {
-    console.log('Starting multi-source scraping...');
+    if (group === 'galleries') {
+      console.log('Starting gallery scraping...');
+      const galleriesResult = await scrapeGalleries();
+      const events = galleriesResult.events;
+      const counts = galleriesResult.counts;
 
-    // Run all scrapers in parallel (galleries run sequentially inside scrapeGalleries)
+      // Filter permanent exhibitions
+      const filtered = events.filter(e => {
+        const d = (e.date || '').toLowerCase();
+        if (d.match(/^on view/i)) return false;
+        return true;
+      });
+
+      // Clean descriptions
+      for (const event of filtered) {
+        event.description = cleanDescription(event.description);
+      }
+
+      filtered._galleryCounts = counts;
+      console.log(`Gallery total: ${filtered.length} events`, counts);
+      return filtered;
+    }
+
+    // Default: 'main' group — listing sites + museums + enrichment
+    console.log('Starting main source scraping...');
     const [
       timeoutEvents,
       nycFreeEvents,
@@ -1562,8 +1586,7 @@ async function scrapeAllEvents() {
       guggenheimEvents,
       amnhEvents,
       newMuseumEvents,
-      localGirlEvents,
-      galleriesResult
+      localGirlEvents
     ] = await Promise.all([
       scrapeTimeOut(),
       scrapeNYCForFree(),
@@ -1572,14 +1595,9 @@ async function scrapeAllEvents() {
       scrapeGuggenheim(),
       scrapeAMNH(),
       scrapeNewMuseum(),
-      scrapeTheLocalGirl(),
-      scrapeGalleries()
+      scrapeTheLocalGirl()
     ]);
 
-    const galleryEvents = galleriesResult.events;
-    const galleryCounts = galleriesResult.counts;
-
-    // Merge all events
     const merged = [
       ...timeoutEvents,
       ...nycFreeEvents,
@@ -1588,28 +1606,20 @@ async function scrapeAllEvents() {
       ...guggenheimEvents,
       ...amnhEvents,
       ...newMuseumEvents,
-      ...localGirlEvents,
-      ...galleryEvents
+      ...localGirlEvents
     ];
 
     // Filter out permanent/long-running exhibitions
     const allEvents = merged.filter(e => {
       const d = (e.date || '').toLowerCase();
       const t = (e.time || '').toLowerCase();
-      // Skip "Now on view" + "Museum hours" (permanent exhibitions)
       if (d.includes('now on view') && t.includes('museum hours')) return false;
-      // Skip "On view through..." or "Through [year 2+ years out]"
       if (d.match(/^on view/i)) return false;
-      // Skip "Through [date]" with "Museum hours" (long-running exhibition)
       if (d.match(/^through\s/i) && t.includes('museum hours')) return false;
       return true;
     });
 
-    // Attach gallery counts for the API response
-    allEvents._galleryCounts = galleryCounts;
-
-    console.log(`Total events scraped: ${merged.length}, after filtering: ${allEvents.length}`);
-
+    console.log(`Main sources: ${merged.length} scraped, ${allEvents.length} after filtering`);
     console.log(`  - TimeOut NY: ${timeoutEvents.length}`);
     console.log(`  - NYC For Free: ${nycFreeEvents.length}`);
     console.log(`  - Whitney Museum: ${whitneyEvents.length}`);
@@ -1618,29 +1628,25 @@ async function scrapeAllEvents() {
     console.log(`  - AMNH: ${amnhEvents.length}`);
     console.log(`  - New Museum: ${newMuseumEvents.length}`);
     console.log(`  - The Local Girl: ${localGirlEvents.length}`);
-    console.log(`  - Galleries: ${galleryEvents.length}`, galleryCounts);
 
-    // If no events found at all, use fallback
     if (allEvents.length === 0) {
       console.log('No events found from any source, using fallback events');
       return getFallbackEvents();
     }
 
-    // Enrich non-gallery events with full descriptions from their detail pages
-    // Gallery events already have good data from listing pages — skip them to save time
-    const nonGalleryEvents = allEvents.filter(e => !e.event_type);
-    console.log(`Enriching ${nonGalleryEvents.length} non-gallery events (skipping ${allEvents.length - nonGalleryEvents.length} gallery events)...`);
-    await enrichWithDetailPages(nonGalleryEvents, 8);
+    // Enrich with detail page descriptions
+    console.log('Enriching events with detail page descriptions...');
+    await enrichWithDetailPages(allEvents, 8);
 
-    // Clean up all descriptions — remove junk, dedup sentences, truncate
+    // Clean descriptions
     for (const event of allEvents) {
       event.description = cleanDescription(event.description);
     }
 
     return allEvents;
   } catch (error) {
-    console.error('Multi-source scraping failed:', error.message);
-    return getFallbackEvents();
+    console.error(`Scraping group '${group}' failed:`, error.message);
+    return group === 'main' ? getFallbackEvents() : [];
   }
 }
 
@@ -1719,8 +1725,12 @@ module.exports = async function handler(req, res) {
       CREATE UNIQUE INDEX IF NOT EXISTS events_url_unique ON events(url)
     `);
 
-    // Get events from all sources
-    const events = await scrapeAllEvents();
+    // Get events — split by group to stay under Vercel 60s timeout
+    // ?group=main (default) = listing sites + museums + enrichment
+    // ?group=galleries = all 30 gallery scrapers
+    const group = (req.query.group || 'main').toLowerCase();
+    console.log(`Scraping group: ${group}`);
+    const events = await scrapeByGroup(group);
 
     // Remove duplicates from scraped events (same URL)
     const uniqueEvents = [];

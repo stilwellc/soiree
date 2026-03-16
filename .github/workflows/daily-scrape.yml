@@ -24,28 +24,47 @@ jobs:
           cat response.json
           echo ""
 
-      - name: Run scraper
+      - name: Scrape main sources
         run: |
-          echo "🌐 Starting event scraper..."
-          HTTP_CODE=$(curl -X POST https://soiree-one.vercel.app/api/scrape \
+          echo "🌐 Scraping main sources (TimeOut, museums, etc.)..."
+          HTTP_CODE=$(curl -X POST "https://soiree-one.vercel.app/api/scrape?group=main" \
             -H "Authorization: Bearer ${{ secrets.SCRAPE_SECRET }}" \
             -H "Content-Type: application/json" \
             -w "%{http_code}" \
-            -o scrape-result.json \
+            -o scrape-main.json \
             -s)
 
           echo "HTTP Status: $HTTP_CODE"
-          echo "📊 Scrape Results:"
-          cat scrape-result.json
+          echo "📊 Main Results:"
+          cat scrape-main.json
           echo ""
 
-          # Check HTTP status
           if [ "$HTTP_CODE" != "200" ]; then
-            echo "❌ Scrape failed with HTTP $HTTP_CODE"
+            echo "❌ Main scrape failed with HTTP $HTTP_CODE"
             exit 1
           fi
+          echo "✅ Main scrape completed"
 
-          echo "✅ Main scrape completed successfully"
+      - name: Scrape galleries
+        run: |
+          echo "🎨 Scraping 30 galleries..."
+          HTTP_CODE=$(curl -X POST "https://soiree-one.vercel.app/api/scrape?group=galleries" \
+            -H "Authorization: Bearer ${{ secrets.SCRAPE_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -w "%{http_code}" \
+            -o scrape-galleries.json \
+            -s)
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "📊 Gallery Results:"
+          cat scrape-galleries.json
+          echo ""
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Gallery scrape failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+          echo "✅ Gallery scrape completed"
 
       - name: Scrape Visit NJ (Direct)
         env:
@@ -93,5 +112,6 @@ jobs:
           name: scrape-results
           path: |
             response.json
-            scrape-result.json
+            scrape-main.json
+            scrape-galleries.json
           retention-days: 7
