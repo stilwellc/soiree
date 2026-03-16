@@ -1371,7 +1371,7 @@ const DATE_RANGE_RE = /(?:(?:January|February|March|April|May|June|July|August|S
 
 async function scrapeGenericGallery(config) {
   try {
-    const res = await axios.get(config.url, { timeout: 15000, headers: GALLERY_HEADERS });
+    const res = await axios.get(config.url, { timeout: 10000, headers: GALLERY_HEADERS });
     const $ = cheerio.load(res.data);
     const events = [], seen = new Set();
     const baseUrl = new URL(config.url).origin;
@@ -1626,10 +1626,11 @@ async function scrapeAllEvents() {
       return getFallbackEvents();
     }
 
-    // Enrich events with full descriptions from their detail pages
-    // Batched at 8 concurrent requests to stay within Vercel timeout
-    console.log('Enriching events with detail page descriptions...');
-    await enrichWithDetailPages(allEvents, 8);
+    // Enrich non-gallery events with full descriptions from their detail pages
+    // Gallery events already have good data from listing pages — skip them to save time
+    const nonGalleryEvents = allEvents.filter(e => !e.event_type);
+    console.log(`Enriching ${nonGalleryEvents.length} non-gallery events (skipping ${allEvents.length - nonGalleryEvents.length} gallery events)...`);
+    await enrichWithDetailPages(nonGalleryEvents, 8);
 
     // Clean up all descriptions — remove junk, dedup sentences, truncate
     for (const event of allEvents) {
