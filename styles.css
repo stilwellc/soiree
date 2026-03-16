@@ -1594,6 +1594,43 @@ body {
   opacity: 0.7;
 }
 
+/* Art sub-filter toggle (Openings / All Shows) */
+.art-subfilter {
+  display: flex;
+  gap: 6px;
+  padding: 0 16px 10px;
+  justify-content: center;
+}
+
+.art-subfilter.hidden {
+  display: none;
+}
+
+.art-subfilter-btn {
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.3px;
+}
+
+.art-subfilter-btn.active {
+  background: rgba(160, 104, 107, 0.2);
+  color: #C8888B;
+  border-color: rgba(160, 104, 107, 0.3);
+}
+
+.art-subfilter-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+}
+
 @media (min-width: 768px) {
   .filters {
     padding: 4px 28px 22px;

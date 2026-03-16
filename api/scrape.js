@@ -1027,26 +1027,49 @@ const GALLERY_HEADERS = {
   'Upgrade-Insecure-Requests': '1'
 };
 
-// Extract exhibition start date from a date range string like "Jan 16 – Feb 28, 2026"
+// Extract exhibition start AND end dates from a date range string like "Jan 16 – Feb 28, 2026"
 // Also handles British "DD Month" format like "11 February – 11 April 2026".
 // Attaches the year from the range end if the start doesn't include one.
-function galleryStartDate(rangeText) {
-  if (!rangeText) return null;
+function galleryDateRange(rangeText) {
+  if (!rangeText) return { start_date: null, end_date: null };
   const yearMatch = rangeText.match(/\b(20\d{2})\b/);
-  const startPart = rangeText.split(/\s*[–—\-]\s*/)[0].trim();
-  const withYear = yearMatch && !startPart.match(/\d{4}/) ? `${startPart}, ${yearMatch[1]}` : startPart;
+  const parts = rangeText.split(/\s*[–—\-]\s*/);
+  const startPart = parts[0].trim();
+  const endPart = parts.length > 1 ? parts[parts.length - 1].trim() : null;
+
   // Normalize British "DD Month" → "Month DD" for parseDateText
-  const normalized = withYear.replace(
+  const normalizeBritish = (str) => str.replace(
     /^(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i,
     '$2 $1'
   );
-  const { start_date } = parseDateText(normalized, '');
-  return start_date || null;
+
+  // Parse start date (attach year from range if missing)
+  const startWithYear = yearMatch && !startPart.match(/\d{4}/) ? `${startPart}, ${yearMatch[1]}` : startPart;
+  const startNormalized = normalizeBritish(startWithYear);
+  const { start_date } = parseDateText(startNormalized, '');
+
+  // Parse end date if we have a range
+  let end_date = start_date;
+  if (endPart) {
+    const endWithYear = yearMatch && !endPart.match(/\d{4}/) ? `${endPart}, ${yearMatch[1]}` : endPart;
+    const endNormalized = normalizeBritish(endWithYear);
+    const parsed = parseDateText(endNormalized, '');
+    if (parsed.start_date) end_date = parsed.start_date;
+  }
+
+  return { start_date: start_date || null, end_date: end_date || start_date || null };
 }
 
-function galleryEvent(name, dateRaw, start_date, url, locationName, address, sourceName) {
-  return createNormalizedEvent({
-    name: name.trim().substring(0, 255),
+// Returns array of 1-2 events: opening reception + exhibition (if date range exists)
+function galleryEvents(name, dateRaw, start_date, end_date, url, locationName, address, sourceName) {
+  const results = [];
+  const trimmedName = name.trim().substring(0, 255);
+  const img = getEventImage(name, 'art');
+  const spots = Math.floor(Math.random() * 80) + 20;
+
+  // Opening reception (always created)
+  const opening = createNormalizedEvent({
+    name: trimmedName,
     category: 'art',
     date: dateRaw,
     time: 'See details',
@@ -1055,13 +1078,40 @@ function galleryEvent(name, dateRaw, start_date, url, locationName, address, sou
     location: locationName,
     address,
     price: 'free',
-    spots: Math.floor(Math.random() * 80) + 20,
-    image: getEventImage(name, 'art'),
-    description: `${name.trim()} at ${sourceName}.`,
-    highlights: generateHighlights(name, `${name.trim()} at ${sourceName}.`, 'art', locationName, sourceName),
+    spots,
+    image: img,
+    description: `Opening: ${trimmedName} at ${sourceName}.`,
+    highlights: generateHighlights(name, `${trimmedName} at ${sourceName}.`, 'art', locationName, sourceName),
     url,
-    source: sourceName
+    source: sourceName,
+    event_type: 'opening'
   });
+  if (opening) results.push(opening);
+
+  // Exhibition / viewing window (only if end_date differs from start_date)
+  if (end_date && end_date !== start_date) {
+    const exhibition = createNormalizedEvent({
+      name: trimmedName,
+      category: 'art',
+      date: dateRaw,
+      time: 'See details',
+      start_date,
+      end_date,
+      location: locationName,
+      address,
+      price: 'free',
+      spots,
+      image: img,
+      description: `On view: ${trimmedName} at ${sourceName}.`,
+      highlights: generateHighlights(name, `${trimmedName} at ${sourceName}.`, 'art', locationName, sourceName),
+      url: `${url}#exhibition`,
+      source: sourceName,
+      event_type: 'exhibition'
+    });
+    if (exhibition) results.push(exhibition);
+  }
+
+  return results;
 }
 
 // Gagosian: <a href="/exhibitions/YEAR/slug"> — text = ArtistName + Title + DateRange
@@ -1080,12 +1130,12 @@ async function scrapeGagosian() {
       const dateMatch = text.match(/((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:[–—,\s\w]*)?)$/i);
       if (!dateMatch) return;
       const dateRaw = dateMatch[1].trim();
-      const start_date = galleryStartDate(dateRaw);
+      const { start_date, end_date } = galleryDateRange(dateRaw);
       if (!start_date) return;
       const name = text.slice(0, text.length - dateMatch[0].length).trim();
       if (!name || name.length < 5) return;
-      const event = galleryEvent(name, dateRaw, start_date, `https://gagosian.com${href}`, 'Gagosian', '555 W 24th St, New York, NY 10011', 'Gagosian');
-      if (event) events.push(event);
+      const evts = galleryEvents(name, dateRaw, start_date, end_date, `https://gagosian.com${href}`, 'Gagosian', '555 W 24th St, New York, NY 10011', 'Gagosian');
+      events.push(...evts);
     });
     return events;
   } catch (e) { console.error('Gagosian failed:', e.message); return []; }
@@ -1112,11 +1162,11 @@ async function scrapePaceGallery() {
       const subtitle = $e.find('[class*="text-subtitle"]').first().text().trim();
       const dateRaw = $e.find('[class*="text-date"]').first().text().trim();
       if (!artist || !dateRaw) return;
-      const start_date = galleryStartDate(dateRaw);
+      const { start_date, end_date } = galleryDateRange(dateRaw);
       if (!start_date) return;
       const name = subtitle ? `${artist}: ${subtitle}` : artist;
-      const event = galleryEvent(name, dateRaw, start_date, url, 'Pace Gallery', '540 W 25th St, New York, NY 10001', 'Pace Gallery');
-      if (event) events.push(event);
+      const evts = galleryEvents(name, dateRaw, start_date, end_date, url, 'Pace Gallery', '540 W 25th St, New York, NY 10001', 'Pace Gallery');
+      events.push(...evts);
     });
     return events;
   } catch (e) { console.error('Pace Gallery failed:', e.message); return []; }
@@ -1143,8 +1193,11 @@ async function scrapeDavidZwirner() {
           if (item.location?.name && !/new york/i.test(item.location.name)) continue;
           const { start_date } = parseDateText(item.startDate || '', '');
           if (!start_date) continue;
-          const event = galleryEvent(name, item.startDate || '', start_date, url, 'David Zwirner', '519 W 19th St, New York, NY 10011', 'David Zwirner');
-          if (event) events.push(event);
+          const endParsed = parseDateText(item.endDate || '', '');
+          const end_date = endParsed.start_date || start_date;
+          const dateRaw = item.startDate || '';
+          const evts = galleryEvents(name, dateRaw, start_date, end_date, url, 'David Zwirner', '519 W 19th St, New York, NY 10011', 'David Zwirner');
+          events.push(...evts);
         }
       } catch (_) { }
     });
@@ -1171,10 +1224,10 @@ async function scrapeLehmannMaupin() {
       const dateRaw = $e.find('h3').first().text().trim();
       const name = title || artists;
       if (!name || name.length < 5 || !dateRaw) return;
-      const start_date = galleryStartDate(dateRaw);
+      const { start_date, end_date } = galleryDateRange(dateRaw);
       if (!start_date) return;
-      const event = galleryEvent(name, dateRaw, start_date, url, 'Lehmann Maupin', '501 W 26th St, New York, NY 10001', 'Lehmann Maupin');
-      if (event) events.push(event);
+      const evts = galleryEvents(name, dateRaw, start_date, end_date, url, 'Lehmann Maupin', '501 W 26th St, New York, NY 10001', 'Lehmann Maupin');
+      events.push(...evts);
     });
     return events;
   } catch (e) { console.error('Lehmann Maupin failed:', e.message); return []; }
@@ -1200,13 +1253,15 @@ async function scrapeLissonGallery() {
       const dateMatch = text.match(/(\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec))\b/i);
       if (!dateMatch) return;
       const yearMatch = text.match(/\b(20\d{2})\b/);
-      const dateRaw = yearMatch ? `${dateMatch[1]}, ${yearMatch[1]}` : dateMatch[1];
-      const start_date = galleryStartDate(dateRaw);
+      // Try to extract full date range (e.g., "11 February – 11 April 2026")
+      const rangeMatch = text.match(/(\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s*[–—\-]\s*\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)(?:\s+\d{4})?)/i);
+      const dateRaw = rangeMatch ? rangeMatch[1] : (yearMatch ? `${dateMatch[1]}, ${yearMatch[1]}` : dateMatch[1]);
+      const { start_date, end_date } = galleryDateRange(dateRaw);
       if (!start_date) return;
       const nameRaw = text.slice(0, text.indexOf(dateMatch[0])).replace(/[:–—\-]+$/, '').trim();
       if (!nameRaw || nameRaw.length < 5) return;
-      const event = galleryEvent(nameRaw, dateRaw, start_date, `https://www.lissongallery.com${href}`, 'Lisson Gallery', '504 W 24th St, New York, NY 10011', 'Lisson Gallery');
-      if (event) events.push(event);
+      const evts = galleryEvents(nameRaw, dateRaw, start_date, end_date, `https://www.lissongallery.com${href}`, 'Lisson Gallery', '504 W 24th St, New York, NY 10011', 'Lisson Gallery');
+      events.push(...evts);
     });
     return events;
   } catch (e) { console.error('Lisson Gallery failed:', e.message); return []; }
@@ -1233,10 +1288,10 @@ async function scrapeMarianGoodman() {
       const dateRaw = $e.find('div.bottom').first().text().trim();
       const name = artist && subtitle ? `${artist}: ${subtitle}` : (artist || subtitle);
       if (!name || name.length < 5 || !dateRaw) return;
-      const start_date = galleryStartDate(dateRaw);
+      const { start_date, end_date } = galleryDateRange(dateRaw);
       if (!start_date) return;
-      const event = galleryEvent(name, dateRaw, start_date, url, 'Marian Goodman', '24 W 57th St, New York, NY 10019', 'Marian Goodman');
-      if (event) events.push(event);
+      const evts = galleryEvents(name, dateRaw, start_date, end_date, url, 'Marian Goodman', '24 W 57th St, New York, NY 10019', 'Marian Goodman');
+      events.push(...evts);
     });
     return events;
   } catch (e) { console.error('Marian Goodman failed:', e.message); return []; }
@@ -1272,8 +1327,10 @@ async function scrapeGladstoneGallery() {
       if (!dateStr) return;
       const { start_date } = parseDateText(dateStr, '');
       if (!start_date) return;
-      const event = galleryEvent(title, dateStr, start_date, url, 'Gladstone Gallery', '130 W 21st St, New York, NY 10011', 'Gladstone Gallery');
-      if (event) events.push(event);
+      // Parse end date from full raw date string
+      const { end_date: gladEnd } = galleryDateRange(rawDate);
+      const evts = galleryEvents(title, dateStr, start_date, gladEnd || start_date, url, 'Gladstone Gallery', '130 W 21st St, New York, NY 10011', 'Gladstone Gallery');
+      events.push(...evts);
     });
     return events;
   } catch (e) { console.error('Gladstone Gallery failed:', e.message); return []; }
@@ -1443,6 +1500,12 @@ module.exports = async function handler(req, res) {
       ADD COLUMN IF NOT EXISTS source VARCHAR(100)
     `);
 
+    // Add event_type column for art exhibition openings vs viewing windows
+    await pool.query(`
+      ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS event_type VARCHAR(50)
+    `);
+
     // Clean existing duplicates before creating unique index
     // First, remove events with NULL or empty URLs (old fallback data)
     await pool.query(`
@@ -1515,8 +1578,8 @@ module.exports = async function handler(req, res) {
     for (const event of uniqueEvents) {
       try {
         const result = await pool.query(
-          `INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights, url, start_date, end_date, source)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+          `INSERT INTO events (name, category, date, time, location, address, price, spots, image, description, highlights, url, start_date, end_date, source, event_type)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
            ON CONFLICT (url) DO UPDATE SET
              name = EXCLUDED.name,
              category = EXCLUDED.category,
@@ -1530,11 +1593,12 @@ module.exports = async function handler(req, res) {
              highlights = EXCLUDED.highlights,
              start_date = EXCLUDED.start_date,
              end_date = EXCLUDED.end_date,
+             event_type = EXCLUDED.event_type,
              scraped_at = CURRENT_TIMESTAMP
            RETURNING (xmax = 0) AS inserted`,
           [event.name, event.category, event.date, event.time, event.location,
           event.address, event.price, event.spots, event.image, event.description,
-          JSON.stringify(event.highlights), event.url, event.start_date, event.end_date, event.source]
+          JSON.stringify(event.highlights), event.url, event.start_date, event.end_date, event.source, event.event_type || null]
         );
 
         if (result.rows[0].inserted) {

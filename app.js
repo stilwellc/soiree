@@ -288,6 +288,9 @@ let featuredIndex = 0;
 let isSwipeAnimating = false;
 const SWIPE_THRESHOLD = 80;
 
+// Art sub-filter: 'openings' or 'all' (list views only)
+let artSubFilter = 'openings';
+
 // Region Definitions
 const REGIONS = {
   'nyc': { name: 'New York City', shortName: 'NYC', coords: { lat: 40.7128, lng: -74.0060 } },
@@ -705,6 +708,17 @@ function setupEventListeners() {
     chip.addEventListener('click', () => handleFilterClick(chip));
   });
 
+  // Art sub-filter toggle (Openings / All Shows)
+  document.querySelectorAll('.art-subfilter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.art-subfilter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      artSubFilter = btn.dataset.artFilter;
+      currentPage = 1;
+      renderEvents();
+    });
+  });
+
   // Search
   searchInput.addEventListener('input', handleSearch);
   searchClear.addEventListener('click', clearSearch);
@@ -792,6 +806,13 @@ function handleFilterClick(chip) {
   chip.setAttribute('aria-checked', 'true');
   currentFilter = chip.dataset.filter;
   currentPage = 1;
+
+  // Show art sub-filter when Art is active on list views
+  const artSubEl = document.getElementById('art-subfilter');
+  if (artSubEl) {
+    artSubEl.classList.toggle('hidden', currentFilter !== 'art');
+  }
+
   renderEvents();
   setTimeout(() => chip.classList.remove('filter-chip-pop'), 300);
 }
@@ -866,6 +887,9 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       if (eventsListEl) eventsListEl.classList.add('hidden');
       const subscribeStripEvents = document.getElementById('subscribe-strip-events');
       if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
+      // Hide art sub-filter on home view
+      const artSubEl = document.getElementById('art-subfilter');
+      if (artSubEl) artSubEl.classList.add('hidden');
       startRotating();
       updateCategoryCounts();
     } else if (view === 'all') {
@@ -1064,6 +1088,12 @@ function updateFilterCounts() {
 
 // Render Events
 function renderEvents() {
+  // Show/hide art sub-filter based on current category
+  const artSubEl = document.getElementById('art-subfilter');
+  if (artSubEl) {
+    artSubEl.classList.toggle('hidden', currentFilter !== 'art');
+  }
+
   // Check if current region is legitimate
   const validRegions = ['nyc', 'hoboken-jc', 'nj-state', 'north-nj', 'central-nj', 'south-nj', 'jersey-shore'];
   if (currentRegion && !validRegions.includes(currentRegion)) {
@@ -1090,7 +1120,13 @@ function renderEvents() {
       matchesFree = FREE_SOURCES.includes(event.source);
     }
 
-    return matchesFilter && matchesSearch && matchesTime && matchesRegion && matchesFree;
+    // Art sub-filter: when viewing art category, filter by openings vs all
+    let matchesArtType = true;
+    if (currentFilter === 'art' && artSubFilter === 'openings') {
+      matchesArtType = !event.event_type || event.event_type === 'opening';
+    }
+
+    return matchesFilter && matchesSearch && matchesTime && matchesRegion && matchesFree && matchesArtType;
   });
 
   if (filteredEvents.length === 0) {
@@ -2958,7 +2994,9 @@ function getGalleryEvents() {
   const pool = events.filter(e => {
     const matchesRegion = matchesCurrentRegion(e);
     const matchesCat = galleryFilter === 'all' || e.category === galleryFilter;
-    return matchesRegion && matchesCat;
+    // Home gallery: for art, show openings only (not full exhibition viewing windows)
+    const matchesType = galleryFilter !== 'art' || !e.event_type || e.event_type === 'opening';
+    return matchesRegion && matchesCat && matchesType;
   });
   return pool.sort(() => Math.random() - 0.5).slice(0, 15);
 }
