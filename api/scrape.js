@@ -1336,19 +1336,210 @@ async function scrapeGladstoneGallery() {
   } catch (e) { console.error('Gladstone Gallery failed:', e.message); return []; }
 }
 
+// ── Generic gallery scraper ──────────────────────────────────────────────────
+// Works for the majority of gallery sites that list exhibitions as linked items
+// with titles and date ranges. Config-driven: just add a new entry to GENERIC_GALLERIES.
+
+const GENERIC_GALLERIES = [
+  { name: 'Hauser & Wirth', url: 'https://www.hauserwirth.com/exhibitions/', address: '32 E 69th St, New York, NY 10021', locationFilter: /new york/i },
+  { name: 'Perrotin', url: 'https://www.perrotin.com/exhibitions', address: '130 Orchard St, New York, NY 10002', locationFilter: /new york/i },
+  { name: 'Matthew Marks', url: 'https://matthewmarks.com/exhibitions', address: '522 W 22nd St, New York, NY 10011' },
+  { name: 'Marianne Boesky', url: 'https://www.boeskygallery.com/exhibitions', address: '507 W 24th St, New York, NY 10011' },
+  { name: 'Jack Shainman', url: 'https://jackshainman.com/exhibitions', address: '513 W 20th St, New York, NY 10011' },
+  { name: 'Sprüth Magers', url: 'https://www.spruethmagers.com/exhibitions', address: '22 E 80th St, New York, NY 10075', locationFilter: /new york/i },
+  { name: 'Petzel', url: 'https://petzel.com/exhibitions', address: '456 W 18th St, New York, NY 10011' },
+  { name: 'Sean Kelly', url: 'https://skny.com/exhibitions', address: '475 10th Ave, New York, NY 10018' },
+  { name: 'Karma', url: 'https://karmakarma.org/exhibitions', address: '188 E 2nd St, New York, NY 10009' },
+  { name: 'James Fuentes', url: 'https://jamesfuentes.com/exhibitions', address: '55 Delancey St, New York, NY 10002' },
+  { name: 'Canada Gallery', url: 'https://canadanewyork.com/exhibitions', address: '60 Lispenard St, New York, NY 10013' },
+  { name: 'Blade Study', url: 'https://bladestudy.com/exhibitions', address: 'New York, NY' },
+  { name: 'Salon 94', url: 'https://salon94.com/exhibitions', address: '3 E 89th St, New York, NY 10128' },
+  { name: 'Kasmin', url: 'https://www.kasmingallery.com/exhibitions', address: '509 W 27th St, New York, NY 10001' },
+  { name: 'Tanya Bonakdar', url: 'https://www.tanyabonakdargallery.com/exhibitions', address: '521 W 21st St, New York, NY 10011' },
+  { name: 'Anton Kern', url: 'https://www.antonkerngallery.com/exhibitions', address: '16 E 55th St, New York, NY 10022' },
+  { name: 'Sikkema Jenkins', url: 'https://www.sikkemajenkinsco.com/exhibitions', address: '256 W 22nd St, New York, NY 10011' },
+  { name: 'P.P.O.W', url: 'https://www.ppowgallery.com/exhibitions', address: '392 Broadway, New York, NY 10013' },
+  { name: 'Tilton Gallery', url: 'https://www.tiltongallery.com/exhibitions', address: '8 E 76th St, New York, NY 10021' },
+  { name: 'Almine Rech', url: 'https://www.alminerech.com/exhibitions', address: '39 E 78th St, New York, NY 10075', locationFilter: /new york/i },
+  { name: 'Nahmad Contemporary', url: 'https://www.nahmadcontemporary.com/exhibitions', address: '980 Madison Ave, New York, NY 10075' },
+  { name: 'Skarstedt', url: 'https://www.skarstedt.com/exhibitions', address: '20 E 79th St, New York, NY 10075', locationFilter: /new york/i },
+  { name: 'Casey Kaplan', url: 'https://caseykaplangallery.com/exhibitions', address: '121 W 27th St, New York, NY 10001' },
+];
+
+// Date-range regex that matches most gallery date formats in page text
+const DATE_RANGE_RE = /(?:(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[\s.]+\d{1,2}(?:\s*,?\s*\d{4})?(?:\s*[–—\-]\s*(?:(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[\s.]+)?\d{1,2}(?:\s*,?\s*\d{4})?)?)|\d{1,2}[\s.]+(?:January|February|March|April|May|June|July|August|September|October|November|December)(?:\s*[–—\-]\s*\d{1,2}[\s.]+(?:January|February|March|April|May|June|July|August|September|October|November|December))?(?:\s+\d{4})?/i;
+
+async function scrapeGenericGallery(config) {
+  try {
+    const res = await axios.get(config.url, { timeout: 15000, headers: GALLERY_HEADERS });
+    const $ = cheerio.load(res.data);
+    const events = [], seen = new Set();
+    const baseUrl = new URL(config.url).origin;
+
+    // Strategy 1: Look for JSON-LD ExhibitionEvent data (cleanest)
+    $('script[type="application/ld+json"]').each((_, el) => {
+      try {
+        const raw = JSON.parse($(el).html() || '{}');
+        const items = Array.isArray(raw) ? raw : (raw['@graph'] ? raw['@graph'] : [raw]);
+        for (const item of items) {
+          if (events.length >= 10) break;
+          if (!item['@type'] || !/(Exhibition|Event|VisualArts)/i.test(item['@type'])) continue;
+          const name = (item.name || '').trim();
+          if (!name || name.length < 5) continue;
+          const url = (item.url || '').trim();
+          if (!url || seen.has(url)) continue;
+          seen.add(url);
+          if (config.locationFilter && item.location?.name && !config.locationFilter.test(item.location.name)) continue;
+          const { start_date } = parseDateText(item.startDate || '', '');
+          if (!start_date) continue;
+          const endParsed = parseDateText(item.endDate || '', '');
+          const end_date = endParsed.start_date || start_date;
+          const evts = galleryEvents(name, item.startDate || '', start_date, end_date, url, config.name, config.address, config.name);
+          events.push(...evts);
+        }
+      } catch (_) {}
+    });
+    if (events.length > 0) return events;
+
+    // Strategy 2: Find exhibition containers via common selectors
+    const containerSelectors = [
+      'a[href*="/exhibition"]',
+      'article', '[class*="exhibition"]', '[class*="exhibit"]',
+      '[class*="listing"]', '[class*="grid-item"]', '[class*="card"]',
+      'li[class*="item"]', '[class*="entry"]', '[class*="project"]',
+      '[class*="show"]'
+    ];
+
+    // Try direct link approach first (most reliable)
+    const $links = $('a[href*="/exhibition"]').filter((_, el) => {
+      const href = $(el).attr('href') || '';
+      // Skip nav/category links, only want specific exhibition pages
+      return href.split('/').length > 3 || /\/exhibition[s]?\/[^/]+/.test(href);
+    });
+
+    if ($links.length >= 2) {
+      $links.each((_, el) => {
+        if (events.length >= 10) return false;
+        const $a = $(el);
+        const href = $a.attr('href');
+        if (!href) return;
+        const url = href.startsWith('http') ? href : `${baseUrl}${href.startsWith('/') ? '' : '/'}${href}`;
+        if (seen.has(url)) return;
+        seen.add(url);
+
+        // Get text content — could be the link itself or a parent container
+        const $container = $a.closest('article, [class*="exhibition"], [class*="listing"], [class*="entry"], [class*="card"], li') || $a;
+        const containerText = ($container.length ? $container : $a).text().replace(/\s+/g, ' ').trim();
+        if (!containerText || containerText.length < 10) return;
+
+        // Check location filter against full text
+        if (config.locationFilter && !config.locationFilter.test(containerText)) return;
+
+        // Extract date from container
+        const $dateEl = ($container.length ? $container : $a).find('time,[class*="date"],[datetime]').first();
+        let rawDate = ($dateEl.attr('datetime') || $dateEl.text() || '').trim();
+
+        // If no date element, try regex match on container text
+        if (!rawDate) {
+          const dateMatch = containerText.match(DATE_RANGE_RE);
+          if (dateMatch) rawDate = dateMatch[0].trim();
+        }
+
+        // Extract title — prefer heading elements, fall back to link text
+        const $titleEl = ($container.length ? $container : $a).find('h1,h2,h3,h4,[class*="title"],[class*="name"],[class*="artist"]').first();
+        let title = ($titleEl.length ? $titleEl.text() : '').trim().replace(/\s+/g, ' ');
+
+        // If no heading found, use the link text minus the date
+        if (!title || title.length < 5) {
+          title = containerText;
+          if (rawDate) title = title.replace(rawDate, '').trim();
+          // Remove trailing location text
+          title = title.replace(/\s*(New York|NYC|Los Angeles|LA|London|Paris|Hong Kong|Berlin|Seoul|Tokyo).*$/i, '').trim();
+        }
+
+        if (!title || title.length < 5) return;
+        // Truncate overly long titles (got the whole container text)
+        if (title.length > 120) title = title.substring(0, 120).trim();
+
+        const { start_date, end_date } = galleryDateRange(rawDate || '');
+        if (!start_date) return;
+
+        const evts = galleryEvents(title, rawDate, start_date, end_date, url, config.name, config.address, config.name);
+        events.push(...evts);
+      });
+      if (events.length > 0) return events;
+    }
+
+    // Strategy 3: Container-based approach (like Gladstone)
+    let $items = $();
+    for (const sel of containerSelectors) {
+      $items = $(sel).filter((_, el) => $(el).find('a').length > 0);
+      if ($items.length >= 2) break;
+    }
+
+    $items.each((_, el) => {
+      if (events.length >= 10) return false;
+      const $e = $(el);
+      const title = $e.find('h1,h2,h3,h4,[class*="title"],[class*="name"],[class*="artist"]').first().text().trim().replace(/\s+/g, ' ');
+      if (!title || title.length < 5) return;
+      const href = $e.find('a').first().attr('href');
+      if (!href) return;
+      const url = href.startsWith('http') ? href : `${baseUrl}${href.startsWith('/') ? '' : '/'}${href}`;
+      if (seen.has(url)) return;
+      seen.add(url);
+
+      if (config.locationFilter) {
+        const elText = $e.text();
+        if (!config.locationFilter.test(elText)) return;
+      }
+
+      const $dateEl = $e.find('time,[class*="date"],[datetime]').first();
+      let rawDate = ($dateEl.attr('datetime') || $dateEl.text() || '').trim();
+      if (!rawDate) {
+        const fullText = $e.text().replace(/\s+/g, ' ').trim();
+        const dateMatch = fullText.match(DATE_RANGE_RE);
+        if (dateMatch) rawDate = dateMatch[0].trim();
+      }
+
+      const { start_date, end_date } = galleryDateRange(rawDate || '');
+      if (!start_date) return;
+
+      const evts = galleryEvents(title, rawDate, start_date, end_date, url, config.name, config.address, config.name);
+      events.push(...evts);
+    });
+
+    return events;
+  } catch (e) {
+    console.error(`${config.name} failed:`, e.message);
+    return [];
+  }
+}
+
 // Run all gallery scrapers sequentially; returns { events, counts }
 async function scrapeGalleries() {
   console.log('Scraping galleries...');
-  const scrapers = [scrapeGagosian, scrapePaceGallery, scrapeDavidZwirner, scrapeLehmannMaupin, scrapeLissonGallery, scrapeMarianGoodman, scrapeGladstoneGallery];
-  const names = ['Gagosian', 'Pace Gallery', 'David Zwirner', 'Lehmann Maupin', 'Lisson Gallery', 'Marian Goodman', 'Gladstone Gallery'];
+  // Dedicated scrapers for galleries with unique HTML structures
+  const dedicatedScrapers = [scrapeGagosian, scrapePaceGallery, scrapeDavidZwirner, scrapeLehmannMaupin, scrapeLissonGallery, scrapeMarianGoodman, scrapeGladstoneGallery];
+  const dedicatedNames = ['Gagosian', 'Pace Gallery', 'David Zwirner', 'Lehmann Maupin', 'Lisson Gallery', 'Marian Goodman', 'Gladstone Gallery'];
   const allEvents = [];
   const counts = {};
-  for (let i = 0; i < scrapers.length; i++) {
-    const events = await scrapers[i]();
-    console.log(`  - ${names[i]}: ${events.length} events`);
-    counts[names[i]] = events.length;
+
+  // Run dedicated scrapers
+  for (let i = 0; i < dedicatedScrapers.length; i++) {
+    const events = await dedicatedScrapers[i]();
+    console.log(`  - ${dedicatedNames[i]}: ${events.length} events`);
+    counts[dedicatedNames[i]] = events.length;
     allEvents.push(...events);
   }
+
+  // Run generic scrapers for all additional galleries
+  for (const config of GENERIC_GALLERIES) {
+    const events = await scrapeGenericGallery(config);
+    console.log(`  - ${config.name}: ${events.length} events`);
+    counts[config.name] = events.length;
+    allEvents.push(...events);
+  }
+
   console.log(`Gallery total: ${allEvents.length} events`);
   return { events: allEvents, counts };
 }
