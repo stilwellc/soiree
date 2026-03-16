@@ -1515,28 +1515,31 @@ async function scrapeGenericGallery(config) {
   }
 }
 
-// Run all gallery scrapers sequentially; returns { events, counts }
+// Run all gallery scrapers in parallel; returns { events, counts }
 async function scrapeGalleries() {
   console.log('Scraping galleries...');
-  // Dedicated scrapers for galleries with unique HTML structures
-  const dedicatedScrapers = [scrapeGagosian, scrapePaceGallery, scrapeDavidZwirner, scrapeLehmannMaupin, scrapeLissonGallery, scrapeMarianGoodman, scrapeGladstoneGallery];
-  const dedicatedNames = ['Gagosian', 'Pace Gallery', 'David Zwirner', 'Lehmann Maupin', 'Lisson Gallery', 'Marian Goodman', 'Gladstone Gallery'];
   const allEvents = [];
   const counts = {};
 
-  // Run dedicated scrapers
-  for (let i = 0; i < dedicatedScrapers.length; i++) {
-    const events = await dedicatedScrapers[i]();
-    console.log(`  - ${dedicatedNames[i]}: ${events.length} events`);
-    counts[dedicatedNames[i]] = events.length;
-    allEvents.push(...events);
-  }
+  // Build unified task list: dedicated scrapers + generic configs
+  const dedicatedTasks = [
+    { name: 'Gagosian', fn: scrapeGagosian },
+    { name: 'Pace Gallery', fn: scrapePaceGallery },
+    { name: 'David Zwirner', fn: scrapeDavidZwirner },
+    { name: 'Lehmann Maupin', fn: scrapeLehmannMaupin },
+    { name: 'Lisson Gallery', fn: scrapeLissonGallery },
+    { name: 'Marian Goodman', fn: scrapeMarianGoodman },
+    { name: 'Gladstone Gallery', fn: scrapeGladstoneGallery },
+  ];
+  const genericTasks = GENERIC_GALLERIES.map(c => ({ name: c.name, fn: () => scrapeGenericGallery(c) }));
+  const allTasks = [...dedicatedTasks, ...genericTasks];
 
-  // Run generic scrapers for all additional galleries
-  for (const config of GENERIC_GALLERIES) {
-    const events = await scrapeGenericGallery(config);
-    console.log(`  - ${config.name}: ${events.length} events`);
-    counts[config.name] = events.length;
+  // Run all galleries in parallel (each has its own 15s timeout so this is safe)
+  const results = await Promise.allSettled(allTasks.map(t => t.fn()));
+  for (let i = 0; i < allTasks.length; i++) {
+    const events = results[i].status === 'fulfilled' ? results[i].value : [];
+    console.log(`  - ${allTasks[i].name}: ${events.length} events`);
+    counts[allTasks[i].name] = events.length;
     allEvents.push(...events);
   }
 
