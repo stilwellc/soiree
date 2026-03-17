@@ -986,11 +986,13 @@ function handleNavClick(item, { pushHistory = true } = {}) {
     setTimeout(() => {
       visibleView.classList.remove('view-fade-out');
       showView();
-      targetView.classList.add('view-fade-out');
+      targetView.classList.add('view-fade-in');
       requestAnimationFrame(() => {
-        targetView.classList.remove('view-fade-out');
+        requestAnimationFrame(() => {
+          targetView.classList.remove('view-fade-in');
+        });
       });
-    }, 200);
+    }, 220);
   } else {
     showView();
   }
@@ -1217,6 +1219,44 @@ function renderEvents() {
       }
     });
   }
+
+  // Trigger scroll-reveal for cards
+  initCardReveal();
+}
+
+// ── Scroll-triggered card reveal with stagger ──
+let cardRevealObserver = null;
+
+function initCardReveal() {
+  // Disconnect previous observer
+  if (cardRevealObserver) cardRevealObserver.disconnect();
+
+  const cards = document.querySelectorAll('.event-card:not(.card-revealed)');
+  if (!cards.length) return;
+
+  let batchIndex = 0;
+  let batchTimer = null;
+
+  cardRevealObserver = new IntersectionObserver((entries) => {
+    const visible = entries.filter(e => e.isIntersecting);
+    if (!visible.length) return;
+
+    visible.forEach(entry => {
+      const card = entry.target;
+      // Stagger within batch
+      const delay = Math.min(batchIndex, 4) * 60;
+      card.style.transitionDelay = `${delay}ms`;
+      card.classList.add('card-revealed');
+      cardRevealObserver.unobserve(card);
+      batchIndex++;
+    });
+
+    // Reset batch after a pause
+    clearTimeout(batchTimer);
+    batchTimer = setTimeout(() => { batchIndex = 0; }, 200);
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+  cards.forEach(c => cardRevealObserver.observe(c));
 }
 
 // Render Favorites
@@ -1264,6 +1304,8 @@ function renderFavorites() {
       toggleFavorite(eventId);
     });
   });
+
+  initCardReveal();
 }
 
 // Render Social Media Posts for Instagram
@@ -1647,19 +1689,33 @@ function formatBadgeDate(event) {
   return event.date || 'See Details';
 }
 
+// Category fallback gradients for cards without images
+const CATEGORY_GRADIENTS = {
+  art: 'linear-gradient(135deg, #A0686B 0%, #8B4545 100%)',
+  perks: 'linear-gradient(135deg, #B8956A 0%, #8B6347 100%)',
+  community: 'linear-gradient(135deg, #8BA89B 0%, #6B8B7B 100%)',
+  music: 'linear-gradient(135deg, #8B8B8B 0%, #5A5A5A 100%)',
+  culinary: 'linear-gradient(135deg, #A8906E 0%, #8B6F47 100%)',
+  fashion: 'linear-gradient(135deg, #6B6B6B 0%, #3D3D3D 100%)',
+  lifestyle: 'linear-gradient(135deg, #C9A18E 0%, #B8826B 100%)',
+};
+
 // Create Event Card
 function createEventCard(event, index) {
   const isFavorited = favorites.includes(event.id);
-  const animationDelay = index < 3 ? `style="animation-delay: ${0.4 + index * 0.1}s"` : '';
   const isFree = FREE_SOURCES.includes(event.source);
   const badgeDate = formatBadgeDate(event);
   const timeText = event.time && event.time !== 'See details' ? event.time : '';
   const displayName = event.name.replace(/American Museum of Natural History/gi, 'AMNH');
   const categoryName = getCategoryName(event.category);
+  const imageStyle = event.image
+    ? `background-image: url('${event.image}')`
+    : `background: ${CATEGORY_GRADIENTS[event.category] || CATEGORY_GRADIENTS.community}`;
 
   return `
-    <div class="event-card" data-id="${event.id}" data-category="${event.category}" data-start-date="${event.start_date || ''}" data-end-date="${event.end_date || ''}" ${animationDelay} role="article" tabindex="0">
+    <div class="event-card" data-id="${event.id}" data-category="${event.category}" data-start-date="${event.start_date || ''}" data-end-date="${event.end_date || ''}" role="article" tabindex="0">
       <div class="event-card-accent"></div>
+      <div class="event-card-image" style="${imageStyle}"></div>
       <div class="event-card-inner">
         <div class="event-card-top">
           <div class="event-card-meta">
@@ -1764,8 +1820,17 @@ function openModal(eventId) {
         </svg>
       </button>`;
 
+  // Modal image
+  const modalImageHTML = event.image ? `
+    <div class="modal-image-wrap">
+      <img class="modal-image" src="${event.image}" alt="${event.name}" loading="lazy" />
+      <div class="modal-image-gradient"></div>
+    </div>` : '';
+
   const modalContent = `
     <div class="modal-handle"></div>
+
+    ${modalImageHTML}
 
     <!-- Hero — compact header with category swatch -->
     <div class="modal-hero">
@@ -3019,6 +3084,21 @@ function renderUnifiedGallery() {
     tab.classList.toggle('active', isActive);
     tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
   });
+
+  // Reset progress bar
+  updateGalleryProgress();
+}
+
+function updateGalleryProgress() {
+  const progressBar = document.getElementById('gallery-progress-bar');
+  if (!progressBar || galleryEvents.length === 0) {
+    if (progressBar) progressBar.style.width = '0%';
+    return;
+  }
+  const isMobile = window.innerWidth < 768;
+  const current = isMobile ? stackIndex + 1 : featuredIndex + 1;
+  const pct = Math.min((current / galleryEvents.length) * 100, 100);
+  progressBar.style.width = `${pct}%`;
 }
 
 // ── Mobile Card Stack ──
@@ -3049,6 +3129,7 @@ function updateStackCounter() {
     const current = Math.min(stackIndex + 1, galleryEvents.length);
     counter.textContent = `${current} of ${galleryEvents.length}`;
   }
+  updateGalleryProgress();
 }
 
 function renderStackCards() {
@@ -3278,9 +3359,12 @@ function renderFeaturedLayout() {
     const isFavorited = favorites.includes(ev.id);
     const isActive = i === featuredIndex;
     const displayName = ev.name.replace(/American Museum of Natural History/gi, 'AMNH');
+    const imgStyle = ev.image
+      ? `background-image: url('${ev.image}')`
+      : `background: ${CATEGORY_GRADIENTS[ev.category] || CATEGORY_GRADIENTS.community}`;
     return `
       <div class="sidebar-card ${isActive ? 'active' : ''}" data-event-id="${ev.id}" data-index="${i}" data-category="${ev.category}">
-        <div class="sidebar-card-accent" data-category="${ev.category}"></div>
+        <div class="sidebar-card-image" style="${imgStyle}"></div>
         <div class="sidebar-card-info">
           <div class="sidebar-card-name">${displayName}</div>
           <div class="sidebar-card-meta">${formatBadgeDate(ev)} · ${ev.location}</div>
@@ -3303,6 +3387,7 @@ function renderFeaturedLayout() {
       renderFeaturedCard(idx);
       sidebarEl.querySelectorAll('.sidebar-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
+      updateGalleryProgress();
     });
   });
 

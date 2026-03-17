@@ -1620,17 +1620,21 @@ body {
     transform: scale(1);
   }
 
-  40% {
-    transform: scale(1.08);
+  30% {
+    transform: scale(1.1);
+  }
+
+  60% {
+    transform: scale(0.97);
   }
 
   100% {
-    transform: scale(1.02);
+    transform: scale(1);
   }
 }
 
 .filter-chip-pop {
-  animation: chipPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: chipPop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .filter-count {
@@ -1713,16 +1717,35 @@ body {
   margin-bottom: 14px;
   box-shadow: var(--shadow-md);
   cursor: pointer;
-  transition: transform var(--duration-normal) var(--ease-spring), box-shadow var(--duration-normal) ease, border-color var(--duration-normal) ease;
+  transition: transform var(--duration-normal) var(--ease-spring),
+    box-shadow var(--duration-normal) ease,
+    border-color var(--duration-normal) ease,
+    opacity var(--duration-slow) var(--ease-spring);
   position: relative;
-  animation: cardAppear 0.6s var(--ease-spring) both;
   border: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: row;
+  /* Scroll-reveal: start hidden, revealed by IntersectionObserver */
+  opacity: 0;
+  transform: translateY(20px);
 }
 
-.event-card:nth-child(n) {
-  animation-delay: 0.4s;
+.event-card.card-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Card image thumbnail */
+.event-card-image {
+  width: 88px;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.5s var(--ease-spring);
+}
+
+.event-card:hover .event-card-image {
+  transform: scale(1.05);
 }
 
 @keyframes cardAppear {
@@ -1920,7 +1943,7 @@ body {
 }
 
 .favorite-btn.fav-pulse {
-  animation: favPulse 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: favPulse 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes favPulse {
@@ -1928,13 +1951,30 @@ body {
     transform: scale(1);
   }
 
+  15% {
+    transform: scale(0.85);
+  }
+
   40% {
-    transform: scale(1.3);
+    transform: scale(1.35);
+  }
+
+  65% {
+    transform: scale(0.95);
   }
 
   100% {
     transform: scale(1);
   }
+}
+
+/* Heart fill flash on favorite */
+.favorite-btn.favorited svg {
+  transition: fill 0.25s ease, stroke 0.25s ease;
+}
+
+.favorite-btn.fav-pulse.favorited svg {
+  filter: drop-shadow(0 0 6px var(--gold));
 }
 
 /* Event name — main title */
@@ -2000,8 +2040,19 @@ body {
   flex-shrink: 0;
 }
 
+/* Desktop card image wider */
+@media (min-width: 1024px) {
+  .event-card-image {
+    width: 110px;
+  }
+}
+
 /* Mobile card scaling */
 @media (max-width: 480px) {
+  .event-card-image {
+    width: 72px;
+  }
+
   .event-card-inner {
     padding: 14px 16px;
   }
@@ -2057,7 +2108,7 @@ body {
   overflow-x: hidden;
   position: relative;
   transform: translateY(100%);
-  transition: transform var(--duration-slow) cubic-bezier(0.32, 0.72, 0, 1);
+  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
   box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.15);
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -2140,6 +2191,38 @@ body {
   height: 14px;
   stroke: var(--text-secondary);
   stroke-width: 2;
+}
+
+/* ---- Modal event image ---- */
+.modal-image-wrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.modal-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+@media (min-width: 600px) {
+  .modal-image {
+    height: 240px;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+}
+
+.modal-image-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(to top, var(--surface) 0%, transparent 100%);
+  pointer-events: none;
 }
 
 /* ---- Hero — compact header with inset thumbnail ---- */
@@ -2938,16 +3021,26 @@ body {
 }
 
 /* View transitions */
-#discover-view,
-#favorites-view,
-#about-view {
-  transition: opacity var(--duration-normal) var(--ease-smooth),
-    transform var(--duration-normal) var(--ease-smooth);
-}
-
 .view-fade-out {
   opacity: 0 !important;
-  transform: translateY(6px);
+  transform: translateY(8px);
+  transition: opacity 0.22s cubic-bezier(0.4, 0, 1, 1),
+    transform 0.22s cubic-bezier(0.4, 0, 1, 1) !important;
+}
+
+.view-fade-in {
+  opacity: 0 !important;
+  transform: translateY(-8px);
+}
+
+/* When view-fade-in is removed, it transitions back to normal */
+#discover-view,
+#favorites-view,
+#about-view,
+#social-view,
+#pins-view {
+  transition: opacity 0.3s cubic-bezier(0, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0, 0, 0.2, 1);
 }
 
 /* Accessibility */
@@ -3965,6 +4058,29 @@ button:focus-visible,
   }
 }
 
+/* Gallery progress bar */
+.gallery-progress-track {
+  height: 2px;
+  background: var(--border-subtle);
+  margin: 0 24px 12px;
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.gallery-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--gold);
+  border-radius: 1px;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 768px) {
+  .gallery-progress-track {
+    margin: 0 32px 16px;
+  }
+}
+
 /* ── Mobile: Card Stack ── */
 .gallery-stack {
   display: block;
@@ -4042,6 +4158,8 @@ button:focus-visible,
   border-radius: var(--radius-xl);
   flex-direction: column;
   box-shadow: var(--shadow-lg);
+  opacity: 1;
+  transform: none;
 }
 
 .stack-card .event-card-accent {
@@ -4051,9 +4169,18 @@ button:focus-visible,
   flex-shrink: 0;
 }
 
+/* Stack card image — banner at top */
+.stack-card .event-card-image {
+  width: auto;
+  height: 0;
+  flex: 1 1 45%;
+  min-height: 120px;
+}
+
 .stack-card .event-card-inner {
   padding: 20px 24px;
   gap: 12px;
+  flex: 0 0 auto;
 }
 
 .stack-card .event-name {
@@ -4181,8 +4308,14 @@ button:focus-visible,
 }
 
 .stack-action-fav:active {
-  border-color: rgba(76, 175, 80, 0.4);
-  background: rgba(76, 175, 80, 0.06);
+  border-color: rgba(183, 149, 98, 0.4);
+  background: rgba(183, 149, 98, 0.06);
+}
+
+/* Hover states for stack actions */
+.stack-action:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: scale(1.06);
 }
 
 /* Stack empty & done states */
@@ -4285,6 +4418,8 @@ button:focus-visible,
     border-radius: var(--radius-xl);
     flex-direction: column;
     box-shadow: var(--shadow-lg);
+    opacity: 1;
+    transform: none;
   }
 
   .gallery-featured-main .event-card-accent {
@@ -4293,9 +4428,18 @@ button:focus-visible,
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   }
 
+  /* Featured card image — large banner */
+  .gallery-featured-main .event-card-image {
+    width: auto;
+    height: 0;
+    flex: 1 1 50%;
+    min-height: 180px;
+  }
+
   .gallery-featured-main .event-card-inner {
     padding: 24px 28px;
     gap: 14px;
+    flex: 0 0 auto;
   }
 
   .gallery-featured-main .event-name {
@@ -4390,12 +4534,18 @@ button:focus-visible,
     box-shadow: 0 0 0 1px var(--dusk), var(--shadow-md);
   }
 
-  /* Sidebar card color swatch */
-  .sidebar-card-accent {
-    width: 3px;
+  /* Sidebar card image */
+  .sidebar-card-image {
+    width: 64px;
     flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
     border-radius: var(--radius-md) 0 0 var(--radius-md);
-    background: var(--border-subtle);
+  }
+
+  /* Sidebar card color swatch — hidden when image present */
+  .sidebar-card-accent {
+    display: none;
   }
 
   .sidebar-card-accent[data-category="art"] {
