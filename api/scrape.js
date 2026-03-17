@@ -1032,6 +1032,21 @@ const GALLERY_HEADERS = {
 // Attaches the year from the range end if the start doesn't include one.
 function galleryDateRange(rangeText) {
   if (!rangeText) return { start_date: null, end_date: null };
+
+  // Handle numeric dot format: "03.05–04.11.2026" (MM.DD–MM.DD.YYYY)
+  const dotMatch = rangeText.match(/^(\d{2})\.(\d{2})[–—\-](\d{2})\.(\d{2})\.(\d{4})$/);
+  if (dotMatch) {
+    const [, sm, sd, em, ed, year] = dotMatch;
+    const start = new Date(Date.UTC(parseInt(year), parseInt(sm) - 1, parseInt(sd)));
+    const end = new Date(Date.UTC(parseInt(year), parseInt(em) - 1, parseInt(ed)));
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      return {
+        start_date: start.toISOString().split('T')[0],
+        end_date: end.toISOString().split('T')[0]
+      };
+    }
+  }
+
   const yearMatch = rangeText.match(/\b(20\d{2})\b/);
   const parts = rangeText.split(/\s*[–—\-]\s*/);
   const startPart = parts[0].trim();
@@ -1344,8 +1359,8 @@ const GENERIC_GALLERIES = [
   { name: 'Hauser & Wirth', url: 'https://www.hauserwirth.com/exhibitions/', address: '32 E 69th St, New York, NY 10021', locationFilter: /new york/i },
   { name: 'Perrotin', url: 'https://www.perrotin.com/exhibitions', address: '130 Orchard St, New York, NY 10002', locationFilter: /new york/i },
   { name: 'Matthew Marks', url: 'https://matthewmarks.com/exhibitions', address: '522 W 22nd St, New York, NY 10011' },
-  { name: 'Marianne Boesky', url: 'https://www.boeskygallery.com/exhibitions', address: '507 W 24th St, New York, NY 10011' },
-  { name: 'Jack Shainman', url: 'https://jackshainman.com/exhibitions', address: '513 W 20th St, New York, NY 10011' },
+  { name: 'Marianne Boesky', url: 'https://marianneboeskygallery.com/exhibitions', address: '507 W 24th St, New York, NY 10011' },
+  { name: 'Jack Shainman', url: 'https://jackshainman.com/exhibitions', address: '513 W 20th St, New York, NY 10011', fetchDetailDates: true },
   { name: 'Sprüth Magers', url: 'https://www.spruethmagers.com/exhibitions', address: '22 E 80th St, New York, NY 10075', locationFilter: /new york/i },
   { name: 'Petzel', url: 'https://petzel.com/exhibitions', address: '456 W 18th St, New York, NY 10011' },
   { name: 'Sean Kelly', url: 'https://skny.com/exhibitions', address: '475 10th Ave, New York, NY 10018' },
@@ -1357,17 +1372,18 @@ const GENERIC_GALLERIES = [
   { name: 'Kasmin', url: 'https://www.kasmingallery.com/exhibitions', address: '509 W 27th St, New York, NY 10001' },
   { name: 'Tanya Bonakdar', url: 'https://www.tanyabonakdargallery.com/exhibitions', address: '521 W 21st St, New York, NY 10011' },
   { name: 'Anton Kern', url: 'https://www.antonkerngallery.com/exhibitions', address: '16 E 55th St, New York, NY 10022' },
-  { name: 'Sikkema Jenkins', url: 'https://www.sikkemajenkinsco.com/exhibitions', address: '256 W 22nd St, New York, NY 10011' },
+  { name: 'Sikkema Jenkins', url: 'https://www.smjny.com/current-exhibitions', address: '256 W 22nd St, New York, NY 10011', linkSelector: 'a[href^="/ex20"]', fetchDetailDates: true },
   { name: 'P.P.O.W', url: 'https://www.ppowgallery.com/exhibitions', address: '392 Broadway, New York, NY 10013' },
-  { name: 'Tilton Gallery', url: 'https://www.tiltongallery.com/exhibitions', address: '8 E 76th St, New York, NY 10021' },
+  { name: 'Tilton Gallery', url: 'https://www.jacktiltongallery.com/exhibitions', address: '8 E 76th St, New York, NY 10021' },
   { name: 'Almine Rech', url: 'https://www.alminerech.com/exhibitions', address: '39 E 78th St, New York, NY 10075', locationFilter: /new york/i },
   { name: 'Nahmad Contemporary', url: 'https://www.nahmadcontemporary.com/exhibitions', address: '980 Madison Ave, New York, NY 10075' },
   { name: 'Skarstedt', url: 'https://www.skarstedt.com/exhibitions', address: '20 E 79th St, New York, NY 10075', locationFilter: /new york/i },
-  { name: 'Casey Kaplan', url: 'https://caseykaplangallery.com/exhibitions', address: '121 W 27th St, New York, NY 10001' },
+  { name: 'Casey Kaplan', url: 'https://caseykaplangallery.com/exhibitions', address: '121 W 27th St, New York, NY 10001', linkSelector: 'a[href*="exhibitions="]' },
 ];
 
 // Date-range regex that matches most gallery date formats in page text
-const DATE_RANGE_RE = /(?:(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[\s.]+\d{1,2}(?:\s*,?\s*\d{4})?(?:\s*[–—\-]\s*(?:(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[\s.]+)?\d{1,2}(?:\s*,?\s*\d{4})?)?)|\d{1,2}[\s.]+(?:January|February|March|April|May|June|July|August|September|October|November|December)(?:\s*[–—\-]\s*\d{1,2}[\s.]+(?:January|February|March|April|May|June|July|August|September|October|November|December))?(?:\s+\d{4})?/i;
+// Matches: "January 24 – February 28, 2026", "11 February – 11 April 2026", "03.05–04.11.2026"
+const DATE_RANGE_RE = /(?:(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[\s.]+\d{1,2}(?:\s*,?\s*\d{4})?(?:\s*[–—\-]\s*(?:(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[\s.]+)?\d{1,2}(?:\s*,?\s*\d{4})?)?)|\d{1,2}[\s.]+(?:January|February|March|April|May|June|July|August|September|October|November|December)(?:\s*[–—\-]\s*\d{1,2}[\s.]+(?:January|February|March|April|May|June|July|August|September|October|November|December))?(?:\s+\d{4})?|\d{2}\.\d{2}[–—\-]\d{2}\.\d{2}\.\d{4}/i;
 
 async function scrapeGenericGallery(config) {
   try {
@@ -1409,13 +1425,24 @@ async function scrapeGenericGallery(config) {
       'li[class*="item"]', '[class*="entry"]', '[class*="project"]',
       '[class*="show"]'
     ];
+    if (config.linkSelector) containerSelectors.unshift(config.linkSelector);
 
     // Try direct link approach first (most reliable)
-    const $links = $('a[href*="/exhibition"]').filter((_, el) => {
-      const href = $(el).attr('href') || '';
-      // Skip nav/category links, only want specific exhibition pages
-      return href.split('/').length > 3 || /\/exhibition[s]?\/[^/]+/.test(href);
-    });
+    // Use custom linkSelector if provided, otherwise default to exhibition links
+    let $links;
+    if (config.linkSelector) {
+      $links = $(config.linkSelector).filter((_, el) => {
+        const href = $(el).attr('href') || '';
+        return href.length > 3 && href !== config.url.replace(baseUrl, '');
+      });
+    } else {
+      $links = $('a[href*="/exhibition"]').filter((_, el) => {
+        const href = $(el).attr('href') || '';
+        // Skip nav/category/archive links, only want specific exhibition pages
+        if (href.includes('/past')) return false;
+        return href.split('/').length > 3 || /\/exhibition[s]?\/[^/]+/.test(href);
+      });
+    }
 
     if ($links.length >= 2) {
       $links.each((_, el) => {
@@ -1425,10 +1452,16 @@ async function scrapeGenericGallery(config) {
         if (!href) return;
         const url = href.startsWith('http') ? href : `${baseUrl}${href.startsWith('/') ? '' : '/'}${href}`;
         if (seen.has(url)) return;
+        // Skip image-only links (no text) — wait for the text link to the same URL
+        const linkText = $a.text().trim();
+        if (!linkText && $a.find('img').length > 0) return;
         seen.add(url);
 
         // Get text content — could be the link itself or a parent container
-        const $container = $a.closest('article, [class*="exhibition"], [class*="listing"], [class*="entry"], [class*="card"], li') || $a;
+        let $container = $a.closest('article, [class*="exhibition"], [class*="listing"], [class*="entry"], [class*="card"], li');
+        // Fallback: walk up to nearest div/section that contains the link and siblings (date, artist)
+        if (!$container.length) $container = $a.closest('h1,h2,h3,h4').parent();
+        if (!$container.length) $container = $a.parent();
         const containerText = ($container.length ? $container : $a).text().replace(/\s+/g, ' ').trim();
         if (!containerText || containerText.length < 10) return;
 
@@ -1436,20 +1469,30 @@ async function scrapeGenericGallery(config) {
         if (config.locationFilter && !config.locationFilter.test(containerText)) return;
 
         // Extract date from container
-        const $dateEl = ($container.length ? $container : $a).find('time,[class*="date"],[datetime]').first();
+        const $ctx = $container.length ? $container : $a;
+        const $dateEl = $ctx.find('time,[class*="date"],[datetime]').first();
         let rawDate = ($dateEl.attr('datetime') || $dateEl.text() || '').trim();
 
         // If no date element, try regex match on container text
         if (!rawDate) {
-          const dateMatch = containerText.match(DATE_RANGE_RE);
-          if (dateMatch) rawDate = dateMatch[0].trim();
+          // Prefer date range with year (most specific) to avoid false matches from titles
+          const rangeWithYear = containerText.match(/(?:(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[\s.]+\d{1,2}(?:\s*,?\s*\d{4})?\s*[–—\-]\s*(?:(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[\s.]+)?\d{1,2}(?:\s*,?\s*\d{4}))/i);
+          if (rangeWithYear) {
+            rawDate = rangeWithYear[0].trim();
+          } else {
+            const dateMatch = containerText.match(DATE_RANGE_RE);
+            if (dateMatch) rawDate = dateMatch[0].trim();
+          }
         }
 
-        // Extract title — prefer heading elements, fall back to link text
-        const $titleEl = ($container.length ? $container : $a).find('h1,h2,h3,h4,[class*="title"],[class*="name"],[class*="artist"]').first();
-        let title = ($titleEl.length ? $titleEl.text() : '').trim().replace(/\s+/g, ' ');
+        // Extract title — prefer link text, then heading elements
+        let title = $a.text().trim().replace(/\s+/g, ' ');
+        if (!title || title.length < 5) {
+          const $titleEl = $ctx.find('h1,h2,h3,h4,[class*="title"],[class*="name"],[class*="artist"]').first();
+          title = ($titleEl.length ? $titleEl.text() : '').trim().replace(/\s+/g, ' ');
+        }
 
-        // If no heading found, use the link text minus the date
+        // If still no title, use the container text minus the date
         if (!title || title.length < 5) {
           title = containerText;
           if (rawDate) title = title.replace(rawDate, '').trim();
@@ -1458,6 +1501,9 @@ async function scrapeGenericGallery(config) {
         }
 
         if (!title || title.length < 5) return;
+        // Strip date patterns from titles (e.g., when date is embedded in link text)
+        if (rawDate) title = title.replace(rawDate, '').trim();
+        title = title.replace(/^\d{2}\.\d{2}[–—\-]\d{2}\.\d{2}\.\d{4}\s*/g, '').trim();
         // Truncate overly long titles (got the whole container text)
         if (title.length > 120) title = title.substring(0, 120).trim();
 
@@ -1507,6 +1553,44 @@ async function scrapeGenericGallery(config) {
       const evts = galleryEvents(title, rawDate, start_date, end_date, url, config.name, config.address, config.name);
       events.push(...evts);
     });
+
+    // If no events found and fetchDetailDates is enabled, collect exhibition links
+    // and fetch their detail pages to extract dates (for galleries that don't show dates on listing)
+    if (events.length === 0 && config.fetchDetailDates) {
+      const detailLinks = [];
+      const detailSeen = new Set();
+      const currentYear = new Date().getFullYear();
+      const detailSelector = config.linkSelector || 'a[href*="/exhibition"]';
+      $(detailSelector).each((_, el) => {
+        const href = $(el).attr('href') || '';
+        if (href === '/exhibitions' || href === '/exhibitions/' || href.includes('/past')) return;
+        // Skip links whose URL embeds a year before the current year (e.g. /ex20230428...)
+        const yearInHref = href.match(/\/ex(\d{4})/);
+        if (yearInHref && parseInt(yearInHref[1]) < currentYear) return;
+        const url = href.startsWith('http') ? href : `${baseUrl}${href.startsWith('/') ? '' : '/'}${href}`;
+        if (detailSeen.has(url)) return;
+        detailSeen.add(url);
+        const title = $(el).text().replace(/\s+/g, ' ').trim();
+        if (title && title.length >= 5) detailLinks.push({ url, title });
+      });
+
+      const detailResults = await Promise.allSettled(
+        detailLinks.slice(0, 5).map(async ({ url, title }) => {
+          const detailRes = await axios.get(url, { timeout: 8000, headers: GALLERY_HEADERS });
+          const detail$ = cheerio.load(detailRes.data);
+          const bodyText = detail$('body').text().replace(/\s+/g, ' ');
+          const dateMatch = bodyText.match(DATE_RANGE_RE);
+          if (!dateMatch) return null;
+          const rawDate = dateMatch[0].trim();
+          const { start_date, end_date } = galleryDateRange(rawDate);
+          if (!start_date) return null;
+          return galleryEvents(title, rawDate, start_date, end_date, url, config.name, config.address, config.name);
+        })
+      );
+      for (const r of detailResults) {
+        if (r.status === 'fulfilled' && r.value) events.push(...r.value);
+      }
+    }
 
     return events;
   } catch (e) {
