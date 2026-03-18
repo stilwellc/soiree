@@ -3360,9 +3360,18 @@ function renderFeaturedLayout() {
     const isFavorited = favorites.includes(ev.id);
     const isActive = i === featuredIndex;
     const displayName = ev.name.replace(/American Museum of Natural History/gi, 'AMNH');
-    const imgStyle = ev.image
-      ? `background-image: url('${ev.image}')`
-      : `background: ${CATEGORY_GRADIENTS[ev.category] || CATEGORY_GRADIENTS.community}`;
+    let imgStyle;
+    if (ev.category === 'art') {
+      let h = 0;
+      for (let i = 0; i < ev.name.length; i++) h = ((h << 5) - h) + ev.name.charCodeAt(i) | 0;
+      const x = Math.abs(h % 80) + 10;
+      const y = Math.abs((h >>> 8) % 80) + 10;
+      imgStyle = `background-image: url('assets/images/art-doodles.png'); background-size: 280%; background-position: ${x}% ${y}%`;
+    } else {
+      imgStyle = ev.image
+        ? `background-image: url('${ev.image}')`
+        : `background: ${CATEGORY_GRADIENTS[ev.category] || CATEGORY_GRADIENTS.community}`;
+    }
     return `
       <div class="sidebar-card ${isActive ? 'active' : ''}" data-event-id="${ev.id}" data-index="${i}" data-category="${ev.category}">
         <div class="sidebar-card-image" style="${imgStyle}"></div>
