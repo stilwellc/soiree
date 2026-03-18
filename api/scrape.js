@@ -1075,9 +1075,12 @@ function galleryDateRange(rangeText) {
   return { start_date: start_date || null, end_date: end_date || start_date || null };
 }
 
-// Returns array of 1-2 events: opening reception + exhibition (if date range exists)
+// Returns array of 0-1 events per exhibition
 function galleryEvents(name, dateRaw, start_date, end_date, url, locationName, address, sourceName) {
   const trimmedName = name.trim().substring(0, 255);
+
+  // Skip non-descriptive names (e.g. "Extended through")
+  if (/^extended\s+through$/i.test(trimmedName)) return [];
   const img = getEventImage(name, 'art');
   const spots = Math.floor(Math.random() * 80) + 20;
 
