@@ -1715,7 +1715,7 @@ function createEventCard(event, index) {
     for (let i = 0; i < event.name.length; i++) h = ((h << 5) - h) + event.name.charCodeAt(i) | 0;
     const x = Math.abs(h % 80) + 10;          // 10-89%
     const y = Math.abs((h >>> 8) % 80) + 10;  // 10-89%
-    imageStyle = `background-image: url('assets/images/art-doodles.png'); background-position: ${x}% ${y}%`;
+    imageStyle = `background-image: url('assets/images/art-doodles.png'); background-size: 280%; background-position: ${x}% ${y}%`;
   } else {
     imageStyle = event.image
       ? `background-image: url('${event.image}')`
