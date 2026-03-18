@@ -1077,56 +1077,31 @@ function galleryDateRange(rangeText) {
 
 // Returns array of 1-2 events: opening reception + exhibition (if date range exists)
 function galleryEvents(name, dateRaw, start_date, end_date, url, locationName, address, sourceName) {
-  const results = [];
   const trimmedName = name.trim().substring(0, 255);
   const img = getEventImage(name, 'art');
   const spots = Math.floor(Math.random() * 80) + 20;
 
-  // Opening reception (always created)
-  const opening = createNormalizedEvent({
+  // Single event per exhibition — use full date range when available
+  const event = createNormalizedEvent({
     name: trimmedName,
     category: 'art',
     date: dateRaw,
     time: 'See details',
     start_date,
-    end_date: start_date,
+    end_date: end_date || start_date,
     location: locationName,
     address,
     price: 'free',
     spots,
     image: img,
-    description: `Opening: ${trimmedName} at ${sourceName}.`,
+    description: `${trimmedName} at ${sourceName}.`,
     highlights: generateHighlights(name, `${trimmedName} at ${sourceName}.`, 'art', locationName, sourceName),
     url,
     source: sourceName,
-    event_type: 'opening'
+    event_type: 'exhibition'
   });
-  if (opening) results.push(opening);
 
-  // Exhibition / viewing window (only if end_date differs from start_date)
-  if (end_date && end_date !== start_date) {
-    const exhibition = createNormalizedEvent({
-      name: trimmedName,
-      category: 'art',
-      date: dateRaw,
-      time: 'See details',
-      start_date,
-      end_date,
-      location: locationName,
-      address,
-      price: 'free',
-      spots,
-      image: img,
-      description: `On view: ${trimmedName} at ${sourceName}.`,
-      highlights: generateHighlights(name, `${trimmedName} at ${sourceName}.`, 'art', locationName, sourceName),
-      url: `${url}#exhibition`,
-      source: sourceName,
-      event_type: 'exhibition'
-    });
-    if (exhibition) results.push(exhibition);
-  }
-
-  return results;
+  return event ? [event] : [];
 }
 
 // Gagosian: <a href="/exhibitions/YEAR/slug"> — text = ArtistName + Title + DateRange
@@ -1802,6 +1777,12 @@ module.exports = async function handler(req, res) {
     await pool.query(`
       DELETE FROM events a USING events b
       WHERE a.id < b.id AND a.url = b.url
+    `);
+
+    // Remove #exhibition fragment duplicates — keep base URL version
+    await pool.query(`
+      DELETE FROM events WHERE url LIKE '%#exhibition'
+        AND REPLACE(url, '#exhibition', '') IN (SELECT url FROM events)
     `);
 
     // Add unique constraint on URL to prevent duplicates
