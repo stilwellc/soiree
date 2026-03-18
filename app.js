@@ -1708,9 +1708,19 @@ function createEventCard(event, index) {
   const timeText = event.time && event.time !== 'See details' ? event.time : '';
   const displayName = event.name.replace(/American Museum of Natural History/gi, 'AMNH');
   const categoryName = getCategoryName(event.category);
-  const imageStyle = event.image
-    ? `background-image: url('${event.image}')`
-    : `background: ${CATEGORY_GRADIENTS[event.category] || CATEGORY_GRADIENTS.community}`;
+  let imageStyle;
+  if (event.category === 'art') {
+    // Random crop of doodles illustration — hash title for consistent position per event
+    let h = 0;
+    for (let i = 0; i < event.name.length; i++) h = ((h << 5) - h) + event.name.charCodeAt(i) | 0;
+    const x = Math.abs(h % 80) + 10;          // 10-89%
+    const y = Math.abs((h >>> 8) % 80) + 10;  // 10-89%
+    imageStyle = `background-image: url('assets/images/art-doodles.png'); background-position: ${x}% ${y}%`;
+  } else {
+    imageStyle = event.image
+      ? `background-image: url('${event.image}')`
+      : `background: ${CATEGORY_GRADIENTS[event.category] || CATEGORY_GRADIENTS.community}`;
+  }
 
   return `
     <div class="event-card" data-id="${event.id}" data-category="${event.category}" data-start-date="${event.start_date || ''}" data-end-date="${event.end_date || ''}" role="article" tabindex="0">
@@ -1820,17 +1830,8 @@ function openModal(eventId) {
         </svg>
       </button>`;
 
-  // Modal image
-  const modalImageHTML = event.image ? `
-    <div class="modal-image-wrap">
-      <img class="modal-image" src="${event.image}" alt="${event.name}" loading="lazy" />
-      <div class="modal-image-gradient"></div>
-    </div>` : '';
-
   const modalContent = `
     <div class="modal-handle"></div>
-
-    ${modalImageHTML}
 
     <!-- Hero — compact header with category swatch -->
     <div class="modal-hero">
