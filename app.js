@@ -1708,14 +1708,18 @@ function createEventCard(event, index) {
   const timeText = event.time && event.time !== 'See details' ? event.time : '';
   const displayName = event.name.replace(/American Museum of Natural History/gi, 'AMNH');
   const categoryName = getCategoryName(event.category);
+  const CATEGORY_DOODLES = {
+    art: 'assets/images/art-doodles.png',
+    perks: 'assets/images/perks-doodles.png',
+  };
   let imageStyle;
-  if (event.category === 'art') {
+  if (CATEGORY_DOODLES[event.category]) {
     // Random crop of doodles illustration — hash title for consistent position per event
     let h = 0;
     for (let i = 0; i < event.name.length; i++) h = ((h << 5) - h) + event.name.charCodeAt(i) | 0;
     const x = Math.abs(h % 80) + 10;          // 10-89%
     const y = Math.abs((h >>> 8) % 80) + 10;  // 10-89%
-    imageStyle = `background-image: url('assets/images/art-doodles.png'); background-size: 280%; background-position: ${x}% ${y}%`;
+    imageStyle = `background-image: url('${CATEGORY_DOODLES[event.category]}'); background-size: 280%; background-position: ${x}% ${y}%`;
   } else {
     imageStyle = event.image
       ? `background-image: url('${event.image}')`
@@ -3360,13 +3364,17 @@ function renderFeaturedLayout() {
     const isFavorited = favorites.includes(ev.id);
     const isActive = i === featuredIndex;
     const displayName = ev.name.replace(/American Museum of Natural History/gi, 'AMNH');
+    const CATEGORY_DOODLES = {
+      art: 'assets/images/art-doodles.png',
+      perks: 'assets/images/perks-doodles.png',
+    };
     let imgStyle;
-    if (ev.category === 'art') {
+    if (CATEGORY_DOODLES[ev.category]) {
       let h = 0;
       for (let i = 0; i < ev.name.length; i++) h = ((h << 5) - h) + ev.name.charCodeAt(i) | 0;
       const x = Math.abs(h % 80) + 10;
       const y = Math.abs((h >>> 8) % 80) + 10;
-      imgStyle = `background-image: url('assets/images/art-doodles.png'); background-size: 280%; background-position: ${x}% ${y}%`;
+      imgStyle = `background-image: url('${CATEGORY_DOODLES[ev.category]}'); background-size: 280%; background-position: ${x}% ${y}%`;
     } else {
       imgStyle = ev.image
         ? `background-image: url('${ev.image}')`
