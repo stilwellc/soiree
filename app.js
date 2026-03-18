@@ -3368,6 +3368,7 @@ function renderFeaturedLayout() {
     const CATEGORY_DOODLES = {
       art: 'assets/images/art-doodles.png',
       perks: 'assets/images/perks-doodles.png',
+      community: 'assets/images/community-doodles.png',
     };
     let imgStyle;
     if (CATEGORY_DOODLES[ev.category]) {
