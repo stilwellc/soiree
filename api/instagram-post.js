@@ -18,13 +18,16 @@ const CATEGORIES = [
 ];
 
 // Region classification (mirrors client-side getEventRegion in app.js)
-// Catches Hoboken, Jersey City, and broader NJ events (e.g. from The Local Girl)
+// Only Hoboken and Jersey City — other NJ locations are excluded from posts
 function getEventRegion(event) {
   const loc = (event.location || '').toLowerCase();
   const addr = (event.address || '').toLowerCase();
-  const combined = loc + ' ' + addr;
-  if (combined.includes('hoboken') || combined.includes('jersey city') ||
-      combined.includes(', nj')) return 'hoboken-jc';
+  if (loc.includes('hoboken') || loc.includes('jersey city') ||
+      addr.includes('hoboken') || addr.includes('jersey city')) return 'hoboken-jc';
+  // Skip broader NJ events — they don't belong in either region post
+  const source = (event.source || '').toLowerCase();
+  if (source.includes('visit nj') || loc.includes(', nj') || addr.includes(', nj') ||
+      addr.includes('new jersey')) return 'nj-other';
   return 'nyc';
 }
 
