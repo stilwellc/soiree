@@ -4143,6 +4143,7 @@ button:focus-visible,
   height: 0;
   flex: 1 1 45%;
   min-height: 120px;
+  background-size: cover !important;
 }
 
 .stack-card .event-card-inner {
@@ -4402,6 +4403,7 @@ button:focus-visible,
     height: 0;
     flex: 1 1 50%;
     min-height: 180px;
+    background-size: cover !important;
   }
 
   .gallery-featured-main .event-card-inner {
