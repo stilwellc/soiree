@@ -1711,6 +1711,7 @@ function createEventCard(event, index) {
   const CATEGORY_DOODLES = {
     art: 'assets/images/art-doodles.png',
     perks: 'assets/images/perks-doodles.png',
+    community: 'assets/images/community-doodles.png',
   };
   let imageStyle;
   if (CATEGORY_DOODLES[event.category]) {
