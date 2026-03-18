@@ -1788,6 +1788,11 @@ module.exports = async function handler(req, res) {
         AND REPLACE(url, '#exhibition', '') IN (SELECT url FROM events)
     `);
 
+    // Remove junk events with non-descriptive names
+    await pool.query(`
+      DELETE FROM events WHERE LOWER(TRIM(name)) = 'extended through'
+    `);
+
     // Add unique constraint on URL to prevent duplicates
     await pool.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS events_url_unique ON events(url)
