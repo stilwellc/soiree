@@ -60,6 +60,7 @@
       <div class="nav-item" data-view="week" role="button" tabindex="0" aria-label="This week's events">
         <span class="nav-label">This Week</span>
       </div>
+      <div class="nav-separator" aria-hidden="true"></div>
       <div class="nav-item nav-item-icon" data-view="favorites" role="button" tabindex="0" aria-label="Favorites">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path
@@ -649,8 +650,21 @@
 
     <!-- Footer (Global) -->
     <footer class="app-footer">
-      <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="footer-logo">
-      <p class="footer-tagline">Curating local experience.</p>
+      <div class="footer-brand">
+        <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="footer-logo">
+        <p class="footer-tagline">Curating local experience.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="https://www.instagram.com/soiree.nyc/" target="_blank" rel="noopener noreferrer" class="footer-link footer-link-ig">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+          </svg>
+          <span>Follow us</span>
+        </a>
+      </nav>
+      <p class="footer-copy">Made with care in NYC</p>
     </footer>
   </main>
 

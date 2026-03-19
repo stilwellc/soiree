@@ -992,7 +992,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
           targetView.classList.remove('view-fade-in');
         });
       });
-    }, 220);
+    }, 280);
   } else {
     showView();
   }
