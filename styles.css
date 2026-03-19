@@ -5154,9 +5154,9 @@ button:focus-visible,
 
 .footer-brand {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  min-height: 120px;
 }
 
 .footer-logo {
@@ -5164,20 +5164,20 @@ button:focus-visible,
   width: auto;
   filter: none;
   opacity: 0.85;
-  position: relative;
+  grid-area: 1 / 1;
   z-index: 2;
 }
 
 .footer-motto {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 88px;
-  font-weight: 300;
+  font-size: 128px;
+  font-weight: 600;
   font-style: italic;
-  color: rgba(28, 20, 16, 0.05);
+  color: rgba(28, 20, 16, 0.04);
   margin: 0;
-  letter-spacing: -2px;
+  letter-spacing: -4px;
   line-height: 1;
-  position: absolute;
+  grid-area: 1 / 1;
   z-index: 1;
   white-space: nowrap;
   user-select: none;
