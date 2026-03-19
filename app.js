@@ -3203,16 +3203,33 @@ function resetStack() {
 
 // ── Swipe Handler ──
 function attachSwipeHandlers(cardEl, event) {
-  let startX = 0, startY = 0, currentX = 0;
+  let startX = 0, startY = 0, currentX = 0, currentY = 0;
   let isDragging = false, directionLocked = null, hasMoved = false;
+  let rafId = null;
   const likeOverlay = cardEl.querySelector('.stack-card-overlay--like');
   const skipOverlay = cardEl.querySelector('.stack-card-overlay--skip');
 
   function onStart(x, y) {
     if (isSwipeAnimating) return;
-    startX = x; startY = y; currentX = x;
+    startX = x; startY = y; currentX = x; currentY = y;
     isDragging = true; directionLocked = null; hasMoved = false;
-    cardEl.style.transition = 'none';
+    cardEl.classList.add('dragging');
+  }
+
+  function applyTransform() {
+    const dx = currentX - startX;
+    const rotate = dx * 0.06;
+    cardEl.style.transform = `translateX(${dx}px) rotate(${rotate}deg)`;
+
+    const progress = Math.min(Math.abs(dx) / SWIPE_THRESHOLD, 1);
+    if (dx > 0) {
+      likeOverlay.style.opacity = progress * 0.7;
+      skipOverlay.style.opacity = 0;
+    } else {
+      skipOverlay.style.opacity = progress * 0.7;
+      likeOverlay.style.opacity = 0;
+    }
+    rafId = null;
   }
 
   function onMove(x, y) {
@@ -3220,32 +3237,28 @@ function attachSwipeHandlers(cardEl, event) {
     const dx = x - startX;
     const dy = y - startY;
 
-    if (!directionLocked && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+    if (!directionLocked && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
       directionLocked = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical';
+      if (directionLocked === 'vertical') {
+        isDragging = false;
+        cardEl.classList.remove('dragging');
+        return;
+      }
     }
-
-    if (directionLocked === 'vertical') { isDragging = false; return; }
 
     if (directionLocked === 'horizontal') {
       hasMoved = true;
       currentX = x;
-      const rotate = dx * 0.08;
-      cardEl.style.transform = `translateX(${dx}px) rotate(${rotate}deg)`;
-
-      const progress = Math.min(Math.abs(dx) / SWIPE_THRESHOLD, 1);
-      if (dx > 0) {
-        likeOverlay.style.opacity = progress * 0.8;
-        skipOverlay.style.opacity = 0;
-      } else {
-        skipOverlay.style.opacity = progress * 0.8;
-        likeOverlay.style.opacity = 0;
-      }
+      currentY = y;
+      if (!rafId) rafId = requestAnimationFrame(applyTransform);
     }
   }
 
   function onEnd() {
     if (!isDragging) return;
     isDragging = false;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    cardEl.classList.remove('dragging');
     const dx = currentX - startX;
 
     if (Math.abs(dx) > SWIPE_THRESHOLD) {
@@ -3258,7 +3271,7 @@ function attachSwipeHandlers(cardEl, event) {
     }
   }
 
-  // Touch events (iOS Safari)
+  // Touch events
   cardEl.addEventListener('touchstart', (e) => {
     const t = e.touches[0];
     onStart(t.clientX, t.clientY);
@@ -3297,7 +3310,6 @@ function attachSwipeHandlers(cardEl, event) {
 }
 
 function resetCardPosition(cardEl, likeOverlay, skipOverlay) {
-  cardEl.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
   cardEl.style.transform = '';
   if (likeOverlay) likeOverlay.style.opacity = 0;
   if (skipOverlay) skipOverlay.style.opacity = 0;
@@ -3305,17 +3317,24 @@ function resetCardPosition(cardEl, likeOverlay, skipOverlay) {
 
 function completeSwipe(direction, cardEl, event) {
   isSwipeAnimating = true;
-  cardEl.classList.add(direction === 'right' ? 'swiping-right' : 'swiping-left');
+  const flyX = direction === 'right' ? '120%' : '-120%';
+  const flyRotate = direction === 'right' ? 15 : -15;
+  cardEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 1, 1), opacity 0.3s ease';
+  cardEl.style.transform = `translateX(${flyX}) rotate(${flyRotate}deg)`;
+  cardEl.style.opacity = '0';
 
   if (direction === 'right' && !favorites.includes(event.id)) {
     toggleFavorite(event.id);
   }
 
-  setTimeout(() => {
+  // After card flies out, promote remaining cards then re-render
+  cardEl.addEventListener('transitionend', function handler(e) {
+    if (e.propertyName !== 'transform') return;
+    cardEl.removeEventListener('transitionend', handler);
     stackIndex++;
     updateStackCounter();
     renderStackCards();
-  }, 350);
+  }, { once: false });
 }
 
 // ── Stack Action Buttons ──

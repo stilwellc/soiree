@@ -4079,7 +4079,8 @@ button:focus-visible,
   width: 100%;
   aspect-ratio: 1 / 1;
   max-height: 440px;
-  perspective: 1000px;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
 }
 
 /* Stack card wrapper */
@@ -4089,32 +4090,40 @@ button:focus-visible,
   left: 0;
   width: 100%;
   height: 100%;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 0.4s ease,
-    box-shadow 0.4s ease;
-  will-change: transform;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.35s ease;
+  will-change: transform, opacity;
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Kill transitions while dragging */
+.stack-card.dragging {
+  transition: none !important;
 }
 
 /* Stack depth positions */
 .stack-card[data-depth="0"] {
   z-index: 3;
   transform: scale(1) translateY(0);
+  opacity: 1;
 }
 
 .stack-card[data-depth="1"] {
   z-index: 2;
-  transform: scale(0.95) translateY(12px);
-  opacity: 0.65;
+  transform: scale(0.96) translateY(10px);
+  opacity: 0.5;
   pointer-events: none;
+  filter: blur(1px);
 }
 
 .stack-card[data-depth="2"] {
   z-index: 1;
-  transform: scale(0.90) translateY(24px);
-  opacity: 0.35;
+  transform: scale(0.92) translateY(20px);
+  opacity: 0;
   pointer-events: none;
 }
 
