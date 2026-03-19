@@ -3625,6 +3625,28 @@ function initScrollReveal() {
   sections.forEach(s => observer.observe(s));
 }
 
+// ── Footer Reveal ─────────────────────────────────
+function initFooterReveal() {
+  const motto = document.querySelector('.footer-motto');
+  if (!motto) return;
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    motto.classList.add('visible');
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        motto.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  observer.observe(motto);
+}
+
 // ── Value strip event count ────────────────────────
 function updateValueStrip() {
   const el = document.getElementById('value-events');
@@ -3713,6 +3735,7 @@ if (document.readyState === 'loading') {
     initSubscribeStrip();
     initSubscribeStripEvents();
     initScrollReveal();
+    initFooterReveal();
     initInstagramGrid();
     initGalleryTabs();
     initStackActions();
@@ -3734,6 +3757,7 @@ if (document.readyState === 'loading') {
   initSubscribeForm();
   initSubscribeStrip();
   initSubscribeStripEvents();
+  initFooterReveal();
 }
 // v1.0.2
 

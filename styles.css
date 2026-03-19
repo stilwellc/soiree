@@ -3085,7 +3085,8 @@ body {
     transform: none !important;
   }
 
-  .event-card {
+  .event-card,
+  .footer-motto {
     opacity: 1 !important;
     transform: none !important;
   }
@@ -5142,14 +5143,15 @@ button:focus-visible,
 
 /* Footer */
 .app-footer {
-  padding: 36px 24px 48px;
+  padding: 56px 24px 64px;
   text-align: center;
   margin-top: auto;
-  border-top: 1px solid var(--border-subtle);
+  border-top: none;
+  background: linear-gradient(to bottom, transparent, rgba(28, 20, 16, 0.015));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
 .footer-brand {
@@ -5185,6 +5187,14 @@ button:focus-visible,
   z-index: 1;
   white-space: nowrap;
   user-select: none;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.footer-motto.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @media (max-width: 767px) {
@@ -5198,6 +5208,16 @@ button:focus-visible,
 
   .footer-brand {
     min-height: 120px;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-footer {
+    padding: 72px 32px 80px;
+  }
+
+  .footer-logo {
+    height: 40px;
   }
 }
 
@@ -5216,16 +5236,31 @@ button:focus-visible,
   font-weight: 500;
   color: var(--text-secondary);
   text-decoration: none;
-  padding: 8px 16px;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-subtle);
-  transition: all var(--duration-normal) var(--ease-spring);
+  padding: 8px 0;
+  border: none;
+  background: none;
+  position: relative;
+  transition: color var(--duration-normal) var(--ease-spring);
+}
+
+.footer-link::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.3;
+  transition: opacity var(--duration-normal) var(--ease-spring);
 }
 
 .footer-link:hover {
   color: var(--text-primary);
-  border-color: var(--border-medium);
-  background: rgba(28, 20, 16, 0.02);
+}
+
+.footer-link:hover::after {
+  opacity: 0.6;
 }
 
 .footer-link svg {
