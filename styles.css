@@ -5169,7 +5169,7 @@ button:focus-visible,
   z-index: 2;
   align-self: center;
   justify-self: center;
-  transform: translateY(8%);
+  transform: translateY(10px);
 }
 
 .footer-motto {
