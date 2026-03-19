@@ -4753,6 +4753,19 @@ button:focus-visible,
   cursor: pointer;
 }
 
+/* Inside about-flow, compensate for parent padding to match homepage spacing */
+.about-flow .subscribe-section {
+  margin-left: -8px;
+  margin-right: -8px;
+}
+
+@media (max-width: 600px) {
+  .about-flow .subscribe-section {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
 .subscribe-section-bg {
   position: absolute;
   inset: 0;
