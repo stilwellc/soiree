@@ -5143,7 +5143,7 @@ button:focus-visible,
 
 /* Footer */
 .app-footer {
-  padding: 56px 24px 64px;
+  padding: 36px 20px 40px;
   text-align: center;
   margin-top: auto;
   border-top: none;
@@ -5151,19 +5151,19 @@ button:focus-visible,
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
 }
 
 .footer-brand {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 160px;
   overflow: visible;
+  width: 100%;
 }
 
 .footer-logo {
-  height: 28px;
+  height: 24px;
   width: auto;
   filter: none;
   opacity: 0.85;
@@ -5171,17 +5171,16 @@ button:focus-visible,
   z-index: 2;
   align-self: center;
   justify-self: center;
-  transform: translateY(10px);
 }
 
 .footer-motto {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(64px, 18vw, 256px);
+  font-size: 18vw;
   font-weight: 600;
   font-style: italic;
   color: rgba(28, 20, 16, 0.04);
   margin: 0;
-  letter-spacing: -3px;
+  letter-spacing: -2px;
   line-height: 1;
   grid-area: 1 / 1;
   z-index: 1;
@@ -5197,27 +5196,20 @@ button:focus-visible,
   transform: translateY(0);
 }
 
-@media (max-width: 767px) {
-  .footer-motto {
-    white-space: normal;
-    text-align: center;
-    font-size: 28vw;
-    line-height: 0.85;
-    word-spacing: 100vw;
-  }
-
-  .footer-brand {
-    min-height: 120px;
-  }
-}
-
 @media (min-width: 768px) {
   .app-footer {
     padding: 72px 32px 80px;
+    gap: 24px;
   }
 
   .footer-logo {
     height: 40px;
+    transform: translateY(10px);
+  }
+
+  .footer-motto {
+    font-size: clamp(128px, 18vw, 256px);
+    letter-spacing: -3px;
   }
 }
 
