@@ -5153,33 +5153,34 @@ button:focus-visible,
 }
 
 .footer-brand {
+  position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+}
+
+.footer-logo {
+  height: 28px;
+  width: auto;
+  filter: none;
+  opacity: 0.85;
+  position: relative;
+  z-index: 2;
 }
 
 .footer-motto {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 28px;
+  font-size: 52px;
   font-weight: 300;
   font-style: italic;
-  color: var(--text-tertiary);
+  color: rgba(28, 20, 16, 0.06);
   margin: 0;
-  letter-spacing: -0.3px;
-  line-height: 1.2;
-}
-
-.footer-logo {
-  height: 20px;
-  width: auto;
-  filter: none;
-  opacity: 0.7;
-  transition: opacity var(--duration-normal) ease;
-}
-
-.footer-logo:hover {
-  opacity: 1;
+  letter-spacing: -1px;
+  line-height: 1;
+  position: absolute;
+  z-index: 1;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .footer-nav {
