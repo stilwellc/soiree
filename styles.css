@@ -5143,51 +5143,52 @@ button:focus-visible,
 
 /* Footer */
 .app-footer {
-  padding: 36px 20px 40px;
+  padding: 48px 24px 52px;
   text-align: center;
   margin-top: auto;
   border-top: none;
-  background: linear-gradient(to bottom, transparent, rgba(28, 20, 16, 0.015));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 0;
+}
+
+.footer-rule {
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  margin-bottom: 28px;
 }
 
 .footer-brand {
-  position: relative;
-  display: grid;
-  place-items: center;
-  overflow: visible;
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 24px;
 }
 
 .footer-logo {
-  height: 24px;
+  height: 22px;
   width: auto;
   filter: none;
-  opacity: 0.85;
-  grid-area: 1 / 1;
-  z-index: 2;
-  align-self: center;
-  justify-self: center;
+  opacity: 0.8;
+  margin-bottom: 14px;
 }
 
 .footer-motto {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 18vw;
-  font-weight: 600;
+  font-size: var(--text-lg);
+  font-weight: 300;
   font-style: italic;
-  color: rgba(28, 20, 16, 0.04);
+  color: var(--text-tertiary);
   margin: 0;
-  letter-spacing: -2px;
+  letter-spacing: 1px;
   line-height: 1;
-  grid-area: 1 / 1;
-  z-index: 1;
   white-space: nowrap;
   user-select: none;
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(8px);
   transition: opacity 0.8s ease, transform 0.8s ease;
 }
 
@@ -5199,17 +5200,37 @@ button:focus-visible,
 @media (min-width: 768px) {
   .app-footer {
     padding: 72px 32px 80px;
-    gap: 24px;
+  }
+
+  .footer-rule {
+    margin-bottom: 40px;
+  }
+
+  .footer-brand {
+    display: grid;
+    place-items: center;
+    overflow: visible;
+    width: 100%;
+    margin-bottom: 28px;
   }
 
   .footer-logo {
     height: 40px;
+    grid-area: 1 / 1;
+    z-index: 2;
+    align-self: center;
+    justify-self: center;
     transform: translateY(10px);
+    margin-bottom: 0;
   }
 
   .footer-motto {
     font-size: clamp(128px, 18vw, 256px);
+    font-weight: 600;
+    color: rgba(28, 20, 16, 0.04);
     letter-spacing: -3px;
+    grid-area: 1 / 1;
+    z-index: 1;
   }
 }
 
