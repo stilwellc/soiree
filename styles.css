@@ -5170,12 +5170,12 @@ button:focus-visible,
 
 .footer-motto {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 52px;
+  font-size: 88px;
   font-weight: 300;
   font-style: italic;
-  color: rgba(28, 20, 16, 0.06);
+  color: rgba(28, 20, 16, 0.05);
   margin: 0;
-  letter-spacing: -1px;
+  letter-spacing: -2px;
   line-height: 1;
   position: absolute;
   z-index: 1;
