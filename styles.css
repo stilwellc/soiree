@@ -5156,30 +5156,30 @@ button:focus-visible,
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+
+.footer-motto {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--text-tertiary);
+  margin: 0;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
 }
 
 .footer-logo {
-  height: 24px;
+  height: 20px;
   width: auto;
-  filter: grayscale(1);
-  opacity: 0.35;
-  transition: opacity var(--duration-normal) ease, filter var(--duration-normal) ease;
+  filter: none;
+  opacity: 0.7;
+  transition: opacity var(--duration-normal) ease;
 }
 
 .footer-logo:hover {
-  opacity: 0.6;
-  filter: grayscale(0);
-}
-
-.footer-tagline {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: var(--text-sm);
-  font-style: italic;
-  color: var(--accent);
-  opacity: 0.5;
-  margin: 0;
-  letter-spacing: 0.3px;
+  opacity: 1;
 }
 
 .footer-nav {
@@ -5217,13 +5217,6 @@ button:focus-visible,
   opacity: 1;
 }
 
-.footer-copy {
-  font-family: 'Jost', sans-serif;
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  letter-spacing: 0.3px;
-  margin: 0;
-}
 
 /* ============================================================================
    SOCIAL MEDIA VIEW — iPhone-screenshot Instagram posts
