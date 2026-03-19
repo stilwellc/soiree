@@ -5156,7 +5156,7 @@ button:focus-visible,
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 80px;
+  min-height: 160px;
   overflow: visible;
 }
 
@@ -5174,7 +5174,7 @@ button:focus-visible,
 
 .footer-motto {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(64px, 18vw, 128px);
+  font-size: clamp(64px, 18vw, 256px);
   font-weight: 600;
   font-style: italic;
   color: rgba(28, 20, 16, 0.04);
@@ -5185,6 +5185,20 @@ button:focus-visible,
   z-index: 1;
   white-space: nowrap;
   user-select: none;
+}
+
+@media (max-width: 767px) {
+  .footer-motto {
+    white-space: normal;
+    text-align: center;
+    font-size: 28vw;
+    line-height: 0.85;
+    word-spacing: 100vw;
+  }
+
+  .footer-brand {
+    min-height: 120px;
+  }
 }
 
 .footer-nav {
