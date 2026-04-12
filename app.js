@@ -306,6 +306,46 @@ const REGIONS = {
 // Data Sources deemed "Always Free" by user definition
 const FREE_SOURCES = ['NYC For Free', 'The Local Girl', 'Hoboken Girl', 'The Hoboken Girl'];
 
+// Daily/Weekly Deals by Region
+const DEALS_BY_REGION = {
+  'nyc': {
+    daily: {
+      'Monday': ['$1 oysters at Grand Banks, 4-7pm', 'Half-price wine at Dante, all day', '$5 martinis at Temple Bar'],
+      'Tuesday': ['2-for-1 tacos at Los Tacos No.1', 'Industry night at The Flower Shop', '$10 burger + beer at The Smith'],
+      'Wednesday': ['Wine Wednesday at Terroir - 50% off bottles', '$1 oysters at Maison Premiere', 'Trivia night at The Richardson'],
+      'Thursday': ['Ladies night at Le Bain', '$8 cocktails at Please Don\'t Tell', 'Half-price apps at The Mermaid Inn'],
+      'Friday': ['Happy hour at Freehold - $5 beers', '$12 margaritas at Tacombi', 'Live music at Rockwood Music Hall'],
+      'Saturday': ['Bottomless brunch at Jack\'s Wife Freda - $25', 'DJ brunch at Sunday in Brooklyn', 'Farmers market deals at Union Square'],
+      'Sunday': ['Drag brunch at Lips', 'Jazz brunch at Birdland', '$10 bloody mary bar at The Smith']
+    },
+    weekly: ['Monday: $1 oysters citywide', 'Tuesday: Taco specials', 'Wednesday: Wine night', 'Thursday: Cocktail deals', 'Weekend: Brunch specials']
+  },
+  'hoboken-jc': {
+    daily: {
+      'Monday': ['$5 burgers at Bareburger', 'Wine night at Bin 14', 'Trivia at Pilsener Haus'],
+      'Tuesday': ['Taco Tuesday at Taqueria Downtown', '2-for-1 apps at Madison Bar & Grill'],
+      'Wednesday': ['Wine Wednesday at Elysian Café', '$1 oysters at Halifax'],
+      'Thursday': ['Ladies night at The Shannon', 'Live music at Maxwell\'s Tavern'],
+      'Friday': ['Happy hour 4-7pm at Beach Haus', 'Live DJs at The Dubliner'],
+      'Saturday': ['Bottomless brunch at Café Bello', 'Farmers market at Newark Ave'],
+      'Sunday': ['Industry brunch at Dullboy', 'Football specials at Zeppelin Hall']
+    },
+    weekly: ['Monday: Burger deals', 'Tuesday: Taco Tuesday', 'Wednesday: Wine specials', 'Weekend: Brunch bottomless']
+  },
+  'philly': {
+    daily: {
+      'Monday': ['$1 oysters at Oyster House', 'Half-price wine at Tria'],
+      'Tuesday': ['Taco Tuesday at Lolita', '$5 margaritas at El Vez'],
+      'Wednesday': ['Wine Wednesday at Good Dog Bar', 'Trivia at Millcreek Tavern'],
+      'Thursday': ['$3 drafts at Monk\'s Café', 'Live music at World Café Live'],
+      'Friday': ['Happy hour at Tradesman\'s', 'Fish fry at Abyssinia'],
+      'Saturday': ['Brunch at Sabrina\'s Café', 'Reading Terminal Market deals'],
+      'Sunday': ['Drag brunch at Tabu', 'Jazz brunch at South']
+    },
+    weekly: ['Monday: Oyster deals', 'Tuesday: Taco specials', 'Wednesday: Wine night', 'Weekend: Brunch & markets']
+  }
+};
+
 // DOM Elements
 const eventsList = document.getElementById('events-list');
 const filterChips = document.querySelectorAll('.filter-chip');
@@ -1088,6 +1128,76 @@ function updateFilterCounts() {
   });
 }
 
+// Create Deals Card
+function createDealsCard(timeFilter) {
+  const regionDeals = DEALS_BY_REGION[currentRegion];
+  if (!regionDeals) return '';
+
+  const regionName = REGIONS[currentRegion]?.name || 'your area';
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+  if (timeFilter === 'today') {
+    const todayDeals = regionDeals.daily?.[today] || [];
+    if (todayDeals.length === 0) return '';
+
+    return `
+      <div class="deals-card">
+        <div class="deals-card-header">
+          <div class="deals-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/>
+            </svg>
+          </div>
+          <div class="deals-card-title-block">
+            <h3 class="deals-card-title">Today's Deals · ${today}</h3>
+            <p class="deals-card-subtitle">${regionName}</p>
+          </div>
+        </div>
+        <div class="deals-card-list">
+          ${todayDeals.map(deal => `
+            <div class="deals-card-item">
+              <div class="deals-card-dot"></div>
+              <span class="deals-card-text">${deal}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else if (timeFilter === 'week') {
+    const weeklyDeals = regionDeals.weekly || [];
+    if (weeklyDeals.length === 0) return '';
+
+    return `
+      <div class="deals-card">
+        <div class="deals-card-header">
+          <div class="deals-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/>
+            </svg>
+          </div>
+          <div class="deals-card-title-block">
+            <h3 class="deals-card-title">This Week's Deals</h3>
+            <p class="deals-card-subtitle">${regionName}</p>
+          </div>
+        </div>
+        <div class="deals-card-grid">
+          ${weeklyDeals.map(deal => {
+            const [day, offer] = deal.split(': ');
+            return `
+              <div class="deals-card-grid-item">
+                <div class="deals-card-day">${day}</div>
+                <div class="deals-card-offer">${offer}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  return '';
+}
+
 // Render Events
 function renderEvents() {
   // Show/hide art sub-filter based on current category
@@ -1169,7 +1279,12 @@ function renderEvents() {
     `;
   }
 
-  eventsList.innerHTML = paginatedEvents.map((event, index) =>
+  // Add deals card at top for today/week views
+  const dealsCard = (currentTimeFilter === 'today' || currentTimeFilter === 'week')
+    ? createDealsCard(currentTimeFilter)
+    : '';
+
+  eventsList.innerHTML = dealsCard + paginatedEvents.map((event, index) =>
     createEventCard(event, startIndex + index)
   ).join('') + paginationHTML;
 
