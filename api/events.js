@@ -63,6 +63,12 @@ module.exports = async function handler(req, res) {
       ADD COLUMN IF NOT EXISTS event_type VARCHAR(50)
     `);
 
+    // Add deals column for daily food/drink specials
+    await pool.query(`
+      ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS deals JSONB
+    `);
+
     // Get category filter
     const { category } = req.query;
 

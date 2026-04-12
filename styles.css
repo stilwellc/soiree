@@ -2068,6 +2068,13 @@ body {
   text-overflow: ellipsis;
 }
 
+.event-footer-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .event-footer-free {
   font-family: 'Jost', sans-serif;
   font-size: var(--text-xs);
@@ -2076,6 +2083,18 @@ body {
   color: #4CAF50;
   flex-shrink: 0;
   background: rgba(76, 175, 80, 0.08);
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+}
+
+.event-footer-deals {
+  font-family: 'Jost', sans-serif;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #D4AF37;
+  flex-shrink: 0;
+  background: rgba(212, 175, 55, 0.08);
   padding: 3px 10px;
   border-radius: var(--radius-sm);
 }
@@ -2643,6 +2662,68 @@ body {
   color: var(--text-secondary);
   line-height: 1.45;
   flex: 1;
+}
+
+/* ---- Daily Deals Section ---- */
+.modal-deals-section {
+  padding: 0 20px;
+  margin-top: 20px;
+}
+
+@media (min-width: 600px) {
+  .modal-deals-section {
+    padding: 0 24px;
+  }
+}
+
+.modal-deals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  background: rgba(212, 175, 55, 0.03);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+}
+
+@media (min-width: 600px) {
+  .modal-deals-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+.modal-deal-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: rgba(250, 248, 243, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) ease;
+}
+
+.modal-deal-item:hover {
+  background: rgba(250, 248, 243, 1);
+  border-color: rgba(212, 175, 55, 0.25);
+  transform: translateY(-1px);
+}
+
+.modal-deal-day {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #D4AF37;
+}
+
+.modal-deal-text {
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--text-secondary);
 }
 
 /* ---- CTA Section ---- */

@@ -1754,7 +1754,10 @@ function createEventCard(event, index) {
             </svg>
             <span>${event.location}</span>
           </div>
-          ${isFree ? '<span class="event-footer-free">Free</span>' : ''}
+          <div class="event-footer-badges">
+            ${isFree ? '<span class="event-footer-free">Free</span>' : ''}
+            ${(event.deals && Array.isArray(event.deals) && event.deals.length > 0) ? '<span class="event-footer-deals">Daily Deals</span>' : ''}
+          </div>
         </div>
       </div>
     </div>
@@ -1815,6 +1818,20 @@ function openModal(eventId) {
               </svg>
             </div>
             <span class="modal-highlight-text">${h}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>` : '';
+
+  // Build deals section (daily drink/food specials)
+  const dealsHTML = (event.deals && Array.isArray(event.deals) && event.deals.length > 0) ? `
+    <div class="modal-deals-section">
+      <span class="modal-section-label">Daily Specials</span>
+      <div class="modal-deals-grid">
+        ${event.deals.map(deal => `
+          <div class="modal-deal-item">
+            <div class="modal-deal-day">${deal.day}</div>
+            <div class="modal-deal-text">${deal.offer}</div>
           </div>
         `).join('')}
       </div>
@@ -1896,6 +1913,9 @@ function openModal(eventId) {
 
     <!-- Highlights -->
     ${highlightsHTML}
+
+    <!-- Deals -->
+    ${dealsHTML}
 
     <!-- CTA -->
     <div class="modal-cta-section">
