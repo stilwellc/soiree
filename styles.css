@@ -1903,6 +1903,42 @@ body {
   color: var(--text-secondary);
 }
 
+/* Deals Card Expand Button */
+.deals-card-expand-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 20px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: var(--radius-md);
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #D4AF37;
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.deals-card-expand-btn:hover {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.4);
+  transform: translateY(-1px);
+}
+
+.deals-expand-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--duration-normal) ease;
+}
+
+.deals-card-hidden {
+  display: contents;
+}
+
 /* ============================================================================
    EVENT CARD
    ============================================================================ */

@@ -316,9 +316,9 @@ const DEALS_BY_REGION = {
       'Thursday': ['Ladies night at Le Bain', '$8 cocktails at Please Don\'t Tell', 'Half-price apps at The Mermaid Inn'],
       'Friday': ['Happy hour at Freehold - $5 beers', '$12 margaritas at Tacombi', 'Live music at Rockwood Music Hall'],
       'Saturday': ['Bottomless brunch at Jack\'s Wife Freda - $25', 'DJ brunch at Sunday in Brooklyn', 'Farmers market deals at Union Square'],
-      'Sunday': ['Drag brunch at Lips', 'Jazz brunch at Birdland', '$10 bloody mary bar at The Smith']
+      'Sunday': ['Drag brunch at Lips', 'Jazz brunch at Birdland', '$10 bloody mary bar at The Smith', '$15 bottomless mimosas at Cafeteria', 'NFL game day specials at The Ainsworth', 'Live gospel brunch at Sylvia\'s in Harlem', 'Comedy brunch at The Stand']
     },
-    weekly: ['Monday: $1 oysters citywide', 'Tuesday: Taco specials', 'Wednesday: Wine night', 'Thursday: Cocktail deals', 'Weekend: Brunch specials']
+    weekly: ['Monday: $1 oysters citywide', 'Tuesday: Taco specials', 'Wednesday: Wine night', 'Thursday: Cocktail deals', 'Friday: Happy hours 4-7pm', 'Saturday: Brunch bottomless', 'Sunday: NFL watch parties']
   },
   'hoboken-jc': {
     daily: {
@@ -1135,13 +1135,18 @@ function createDealsCard(timeFilter) {
 
   const regionName = REGIONS[currentRegion]?.name || 'your area';
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const PREVIEW_LIMIT = 3;
 
   if (timeFilter === 'today') {
     const todayDeals = regionDeals.daily?.[today] || [];
     if (todayDeals.length === 0) return '';
 
+    const showExpanded = todayDeals.length <= PREVIEW_LIMIT;
+    const displayDeals = showExpanded ? todayDeals : todayDeals.slice(0, PREVIEW_LIMIT);
+    const hasMore = todayDeals.length > PREVIEW_LIMIT;
+
     return `
-      <div class="deals-card">
+      <div class="deals-card" id="deals-card-today" data-expanded="${showExpanded}">
         <div class="deals-card-header">
           <div class="deals-card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -1153,22 +1158,44 @@ function createDealsCard(timeFilter) {
             <p class="deals-card-subtitle">${regionName}</p>
           </div>
         </div>
-        <div class="deals-card-list">
-          ${todayDeals.map(deal => `
+        <div class="deals-card-list" id="deals-card-list-today">
+          ${displayDeals.map(deal => `
             <div class="deals-card-item">
               <div class="deals-card-dot"></div>
               <span class="deals-card-text">${deal}</span>
             </div>
           `).join('')}
+          ${hasMore ? `
+            <div class="deals-card-hidden" id="deals-card-hidden-today" style="display: none;">
+              ${todayDeals.slice(PREVIEW_LIMIT).map(deal => `
+                <div class="deals-card-item">
+                  <div class="deals-card-dot"></div>
+                  <span class="deals-card-text">${deal}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
         </div>
+        ${hasMore ? `
+          <button class="deals-card-expand-btn" onclick="toggleDealsCard('today')" aria-label="View all deals">
+            <span class="deals-expand-text">View All ${todayDeals.length} Deals</span>
+            <svg class="deals-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        ` : ''}
       </div>
     `;
   } else if (timeFilter === 'week') {
     const weeklyDeals = regionDeals.weekly || [];
     if (weeklyDeals.length === 0) return '';
 
+    const showExpanded = weeklyDeals.length <= PREVIEW_LIMIT;
+    const displayDeals = showExpanded ? weeklyDeals : weeklyDeals.slice(0, PREVIEW_LIMIT);
+    const hasMore = weeklyDeals.length > PREVIEW_LIMIT;
+
     return `
-      <div class="deals-card">
+      <div class="deals-card" id="deals-card-week" data-expanded="${showExpanded}">
         <div class="deals-card-header">
           <div class="deals-card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -1180,8 +1207,8 @@ function createDealsCard(timeFilter) {
             <p class="deals-card-subtitle">${regionName}</p>
           </div>
         </div>
-        <div class="deals-card-grid">
-          ${weeklyDeals.map(deal => {
+        <div class="deals-card-grid" id="deals-card-grid-week">
+          ${displayDeals.map(deal => {
             const [day, offer] = deal.split(': ');
             return `
               <div class="deals-card-grid-item">
@@ -1190,12 +1217,59 @@ function createDealsCard(timeFilter) {
               </div>
             `;
           }).join('')}
+          ${hasMore ? `
+            <div class="deals-card-hidden" id="deals-card-hidden-week" style="display: none;">
+              ${weeklyDeals.slice(PREVIEW_LIMIT).map(deal => {
+                const [day, offer] = deal.split(': ');
+                return `
+                  <div class="deals-card-grid-item">
+                    <div class="deals-card-day">${day}</div>
+                    <div class="deals-card-offer">${offer}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          ` : ''}
         </div>
+        ${hasMore ? `
+          <button class="deals-card-expand-btn" onclick="toggleDealsCard('week')" aria-label="View all deals">
+            <span class="deals-expand-text">View All ${weeklyDeals.length} Deals</span>
+            <svg class="deals-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        ` : ''}
       </div>
     `;
   }
 
   return '';
+}
+
+// Toggle Deals Card Expansion
+function toggleDealsCard(timeFilter) {
+  const card = document.getElementById(`deals-card-${timeFilter}`);
+  const hidden = document.getElementById(`deals-card-hidden-${timeFilter}`);
+  const btn = card.querySelector('.deals-card-expand-btn');
+  const icon = btn.querySelector('.deals-expand-icon');
+  const text = btn.querySelector('.deals-expand-text');
+
+  const isExpanded = card.dataset.expanded === 'true';
+
+  if (isExpanded) {
+    // Collapse
+    hidden.style.display = 'none';
+    card.dataset.expanded = 'false';
+    icon.style.transform = 'rotate(0deg)';
+    const totalDeals = hidden.querySelectorAll('.deals-card-item, .deals-card-grid-item').length + 3;
+    text.textContent = `View All ${totalDeals} Deals`;
+  } else {
+    // Expand
+    hidden.style.display = 'contents';
+    card.dataset.expanded = 'true';
+    icon.style.transform = 'rotate(180deg)';
+    text.textContent = 'Show Less';
+  }
 }
 
 // Render Events
