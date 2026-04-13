@@ -1134,101 +1134,87 @@ function createDealsCard(timeFilter) {
   if (!regionDeals) return '';
 
   const regionName = REGIONS[currentRegion]?.name || 'your area';
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
   const PREVIEW_LIMIT = 3;
 
   if (timeFilter === 'today') {
-    const todayDeals = regionDeals.daily?.[today] || [];
+    const todayDeals = regionDeals.daily?.[todayName] || [];
     if (todayDeals.length === 0) return '';
-
-    const showExpanded = todayDeals.length <= PREVIEW_LIMIT;
-    const displayDeals = showExpanded ? todayDeals : todayDeals.slice(0, PREVIEW_LIMIT);
     const hasMore = todayDeals.length > PREVIEW_LIMIT;
 
     return `
-      <div class="deals-card" id="deals-card-today" data-expanded="${showExpanded}">
+      <div class="deals-card" id="deals-card-today" data-expanded="${!hasMore}">
         <div class="deals-card-header">
-          <div class="deals-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/>
-            </svg>
-          </div>
-          <div class="deals-card-title-block">
-            <h3 class="deals-card-title">Today's Deals · ${today}</h3>
-            <p class="deals-card-subtitle">${regionName}</p>
-          </div>
+          <div class="deals-card-label">${regionName}</div>
+          <h3 class="deals-card-title">${todayName}'s Deals</h3>
         </div>
-        <div class="deals-card-list" id="deals-card-list-today">
-          ${displayDeals.map(deal => `
-            <div class="deals-card-item">
-              <div class="deals-card-dot"></div>
-              <span class="deals-card-text">${deal}</span>
-            </div>
-          `).join('')}
-          ${hasMore ? todayDeals.slice(PREVIEW_LIMIT).map(deal => `
-            <div class="deals-card-item deals-card-hidden-item" style="display: none;">
-              <div class="deals-card-dot"></div>
-              <span class="deals-card-text">${deal}</span>
-            </div>
-          `).join('') : ''}
+        <div class="deals-card-rule"></div>
+        <div class="deals-card-list">
+          ${todayDeals.map((deal, i) => {
+            // Split deal into venue and offer at the " at " boundary
+            const atIdx = deal.lastIndexOf(' at ');
+            const offer = atIdx > -1 ? deal.substring(0, atIdx) : deal;
+            const venue = atIdx > -1 ? deal.substring(atIdx + 4) : '';
+            return `
+              <div class="deals-card-item ${i >= PREVIEW_LIMIT ? 'deals-card-hidden-item' : ''}" ${i >= PREVIEW_LIMIT ? 'style="display:none"' : ''}>
+                <span class="deals-card-offer-text">${offer}</span>
+                ${venue ? `<span class="deals-card-venue">${venue}</span>` : ''}
+              </div>
+            `;
+          }).join('')}
         </div>
         ${hasMore ? `
-          <button class="deals-card-expand-btn" onclick="toggleDealsCard('today')" aria-label="View all deals">
-            <span class="deals-expand-text">View All ${todayDeals.length} Deals</span>
-            <svg class="deals-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+          <button class="deals-card-expand-btn" onclick="toggleDealsCard('today')">
+            <span class="deals-expand-text">${todayDeals.length - PREVIEW_LIMIT} more</span>
+            <svg class="deals-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
         ` : ''}
       </div>
     `;
   } else if (timeFilter === 'week') {
-    const weeklyDeals = regionDeals.weekly || [];
-    if (weeklyDeals.length === 0) return '';
-
-    const showExpanded = weeklyDeals.length <= PREVIEW_LIMIT;
-    const displayDeals = showExpanded ? weeklyDeals : weeklyDeals.slice(0, PREVIEW_LIMIT);
-    const hasMore = weeklyDeals.length > PREVIEW_LIMIT;
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const allDays = days.filter(d => (regionDeals.daily?.[d] || []).length > 0);
+    if (allDays.length === 0) return '';
+    const hasMore = allDays.length > PREVIEW_LIMIT;
 
     return `
-      <div class="deals-card" id="deals-card-week" data-expanded="${showExpanded}">
+      <div class="deals-card deals-card-week" id="deals-card-week" data-expanded="${!hasMore}">
         <div class="deals-card-header">
-          <div class="deals-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/>
-            </svg>
-          </div>
-          <div class="deals-card-title-block">
-            <h3 class="deals-card-title">This Week's Deals</h3>
-            <p class="deals-card-subtitle">${regionName}</p>
-          </div>
+          <div class="deals-card-label">${regionName}</div>
+          <h3 class="deals-card-title">This Week's Deals</h3>
         </div>
-        <div class="deals-card-grid" id="deals-card-grid-week">
-          ${displayDeals.map(deal => {
-            const [day, offer] = deal.split(': ');
+        <div class="deals-card-rule"></div>
+        <div class="deals-card-days">
+          ${allDays.map((day, dayIdx) => {
+            const dayDeals = regionDeals.daily[day];
             return `
-              <div class="deals-card-grid-item">
-                <div class="deals-card-day">${day}</div>
-                <div class="deals-card-offer">${offer}</div>
+              <div class="deals-day-group ${dayIdx >= PREVIEW_LIMIT ? 'deals-card-hidden-item' : ''} ${day === todayName ? 'deals-day-today' : ''}" ${dayIdx >= PREVIEW_LIMIT ? 'style="display:none"' : ''}>
+                <div class="deals-day-label">
+                  <span class="deals-day-name">${day}</span>
+                  ${day === todayName ? '<span class="deals-day-badge">Today</span>' : ''}
+                </div>
+                <div class="deals-day-items">
+                  ${dayDeals.slice(0, 3).map(deal => {
+                    const atIdx = deal.lastIndexOf(' at ');
+                    const offer = atIdx > -1 ? deal.substring(0, atIdx) : deal;
+                    const venue = atIdx > -1 ? deal.substring(atIdx + 4) : '';
+                    return `
+                      <div class="deals-day-item">
+                        <span class="deals-day-offer">${offer}</span>
+                        ${venue ? `<span class="deals-day-venue">${venue}</span>` : ''}
+                      </div>
+                    `;
+                  }).join('')}
+                  ${dayDeals.length > 3 ? `<span class="deals-day-more">+${dayDeals.length - 3} more</span>` : ''}
+                </div>
               </div>
             `;
           }).join('')}
-          ${hasMore ? weeklyDeals.slice(PREVIEW_LIMIT).map(deal => {
-            const [day, offer] = deal.split(': ');
-            return `
-              <div class="deals-card-grid-item deals-card-hidden-item" style="display: none;">
-                <div class="deals-card-day">${day}</div>
-                <div class="deals-card-offer">${offer}</div>
-              </div>
-            `;
-          }).join('') : ''}
         </div>
         ${hasMore ? `
-          <button class="deals-card-expand-btn" onclick="toggleDealsCard('week')" aria-label="View all deals">
-            <span class="deals-expand-text">View All ${weeklyDeals.length} Deals</span>
-            <svg class="deals-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+          <button class="deals-card-expand-btn" onclick="toggleDealsCard('week')">
+            <span class="deals-expand-text">${allDays.length - PREVIEW_LIMIT} more days</span>
+            <svg class="deals-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
         ` : ''}
       </div>
@@ -1245,22 +1231,18 @@ function toggleDealsCard(timeFilter) {
   const btn = card.querySelector('.deals-card-expand-btn');
   const icon = btn.querySelector('.deals-expand-icon');
   const text = btn.querySelector('.deals-expand-text');
-
   const isExpanded = card.dataset.expanded === 'true';
 
   if (isExpanded) {
-    // Collapse
     hiddenItems.forEach(item => item.style.display = 'none');
     card.dataset.expanded = 'false';
-    icon.style.transform = 'rotate(0deg)';
-    const totalDeals = hiddenItems.length + 3;
-    text.textContent = `View All ${totalDeals} Deals`;
+    icon.style.transform = '';
+    text.textContent = `${hiddenItems.length} more${timeFilter === 'week' ? ' days' : ''}`;
   } else {
-    // Expand
-    hiddenItems.forEach(item => item.style.display = timeFilter === 'week' ? 'block' : 'flex');
+    hiddenItems.forEach(item => item.style.display = '');
     card.dataset.expanded = 'true';
     icon.style.transform = 'rotate(180deg)';
-    text.textContent = 'Show Less';
+    text.textContent = 'Show less';
   }
 }
 
