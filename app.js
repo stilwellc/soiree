@@ -1165,16 +1165,12 @@ function createDealsCard(timeFilter) {
               <span class="deals-card-text">${deal}</span>
             </div>
           `).join('')}
-          ${hasMore ? `
-            <div class="deals-card-hidden" id="deals-card-hidden-today" style="display: none;">
-              ${todayDeals.slice(PREVIEW_LIMIT).map(deal => `
-                <div class="deals-card-item">
-                  <div class="deals-card-dot"></div>
-                  <span class="deals-card-text">${deal}</span>
-                </div>
-              `).join('')}
+          ${hasMore ? todayDeals.slice(PREVIEW_LIMIT).map(deal => `
+            <div class="deals-card-item deals-card-hidden-item" style="display: none;">
+              <div class="deals-card-dot"></div>
+              <span class="deals-card-text">${deal}</span>
             </div>
-          ` : ''}
+          `).join('') : ''}
         </div>
         ${hasMore ? `
           <button class="deals-card-expand-btn" onclick="toggleDealsCard('today')" aria-label="View all deals">
@@ -1217,19 +1213,15 @@ function createDealsCard(timeFilter) {
               </div>
             `;
           }).join('')}
-          ${hasMore ? `
-            <div class="deals-card-hidden" id="deals-card-hidden-week" style="display: none;">
-              ${weeklyDeals.slice(PREVIEW_LIMIT).map(deal => {
-                const [day, offer] = deal.split(': ');
-                return `
-                  <div class="deals-card-grid-item">
-                    <div class="deals-card-day">${day}</div>
-                    <div class="deals-card-offer">${offer}</div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          ` : ''}
+          ${hasMore ? weeklyDeals.slice(PREVIEW_LIMIT).map(deal => {
+            const [day, offer] = deal.split(': ');
+            return `
+              <div class="deals-card-grid-item deals-card-hidden-item" style="display: none;">
+                <div class="deals-card-day">${day}</div>
+                <div class="deals-card-offer">${offer}</div>
+              </div>
+            `;
+          }).join('') : ''}
         </div>
         ${hasMore ? `
           <button class="deals-card-expand-btn" onclick="toggleDealsCard('week')" aria-label="View all deals">
@@ -1249,7 +1241,7 @@ function createDealsCard(timeFilter) {
 // Toggle Deals Card Expansion
 function toggleDealsCard(timeFilter) {
   const card = document.getElementById(`deals-card-${timeFilter}`);
-  const hidden = document.getElementById(`deals-card-hidden-${timeFilter}`);
+  const hiddenItems = card.querySelectorAll('.deals-card-hidden-item');
   const btn = card.querySelector('.deals-card-expand-btn');
   const icon = btn.querySelector('.deals-expand-icon');
   const text = btn.querySelector('.deals-expand-text');
@@ -1258,14 +1250,14 @@ function toggleDealsCard(timeFilter) {
 
   if (isExpanded) {
     // Collapse
-    hidden.style.display = 'none';
+    hiddenItems.forEach(item => item.style.display = 'none');
     card.dataset.expanded = 'false';
     icon.style.transform = 'rotate(0deg)';
-    const totalDeals = hidden.querySelectorAll('.deals-card-item, .deals-card-grid-item').length + 3;
+    const totalDeals = hiddenItems.length + 3;
     text.textContent = `View All ${totalDeals} Deals`;
   } else {
     // Expand
-    hidden.style.display = 'contents';
+    hiddenItems.forEach(item => item.style.display = timeFilter === 'week' ? 'block' : 'flex');
     card.dataset.expanded = 'true';
     icon.style.transform = 'rotate(180deg)';
     text.textContent = 'Show Less';
