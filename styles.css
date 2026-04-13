@@ -1755,9 +1755,26 @@ body {
   background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.03) 100%);
   border: 1.5px solid rgba(212, 175, 55, 0.2);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 24px;
   margin-bottom: 20px;
+  margin-left: -12px;
+  margin-right: -12px;
   box-shadow: 0 2px 8px rgba(212, 175, 55, 0.06);
+}
+
+@media (min-width: 600px) {
+  .deals-card {
+    padding: 28px;
+    margin-left: -20px;
+    margin-right: -20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .deals-card {
+    margin-left: -32px;
+    margin-right: -32px;
+  }
 }
 
 .deals-card-header {
