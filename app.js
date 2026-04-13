@@ -322,15 +322,15 @@ const DEALS_BY_REGION = {
   },
   'hoboken-jc': {
     daily: {
-      'Monday': ['$5 burgers at Bareburger', 'Wine night at Bin 14', 'Trivia at Pilsener Haus'],
-      'Tuesday': ['Taco Tuesday at Taqueria Downtown', '2-for-1 apps at Madison Bar & Grill'],
-      'Wednesday': ['Wine Wednesday at Elysian Café', '$1 oysters at Halifax'],
-      'Thursday': ['Ladies night at The Shannon', 'Live music at Maxwell\'s Tavern'],
-      'Friday': ['Happy hour 4-7pm at Beach Haus', 'Live DJs at The Dubliner'],
-      'Saturday': ['Bottomless brunch at Café Bello', 'Farmers market at Newark Ave'],
-      'Sunday': ['Industry brunch at Dullboy', 'Football specials at Zeppelin Hall']
+      'Monday': ['Unlimited wings $25 at Madd Hatter', '$15 unlimited wings at 10th & Willow', 'Happy hour all night at The Shannon - $3/$4/$5 drinks', '$1.50 oysters 4-6pm at Antique Bar + Bakery', '$21.95 Prime Rib at Court Street'],
+      'Tuesday': ['Half-price tacos + $7 margaritas at Texas Arizona', '$1 beers til 8pm at Green Rock', '$2 Miller Lite/$3 Yuengling at The Shannon', 'Unlimited tacos $24.99 at Madd Hatter', 'Taco specials at Willie McBrides'],
+      'Wednesday': ['Half-price wine + martinis at The Shannon', '$1 beers + $5 bar pies at Green Rock', '$6 wings at Hoboken Bar & Grill', '$8 select wines at Onieal\'s', 'Trivia + $5 wine at The Shepherd & Knucklehead'],
+      'Thursday': ['$1 beers til 8pm + half-price drinks at Green Rock', 'Power Hour 8-10pm at The Shannon - $5 u-call-it', 'Half-off High Noons at Madd Hatter', '$5 margaritas at House of Que', '$5 margaritas at Black Bear'],
+      'Friday': ['$1 beers til 10pm at Green Rock', 'Power Hour 8-10pm at The Shannon - $5 u-call-it', 'Half-price wings 4-10pm at Urban Coalhouse', 'Late night HH 9pm-2am at The Lola - $10 cocktails', 'Late night HH 10pm-12am at Sirenetta'],
+      'Saturday': ['Power Hour 8-10pm at The Shannon - $5 u-call-it', '$1 wings + $5 pints at Green Rock', '$45 bottomless mimosas at Ainsworth', '$46 champagne brunch at Halifax', 'Late night HH 9pm-2am at The Lola'],
+      'Sunday': ['$1 wings + $5 pints at Green Rock', 'Jazz brunch at Madison Bar & Grill', 'Bottomless brunch at Birch - mimosas start at $1', 'Weekend brunch at Madd Hatter', '$5 morning cocktails at Wicked Wolf']
     },
-    weekly: ['Monday: Burger deals', 'Tuesday: Taco Tuesday', 'Wednesday: Wine specials', 'Weekend: Brunch bottomless']
+    weekly: ['Monday: Wing nights', 'Tuesday: Taco Tuesday + $1 beers', 'Wednesday: Wine specials', 'Thursday: Power hours 8-10pm', 'Weekend: Bottomless brunch deals']
   },
   'philly': {
     daily: {
