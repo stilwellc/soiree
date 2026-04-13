@@ -322,15 +322,15 @@ const DEALS_BY_REGION = {
   },
   'hoboken-jc': {
     daily: {
-      'Monday': ['Unlimited wings $25 at Madd Hatter', '$15 unlimited wings at 10th & Willow', 'Happy hour all night at The Shannon - $3/$4/$5 drinks', '$1.50 oysters 4-6pm at Antique Bar + Bakery', '$21.95 Prime Rib at Court Street'],
-      'Tuesday': ['Half-price tacos + $7 margaritas at Texas Arizona', '$1 beers til 8pm at Green Rock', '$2 Miller Lite/$3 Yuengling at The Shannon', 'Unlimited tacos $24.99 at Madd Hatter', 'Taco specials at Willie McBrides'],
-      'Wednesday': ['Half-price wine + martinis at The Shannon', '$1 beers + $5 bar pies at Green Rock', '$6 wings at Hoboken Bar & Grill', '$8 select wines at Onieal\'s', 'Trivia + $5 wine at The Shepherd & Knucklehead'],
-      'Thursday': ['$1 beers til 8pm + half-price drinks at Green Rock', 'Power Hour 8-10pm at The Shannon - $5 u-call-it', 'Half-off High Noons at Madd Hatter', '$5 margaritas at House of Que', '$5 margaritas at Black Bear'],
-      'Friday': ['$1 beers til 10pm at Green Rock', 'Power Hour 8-10pm at The Shannon - $5 u-call-it', 'Half-price wings 4-10pm at Urban Coalhouse', 'Late night HH 9pm-2am at The Lola - $10 cocktails', 'Late night HH 10pm-12am at Sirenetta'],
-      'Saturday': ['Power Hour 8-10pm at The Shannon - $5 u-call-it', '$1 wings + $5 pints at Green Rock', '$45 bottomless mimosas at Ainsworth', '$46 champagne brunch at Halifax', 'Late night HH 9pm-2am at The Lola'],
-      'Sunday': ['$1 wings + $5 pints at Green Rock', 'Jazz brunch at Madison Bar & Grill', 'Bottomless brunch at Birch - mimosas start at $1', 'Weekend brunch at Madd Hatter', '$5 morning cocktails at Wicked Wolf']
+      'Monday': ['$25 unlimited wings at Madd Hatter', '$15 unlimited wings at 10th & Willow', '$1 wings at Texas Arizona', 'Happy hour all day at 8th St. Tavern - $5 High Lifes, $2 off Big Beers', '$1.50 oysters 4-6pm at Antique Bar + Bakery', '$1.50 oysters at Halifax', 'Power hour 4-7pm at Onieal\'s', '$2 off all drinks at Louise & Jerry\'s', '$21.95 Prime Rib at Court Street', 'Aperitivo 4-6pm at Sorellina', 'HH 5-8pm at Texas Arizona - $5 drafts/house drinks'],
+      'Tuesday': ['$1 Taco Tuesday at Texas Arizona', '$15 unlimited wings at Black Bear', 'Half-price tacos all night at Green Rock', '$7.99 unlimited boneless wings at McSwiggan\'s', '$3 green tea shots at Mike\'s Wild Moose', '$2 Miller Lite/$3 Yuengling at The Shannon', 'Taco Tuesday at Madd Hatter', 'Souper Tuesday Trivia 8pm at 8th St. Tavern', 'Happy hour all night at Sirenetta - half-price raw bar', '$20 pitchers at Louise & Jerry\'s', 'Trivia 7:30pm at Farside, The Ale House, McSwiggans, Schmitty\'s', 'HH 5-8pm at Texas Arizona'],
+      'Wednesday': ['99¢ wings at 8th St. Tavern', 'Half-price Aperol + margaritas at 8th St. Tavern', '$1 beers + $5 bar pies at Green Rock', '$6 wings at Hoboken Bar & Grill', '50% off wings at Hoboken Biergarten', 'Half-price wine + martinis at The Shannon', '$8 select wines at Onieal\'s', 'Trivia 8pm at The Shepherd & Knucklehead - $5 beer/wine', 'Trivia 8pm at Black Bear + Willie McBrides', 'Half-price wine at Bin 14', 'Half-price wine at La Isla'],
+      'Thursday': ['99¢ wings at 8th St. Tavern', '$1 beers til 8pm at Green Rock', 'Half-off High Noons + house drinks at Madd Hatter', 'Half-price frozen margaritas at House of Que', '$5 margaritas at Black Bear', 'Power Hour 8-10pm at The Shannon - $5 u-call-it', 'Tacos + Tequila at Black Bear - $9 tacos, $6 Modelos', '50% off wings at Farside + Psycho Mike\'s', 'HH 5-8pm at Texas Arizona - $5 drafts'],
+      'Friday': ['$1 beers til 10pm at Green Rock', '$3 domestic drafts noon-7pm at Urban Coalhouse', 'Power Hour 8-10pm at The Shannon', 'Late night HH 9pm-2am at The Lola - $10 cocktails', 'Late night HH 10pm-12am at Sirenetta - $10 cocktails, $8 mules/wine', 'Half-price beer + cocktails 4-7pm at The Ferryman, 10th & Willow, The Shepherd', '$5 High Lifes noon-7pm at 8th St. Tavern', '4-7pm HH at Belo, House of Que, River Street Garage, Sorellina, Sirenetta'],
+      'Saturday': ['Power Hour 8-10pm at The Shannon', '$1 wings + $5 pints at Green Rock', '$49 bottomless champagne at Halifax', '$35 bottomless at Halifax for 2hrs', '$29 brunch at Bin 14 - includes zeppoles + drink', '$45 brunch at The Lola', '$10 bottomless mimosas at Willie McBride\'s', 'Bottomless brunch at Farside, Coco Havana', '$15 tequila buckets + $10 mimosa buckets at Fat Taco', 'Late night HH 9pm-2am at The Lola'],
+      'Sunday': ['$1 wings + $5 pints at Green Rock', '$49 bottomless champagne at Halifax', '$29 brunch at Bin 14', '$45 brunch at The Lola', '2-for-1 brunch cocktails at Dear Maud', 'Half-price oysters + sparkling at Stingray', '$5 morning cocktails at Wicked Wolf', '$4 mimosas at The Ferryman', '$10 spritzes at Grand Vin', '$6 mimosas + bloody marys at Orale', 'Jazz brunch at Madison Bar & Grill', '$3 green tea shots at Mike\'s Wild Moose', 'HH 5-8pm at Texas Arizona']
     },
-    weekly: ['Monday: Wing nights', 'Tuesday: Taco Tuesday + $1 beers', 'Wednesday: Wine specials', 'Thursday: Power hours 8-10pm', 'Weekend: Bottomless brunch deals']
+    weekly: ['Monday: Wing nights + oyster specials', 'Tuesday: Taco Tuesday + trivia nights', 'Wednesday: Wine specials + trivia', 'Thursday: Power hours + wing nights', 'Weekend: Bottomless brunch citywide']
   },
   'philly': {
     daily: {
@@ -1276,8 +1276,13 @@ function renderEvents() {
     return matchesFilter && matchesSearch && matchesTime && matchesRegion && matchesFree && matchesArtType;
   });
 
+  // Add deals card at top for today/week views (even if no events)
+  const dealsCard = (currentTimeFilter === 'today' || currentTimeFilter === 'week')
+    ? createDealsCard(currentTimeFilter)
+    : '';
+
   if (filteredEvents.length === 0) {
-    eventsList.innerHTML = `
+    eventsList.innerHTML = dealsCard + `
       <div class="empty-state">
         <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
         <div class="empty-state-title">No events found</div>
@@ -1313,11 +1318,6 @@ function renderEvents() {
       </div>
     `;
   }
-
-  // Add deals card at top for today/week views
-  const dealsCard = (currentTimeFilter === 'today' || currentTimeFilter === 'week')
-    ? createDealsCard(currentTimeFilter)
-    : '';
 
   eventsList.innerHTML = dealsCard + paginatedEvents.map((event, index) =>
     createEventCard(event, startIndex + index)
