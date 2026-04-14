@@ -1189,7 +1189,7 @@ function createDealsCard(timeFilter) {
             <span>${day}</span>
             ${isToday ? '<span class="deals-exp-today-badge">Today</span>' : ''}
           </div>
-          ${items}
+          <div class="deals-exp-list">${items}</div>
         </div>
       `;
     }).join('');
