@@ -587,8 +587,19 @@ async function scrapeNYCForFree() {
       if (event) events.push(event);
     });
 
-    console.log(`Scraped ${events.length} events from nycforfree.co`);
-    return events;
+    // Sample evenly across categories (max 12 per category for balance)
+    const byCat = {};
+    for (const e of events) {
+      if (!byCat[e.category]) byCat[e.category] = [];
+      byCat[e.category].push(e);
+    }
+    const sampled = [];
+    for (const cat in byCat) {
+      sampled.push(...byCat[cat].slice(0, 12));
+    }
+
+    console.log(`Scraped ${events.length} events from nycforfree.co, sampled ${sampled.length} (max 12 per category)`);
+    return sampled;
   } catch (error) {
     console.error('NYC For Free scraping failed:', error.message);
     return [];
@@ -1006,11 +1017,88 @@ async function scrapeTheLocalGirl() {
       if (event) events.push(event);
     });
 
-    console.log(`Scraped ${events.length} events from The Local Girl`);
-    return events;
+    // Sample evenly across categories (max 5 per category for balance)
+    const byCat = {};
+    for (const e of events) {
+      if (!byCat[e.category]) byCat[e.category] = [];
+      byCat[e.category].push(e);
+    }
+    const sampled = [];
+    for (const cat in byCat) {
+      sampled.push(...byCat[cat].slice(0, 5));
+    }
+
+    console.log(`Scraped ${events.length} events from The Local Girl, sampled ${sampled.length} (max 5 per category)`);
+    return sampled;
 
   } catch (error) {
     console.error('The Local Girl scraping failed:', error.message);
+    return [];
+  }
+}
+
+// Scrape Thrillist for perks and culinary events (happy hours, deals, new openings)
+async function scrapeThrillist() {
+  try {
+    console.log('Fetching events from Thrillist...');
+    const events = [];
+
+    // Try NYC food/drink guides
+    const urls = [
+      'https://www.thrillist.com/eat/new-york',
+      'https://www.thrillist.com/drink/new-york'
+    ];
+
+    for (const url of urls) {
+      try {
+        const response = await axios.get(url, {
+          timeout: 8000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+          }
+        });
+
+        const $ = cheerio.load(response.data);
+
+        // Look for happy hour / deal articles
+        $('a[href*="happy-hour"], a[href*="deals"], a[href*="specials"], a[href*="cheap"]').slice(0, 3).each((_, el) => {
+          const $a = $(el);
+          const title = $a.text().trim() || $a.find('h2, h3, h4').first().text().trim();
+          const href = $a.attr('href');
+
+          if (!title || !href || title.length < 10) return;
+
+          const fullUrl = href.startsWith('http') ? href : `https://www.thrillist.com${href}`;
+          const category = url.includes('/drink/') ? 'perks' : 'culinary';
+
+          events.push(createNormalizedEvent({
+            name: title,
+            category,
+            date: 'Ongoing',
+            time: 'See details',
+            start_date: new Date(),
+            end_date: null,
+            location: 'New York',
+            address: 'Various locations',
+            price: 'Varies',
+            spots: 50,
+            image: getEventImage(title, category),
+            description: `${category === 'perks' ? 'Drink deals and happy hours' : 'Food specials'} around NYC`,
+            highlights: generateHighlights(title, `${category === 'perks' ? 'Drink deals and happy hours' : 'Food specials'} around NYC`, category, 'New York', 'Thrillist'),
+            url: fullUrl,
+            source: 'Thrillist'
+          }));
+        });
+      } catch (err) {
+        console.log(`Thrillist ${url} failed:`, err.message);
+      }
+    }
+
+    console.log(`Scraped ${events.length} events from Thrillist`);
+    return events.slice(0, 8); // Limit to 8 total
+
+  } catch (error) {
+    console.error('Thrillist scraping failed:', error.message);
     return [];
   }
 }
@@ -1114,7 +1202,7 @@ async function scrapeGagosian() {
     const $ = cheerio.load(res.data);
     const events = [], seen = new Set();
     $('a[href*="/exhibitions/20"]').each((_, el) => {
-      if (events.length >= 10) return false;
+      if (events.length >= 2) return false;
       const href = $(el).attr('href');
       if (!href || seen.has(href)) return;
       seen.add(href);
@@ -1142,7 +1230,7 @@ async function scrapePaceGallery() {
     const $ = cheerio.load(res.data);
     const events = [], seen = new Set();
     $('li[class*="index-grid__list-item"]').each((_, el) => {
-      if (events.length >= 10) return false;
+      if (events.length >= 2) return false;
       const $e = $(el);
       const href = $e.find('a').first().attr('href');
       if (!href) return;
@@ -1176,7 +1264,7 @@ async function scrapeDavidZwirner() {
         const raw = JSON.parse($(el).html() || '{}');
         const items = Array.isArray(raw) ? raw : (raw['@graph'] ? raw['@graph'] : [raw]);
         for (const item of items) {
-          if (events.length >= 10) break;
+          if (events.length >= 2) break;
           if (item['@type'] !== 'ExhibitionEvent') continue;
           const name = (item.name || '').trim();
           if (!name || name.length < 5) continue;
@@ -1205,7 +1293,7 @@ async function scrapeLehmannMaupin() {
     const $ = cheerio.load(res.data);
     const events = [], seen = new Set();
     $('div.entry, div[class*="entry"]').each((_, el) => {
-      if (events.length >= 10) return false;
+      if (events.length >= 2) return false;
       const $e = $(el);
       const href = $e.find('a').first().attr('href');
       if (!href) return;
@@ -1235,7 +1323,7 @@ async function scrapeLissonGallery() {
     const $ = cheerio.load(res.data);
     const events = [], seen = new Set();
     $('a.link-discreet[href*="/exhibitions/"]').each((_, el) => {
-      if (events.length >= 10) return false;
+      if (events.length >= 2) return false;
       const href = $(el).attr('href');
       if (!href || seen.has(href)) return;
       seen.add(href);
@@ -1269,7 +1357,7 @@ async function scrapeMarianGoodman() {
     const $ = cheerio.load(res.data);
     const events = [], seen = new Set();
     $('div.area').each((_, el) => {
-      if (events.length >= 10) return false;
+      if (events.length >= 2) return false;
       const $e = $(el);
       const href = $e.find('a').first().attr('href');
       if (!href) return;
@@ -1303,7 +1391,7 @@ async function scrapeGladstoneGallery() {
       if ($items.length > 3) break;
     }
     $items.each((_, el) => {
-      if (events.length >= 10) return false;
+      if (events.length >= 2) return false;
       const $e = $(el);
       const title = $e.find('h1,h2,h3,h4,[class*="title"]').first().text().trim().replace(/\s+/g, ' ');
       if (!title || title.length < 10) return;
@@ -1376,7 +1464,7 @@ async function scrapeGenericGallery(config) {
         const raw = JSON.parse($(el).html() || '{}');
         const items = Array.isArray(raw) ? raw : (raw['@graph'] ? raw['@graph'] : [raw]);
         for (const item of items) {
-          if (events.length >= 10) break;
+          if (events.length >= 2) break;
           if (!item['@type'] || !/(Exhibition|Event|VisualArts)/i.test(item['@type'])) continue;
           const name = (item.name || '').trim();
           if (!name || name.length < 5) continue;
@@ -1424,7 +1512,7 @@ async function scrapeGenericGallery(config) {
 
     if ($links.length >= 2) {
       $links.each((_, el) => {
-        if (events.length >= 10) return false;
+        if (events.length >= 2) return false;
         const $a = $(el);
         const href = $a.attr('href');
         if (!href) return;
@@ -1463,25 +1551,27 @@ async function scrapeGenericGallery(config) {
           }
         }
 
-        // Extract title — prefer link text, then heading elements
-        let title = $a.text().trim().replace(/\s+/g, ' ');
+        // Extract title — prefer heading elements inside link/container, then link text
+        const $titleEl = $ctx.find('h1,h2,h3,h4,[class*="title"],[class*="name"],[class*="artist"]').first();
+        let title = ($titleEl.length ? $titleEl.text() : '').trim().replace(/\s+/g, ' ');
         if (!title || title.length < 5) {
-          const $titleEl = $ctx.find('h1,h2,h3,h4,[class*="title"],[class*="name"],[class*="artist"]').first();
-          title = ($titleEl.length ? $titleEl.text() : '').trim().replace(/\s+/g, ' ');
+          title = $a.text().trim().replace(/\s+/g, ' ');
         }
 
         // If still no title, use the container text minus the date
         if (!title || title.length < 5) {
           title = containerText;
           if (rawDate) title = title.replace(rawDate, '').trim();
-          // Remove trailing location text
-          title = title.replace(/\s*(New York|NYC|Los Angeles|LA|London|Paris|Hong Kong|Berlin|Seoul|Tokyo).*$/i, '').trim();
         }
 
         if (!title || title.length < 5) return;
         // Strip date patterns from titles (e.g., when date is embedded in link text)
         if (rawDate) title = title.replace(rawDate, '').trim();
         title = title.replace(/^\d{2}\.\d{2}[–—\-]\d{2}\.\d{2}\.\d{4}\s*/g, '').trim();
+        // Strip trailing street addresses and city names (from links wrapping entire cards)
+        title = title.replace(/\d{3,5}\s+[A-Z][\w\s]+(?:Street|Avenue|Boulevard|Road|Drive|Lane|Way|Place|Court|St|Ave|Blvd|Rd|Ln|Pl)\b.*$/i, '').trim();
+        title = title.replace(/(?:New York|NYC|Los Angeles|London|Paris|Hong Kong|Berlin|Seoul|Tokyo)\b.*$/i, '').trim();
+        title = title.replace(/[\s,;.—–\-]+$/, '').trim();
         // Truncate overly long titles (got the whole container text)
         if (title.length > 120) title = title.substring(0, 120).trim();
 
@@ -1502,7 +1592,7 @@ async function scrapeGenericGallery(config) {
     }
 
     $items.each((_, el) => {
-      if (events.length >= 10) return false;
+      if (events.length >= 2) return false;
       const $e = $(el);
       const title = $e.find('h1,h2,h3,h4,[class*="title"],[class*="name"],[class*="artist"]').first().text().trim().replace(/\s+/g, ' ');
       if (!title || title.length < 5) return;
@@ -1648,7 +1738,8 @@ async function scrapeByGroup(group) {
       guggenheimEvents,
       amnhEvents,
       newMuseumEvents,
-      localGirlEvents
+      localGirlEvents,
+      thrillistEvents
     ] = await Promise.all([
       scrapeTimeOut(),
       scrapeNYCForFree(),
@@ -1657,7 +1748,8 @@ async function scrapeByGroup(group) {
       scrapeGuggenheim(),
       scrapeAMNH(),
       scrapeNewMuseum(),
-      scrapeTheLocalGirl()
+      scrapeTheLocalGirl(),
+      scrapeThrillist()
     ]);
 
     const merged = [
@@ -1668,6 +1760,7 @@ async function scrapeByGroup(group) {
       ...guggenheimEvents,
       ...amnhEvents,
       ...newMuseumEvents,
+      ...thrillistEvents,
       ...localGirlEvents
     ];
 

@@ -10,6 +10,31 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// Balance events across categories to prevent any single category from dominating
+// Max events per category for weekly posts (prevents art galleries from flooding)
+function balanceEventsByCategory(events, maxPerCategory = 8) {
+  const byCat = {};
+  for (const e of events) {
+    if (!byCat[e.category]) byCat[e.category] = [];
+    byCat[e.category].push(e);
+  }
+
+  const balanced = [];
+  for (const cat in byCat) {
+    // Take up to maxPerCategory events from each category
+    // Prioritize events with images and earlier dates
+    const sorted = byCat[cat].sort((a, b) => {
+      const aHasImg = a.image && !a.image.includes('placeholder');
+      const bHasImg = b.image && !b.image.includes('placeholder');
+      if (aHasImg !== bHasImg) return bHasImg ? 1 : -1;
+      return new Date(a.start_date) - new Date(b.start_date);
+    });
+    balanced.push(...sorted.slice(0, maxPerCategory));
+  }
+
+  return balanced;
+}
+
 // Category config: DB category value → display name + card order
 const CATEGORIES = [
   { dbCategory: 'art', displayName: 'Art' },
@@ -23,11 +48,11 @@ function getEventRegion(event) {
   const loc = (event.location || '').toLowerCase();
   const addr = (event.address || '').toLowerCase();
   if (loc.includes('hoboken') || loc.includes('jersey city') ||
-      addr.includes('hoboken') || addr.includes('jersey city')) return 'hoboken-jc';
+    addr.includes('hoboken') || addr.includes('jersey city')) return 'hoboken-jc';
   // Skip broader NJ events — they don't belong in either region post
   const source = (event.source || '').toLowerCase();
   if (source.includes('visit nj') || loc.includes(', nj') || addr.includes(', nj') ||
-      addr.includes('new jersey')) return 'nj-other';
+    addr.includes('new jersey')) return 'nj-other';
   return 'nyc';
 }
 
@@ -180,11 +205,15 @@ async function handleWeekendRoundup(req, res, isDryRun) {
     [friStr, sunStr]
   );
 
-  console.log(`Found ${allEvents.length} weekend events`);
+  console.log(`Found ${allEvents.length} weekend events (before balancing)`);
 
   if (allEvents.length === 0) {
     return res.status(200).json({ success: true, skipped: true, reason: 'No weekend events' });
   }
+
+  // Balance weekend events across categories (max 12 per category for weekend)
+  const balancedEvents = balanceEventsByCategory(allEvents, 12);
+  console.log(`Balanced to ${balancedEvents.length} weekend events (max 12 per category)`);
 
   const token = (process.env.INSTAGRAM_ACCESS_TOKEN || '').trim();
   const igUserId = (process.env.INSTAGRAM_USER_ID || '').trim();
@@ -197,8 +226,8 @@ async function handleWeekendRoundup(req, res, isDryRun) {
   const runId = Date.now();
 
   // Split events by region
-  const nycEvents = allEvents.filter(e => getEventRegion(e) === 'nyc');
-  const hjcEvents = allEvents.filter(e => getEventRegion(e) === 'hoboken-jc');
+  const nycEvents = balancedEvents.filter(e => getEventRegion(e) === 'nyc');
+  const hjcEvents = balancedEvents.filter(e => getEventRegion(e) === 'hoboken-jc');
 
   // Helper to filter by day
   const byDay = (events, dayStr) => events.filter(e => {
@@ -289,7 +318,7 @@ async function handleWeekendRoundup(req, res, isDryRun) {
   await pool.query(
     `INSERT INTO activity_log (type, event_count, detail) VALUES ('instagram', $1, $2)`,
     [totalEvents, 'Weekend Roundup']
-  ).catch(() => {});
+  ).catch(() => { });
 
   return res.status(200).json({
     success: true,
@@ -307,9 +336,11 @@ function buildCaption(categoryEvents, weekLabel, regionId, regionLabel) {
   const sections = [];
 
   const sectionEmojis = {
+    'Art': '\ud83c\udfa8',
     'Art & Culture': '\ud83c\udfa8',
     'Perks & Pop-Ups': '\ud83c\udf81',
     'Food & Drink': '\ud83c\udf7d\ufe0f',
+    'Culture & Community': '\ud83c\udf1f',
     'Jersey City': '\ud83c\udfd9\ufe0f',
     'Hoboken': '\ud83c\udf09',
   };
@@ -428,7 +459,7 @@ module.exports = async function handler(req, res) {
     // 4. Process each region
     for (const region of REGIONS) {
       const regionEvents = allEvents.filter(e => getEventRegion(e) === region.id);
-      console.log(`\n--- ${region.label}: ${regionEvents.length} events ---`);
+      console.log(`\n--- ${region.label}: ${regionEvents.length} events (before balancing) ---`);
 
       if (regionEvents.length === 0) {
         console.log(`No events for ${region.label} — skipping`);
@@ -436,7 +467,11 @@ module.exports = async function handler(req, res) {
         continue;
       }
 
-      const totalRegionEvents = regionEvents.length;
+      // Balance events across categories (max 8 per category for weekly posts)
+      const balancedEvents = balanceEventsByCategory(regionEvents, 8);
+      console.log(`Balanced to ${balancedEvents.length} events (max 8 per category)`);
+
+      const totalRegionEvents = balancedEvents.length;
 
       // JC/Hoboken: split by city instead of category
       // NYC: split by category as before
@@ -444,12 +479,12 @@ module.exports = async function handler(req, res) {
       if (region.id === 'hoboken-jc') {
         cardGroups = CITIES.map(({ id, displayName }) => ({
           displayName,
-          events: regionEvents.filter(e => getCity(e) === id),
+          events: balancedEvents.filter(e => getCity(e) === id),
         }));
       } else {
         cardGroups = CATEGORIES.map(({ dbCategory, displayName }) => ({
           displayName,
-          events: regionEvents.filter(e => e.category === dbCategory),
+          events: balancedEvents.filter(e => e.category === dbCategory),
         }));
       }
 
@@ -513,7 +548,7 @@ module.exports = async function handler(req, res) {
       await pool.query(
         `INSERT INTO activity_log (type, event_count, detail) VALUES ('instagram', $1, $2)`,
         [totalRegionEvents, region.label]
-      ).catch(() => {});
+      ).catch(() => { });
 
       results.push({
         region: region.label,
