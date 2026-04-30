@@ -10,6 +10,18 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// Instagram blocks vercel-storage.com — proxy images through our app domain
+const BLOB_PREFIX = 'https://agrytkqwch00wvxr.public.blob.vercel-storage.com/';
+const APP_DOMAIN = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : 'https://soiree-gules.vercel.app';
+
+function proxyUrl(blobUrl) {
+  if (!blobUrl.startsWith(BLOB_PREFIX)) return blobUrl;
+  const path = blobUrl.slice(BLOB_PREFIX.length);
+  return `${APP_DOMAIN}/api/img?path=${encodeURIComponent(path)}`;
+}
+
 // Balance events across categories to prevent any single category from dominating
 // Max events per category for weekly posts (prevents art galleries from flooding)
 function balanceEventsByCategory(events, maxPerCategory = 8) {
@@ -277,7 +289,7 @@ async function handleWeekendRoundup(req, res, isDryRun) {
     { access: 'public', contentType: 'image/png', addRandomSuffix: false, allowOverwrite: true }
   );
   console.log(`  Cover: ${coverBlob.url}`);
-  imageUrls.push(coverBlob.url);
+  imageUrls.push(proxyUrl(coverBlob.url));
 
   // Slides 2-6: generated cards
   for (let i = 0; i < cards.length; i++) {
@@ -288,7 +300,7 @@ async function handleWeekendRoundup(req, res, isDryRun) {
       { access: 'public', contentType: 'image/png', addRandomSuffix: false }
     );
     console.log(`  ${slides[i].displayName}: ${blob.url}`);
-    imageUrls.push(blob.url);
+    imageUrls.push(proxyUrl(blob.url));
   }
 
   // Build caption
@@ -509,7 +521,7 @@ module.exports = async function handler(req, res) {
           { access: 'public', contentType: 'image/png', addRandomSuffix: false, allowOverwrite: true }
         );
         console.log(`  Cover: ${coverBlob.url}`);
-        imageUrls.push(coverBlob.url);
+        imageUrls.push(proxyUrl(coverBlob.url));
       }
 
       // Upload generated cards
@@ -521,7 +533,7 @@ module.exports = async function handler(req, res) {
           { access: 'public', contentType: 'image/png', addRandomSuffix: false }
         );
         console.log(`  ${cardGroups[i].displayName}: ${blob.url}`);
-        imageUrls.push(blob.url);
+        imageUrls.push(proxyUrl(blob.url));
       }
 
       // Build caption
