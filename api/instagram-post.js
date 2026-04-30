@@ -10,16 +10,21 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Instagram blocks vercel-storage.com — proxy images through our app domain
-const BLOB_PREFIX = 'https://agrytkqwch00wvxr.public.blob.vercel-storage.com/';
-const APP_DOMAIN = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : 'https://soiree-gules.vercel.app';
+// Instagram blocks vercel-storage.com — re-upload images to freeimage.host
+const axios = require('axios');
 
-function proxyUrl(blobUrl) {
-  if (!blobUrl.startsWith(BLOB_PREFIX)) return blobUrl;
-  const path = blobUrl.slice(BLOB_PREFIX.length);
-  return `${APP_DOMAIN}/api/img?path=${encodeURIComponent(path)}`;
+async function uploadForInstagram(imageBuffer) {
+  const base64 = imageBuffer.toString('base64');
+  const formData = new URLSearchParams();
+  formData.append('source', base64);
+  formData.append('type', 'base64');
+  formData.append('action', 'upload');
+  const { data } = await axios.post(
+    'https://freeimage.host/api/1/upload?key=6d207e02198a847aa98d0a2a901485a5',
+    formData.toString(),
+    { timeout: 30000 }
+  );
+  return data.image.url;
 }
 
 // Balance events across categories to prevent any single category from dominating
@@ -289,7 +294,9 @@ async function handleWeekendRoundup(req, res, isDryRun) {
     { access: 'public', contentType: 'image/png', addRandomSuffix: false, allowOverwrite: true }
   );
   console.log(`  Cover: ${coverBlob.url}`);
-  imageUrls.push(proxyUrl(coverBlob.url));
+  const coverIgUrl = await uploadForInstagram(coverBuffer);
+  console.log(`  Cover (IG): ${coverIgUrl}`);
+  imageUrls.push(coverIgUrl);
 
   // Slides 2-6: generated cards
   for (let i = 0; i < cards.length; i++) {
@@ -300,7 +307,9 @@ async function handleWeekendRoundup(req, res, isDryRun) {
       { access: 'public', contentType: 'image/png', addRandomSuffix: false }
     );
     console.log(`  ${slides[i].displayName}: ${blob.url}`);
-    imageUrls.push(proxyUrl(blob.url));
+    const igUrl = await uploadForInstagram(cards[i]);
+    console.log(`  ${slides[i].displayName} (IG): ${igUrl}`);
+    imageUrls.push(igUrl);
   }
 
   // Build caption
@@ -521,7 +530,9 @@ module.exports = async function handler(req, res) {
           { access: 'public', contentType: 'image/png', addRandomSuffix: false, allowOverwrite: true }
         );
         console.log(`  Cover: ${coverBlob.url}`);
-        imageUrls.push(proxyUrl(coverBlob.url));
+        const coverIgUrl = await uploadForInstagram(coverBuffer);
+        console.log(`  Cover (IG): ${coverIgUrl}`);
+        imageUrls.push(coverIgUrl);
       }
 
       // Upload generated cards
@@ -533,7 +544,9 @@ module.exports = async function handler(req, res) {
           { access: 'public', contentType: 'image/png', addRandomSuffix: false }
         );
         console.log(`  ${cardGroups[i].displayName}: ${blob.url}`);
-        imageUrls.push(proxyUrl(blob.url));
+        const igUrl = await uploadForInstagram(cards[i]);
+        console.log(`  ${cardGroups[i].displayName} (IG): ${igUrl}`);
+        imageUrls.push(igUrl);
       }
 
       // Build caption
