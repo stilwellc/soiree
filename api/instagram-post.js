@@ -232,10 +232,10 @@ async function handleWeekendRoundup(req, res, isDryRun) {
   const balancedEvents = balanceEventsByCategory(allEvents, 12);
   console.log(`Balanced to ${balancedEvents.length} weekend events (max 12 per category)`);
 
-  const token = (process.env.INSTAGRAM_ACCESS_TOKEN || '').trim();
+  const { token } = isDryRun ? { token: '' } : await refreshTokenIfNeeded(pool);
   const igUserId = (process.env.INSTAGRAM_USER_ID || '').trim();
   if (!isDryRun) {
-    if (!token) throw new Error('Missing INSTAGRAM_ACCESS_TOKEN env var');
+    if (!token) throw new Error('No Instagram token available (env or database)');
     if (!igUserId) throw new Error('Missing INSTAGRAM_USER_ID env var');
   }
 
@@ -465,11 +465,11 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, skipped: true, reason: 'No events this week' });
     }
 
-    // 3. Get token + user ID (needed for posting)
-    const token = (process.env.INSTAGRAM_ACCESS_TOKEN || '').trim();
+    // 3. Get token + user ID (needed for posting) — auto-refreshes near expiry
+    const { token } = isDryRun ? { token: '' } : await refreshTokenIfNeeded(pool);
     const igUserId = (process.env.INSTAGRAM_USER_ID || '').trim();
     if (!isDryRun) {
-      if (!token) throw new Error('Missing INSTAGRAM_ACCESS_TOKEN env var');
+      if (!token) throw new Error('No Instagram token available (env or database)');
       if (!igUserId) throw new Error('Missing INSTAGRAM_USER_ID env var');
     }
 

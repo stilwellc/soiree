@@ -1814,15 +1814,17 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Verify authorization
+  // Verify authorization: Vercel cron sends GET with x-vercel-cron header;
+  // manual runs use POST with the bearer secret.
   const authHeader = req.headers.authorization;
+  const isVercelCron = !!req.headers['x-vercel-cron'];
   const expectedToken = process.env.SCRAPE_SECRET || 'soiree-scrape-secret-2024';
 
-  if (authHeader !== `Bearer ${expectedToken}`) {
+  if (!isVercelCron && authHeader !== `Bearer ${expectedToken}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  if (req.method !== 'POST') {
+  if (!isVercelCron && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 

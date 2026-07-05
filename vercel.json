@@ -18,6 +18,8 @@
     }
   ],
   "rewrites": [
-    { "source": "/(all|today|week|favorites|about|social|pins)", "destination": "/index.html" }
+    { "source": "/(all|today|week|favorites|about|social|pins)", "destination": "/index.html" },
+    { "source": "/e/(.*)", "destination": "/api/event-page?slug=$1" },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" }
   ]
 }
