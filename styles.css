@@ -6014,8 +6014,8 @@ button:focus-visible,
     align-items: center;
   }
   .dusk-footer .dusk-motto {
-    font-size: clamp(1.7rem, 8vw, 2.2rem);
-    bottom: 38%;
+    font-size: clamp(2.4rem, 11.5vw, 2.95rem);
+    bottom: 40%;
   }
   .dusk-footer .dusk-skyline-wrap {
     margin-top: 1.4rem;
