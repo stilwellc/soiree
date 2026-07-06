@@ -5737,21 +5737,41 @@ button:focus-visible,
 
 .dusk-footer .dusk-sky {
   position: relative;
-  padding-top: clamp(3.5rem, 7vw, 6rem);
+  padding-top: clamp(2.4rem, 4.5vw, 3.75rem);
+}
+
+.dusk-footer .dusk-sky-grid {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: start;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 clamp(1.4rem, 4vw, 2.5rem);
+}
+
+.dusk-footer .dusk-sky-right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: clamp(1.8rem, 3.5vw, 3.5rem);
+  padding-top: .8rem;
 }
 
 .dusk-footer .dusk-motto {
   position: relative;
   z-index: 1;
-  text-align: center;
+  text-align: left;
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
   font-weight: 500;
-  font-size: clamp(3.4rem, 10.5vw, 9.5rem);
-  line-height: .95;
+  font-size: clamp(2.7rem, 4.8vw, 4.5rem);
+  line-height: .98;
   letter-spacing: -.015em;
   color: var(--sf-ink);
-  margin: 0 0 clamp(-2.2rem, -4.5vw, -4.5rem);
+  margin: 0;
   white-space: nowrap;
   user-select: none;
 }
@@ -5763,8 +5783,8 @@ button:focus-visible,
 .dusk-footer .dusk-motto-sub {
   position: relative;
   z-index: 1;
-  text-align: center;
-  margin: 0;
+  text-align: left;
+  margin: 0 0 .7rem;
   font-size: clamp(.62rem, 1vw, .72rem);
   letter-spacing: .34em;
   text-transform: uppercase;
@@ -5774,9 +5794,10 @@ button:focus-visible,
 /* skyline band */
 .dusk-footer .dusk-skyline-wrap {
   position: relative;
-  z-index: 2;
-  margin-top: clamp(.4rem, 1.6vw, 1.2rem);
+  z-index: 1;
+  margin-top: clamp(-3.2rem, -3vw, -1.2rem);
   line-height: 0;
+  pointer-events: none;
 }
 
 .dusk-footer .dusk-skyline {
@@ -5851,21 +5872,17 @@ button:focus-visible,
   border-top: 2px solid var(--sf-wine);
 }
 
-.dusk-footer .dusk-street-inner {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: clamp(2.2rem, 4vw, 3.4rem) clamp(1.4rem, 4vw, 2.5rem) clamp(1.6rem, 3vw, 2.2rem);
-}
+
 
 .dusk-footer .dusk-truth {
-  text-align: center;
+  text-align: left;
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
   font-weight: 500;
-  font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+  font-size: clamp(1.1rem, 1.7vw, 1.45rem);
   color: var(--sf-ink);
   min-height: 1.4em;
-  margin: 0;
+  margin: .85rem 0 0;
   opacity: 0;
   transform: translateY(6px);
   transition: opacity .9s ease, transform .9s ease;
@@ -5883,22 +5900,19 @@ button:focus-visible,
   transform: none;
 }
 
-.dusk-footer .dusk-street-cols {
-  margin-top: clamp(2rem, 4vw, 3rem);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 2.5rem;
-}
+
 
 .dusk-footer .dusk-brand-col {
-  max-width: 280px;
+  max-width: 300px;
+  margin-top: 1.5rem;
+  position: relative;
+  z-index: 3;
 }
 
 .dusk-footer .dusk-wordmark {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 600;
-  font-size: 2.4rem;
+  font-size: 1.55rem;
   line-height: 1;
   color: var(--sf-ink);
   letter-spacing: .01em;
@@ -5910,8 +5924,8 @@ button:focus-visible,
 }
 
 .dusk-footer .dusk-brand-col .dusk-tagline {
-  margin: .65rem 0 0;
-  font-size: .82rem;
+  margin: .5rem 0 0;
+  font-size: .74rem;
   font-weight: 300;
   letter-spacing: .04em;
   color: var(--sf-ink-soft);
@@ -5967,45 +5981,55 @@ button:focus-visible,
 }
 
 .dusk-footer .dusk-baseline {
-  margin-top: clamp(2.2rem, 4vw, 3rem);
-  padding-top: 1.1rem;
-  border-top: 1px solid var(--sf-sand);
-  text-align: center;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: .9rem clamp(1.4rem, 4vw, 2.5rem);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
 }
 
 .dusk-footer .dusk-baseline p {
   margin: 0;
   font-family: 'Jost', sans-serif;
-  font-size: .68rem;
+  font-size: .62rem;
   font-weight: 400;
-  letter-spacing: .22em;
+  letter-spacing: .26em;
   text-transform: uppercase;
   color: var(--sf-ink-soft);
-  opacity: .8;
 }
 
 @media (max-width: 700px) {
-  .dusk-footer .dusk-street-cols {
+  .dusk-footer .dusk-sky-grid {
+    grid-template-columns: 1fr;
+    gap: 1.6rem;
+  }
+  .dusk-footer .dusk-motto {
+    font-size: clamp(2.35rem, 11vw, 2.9rem);
+    white-space: normal;
+  }
+  .dusk-footer .dusk-sky-right {
+    justify-content: flex-start;
+    gap: 2.2rem;
+    padding-top: 0;
+  }
+  .dusk-footer .dusk-brand-col {
+    max-width: 100%;
+    margin-top: 1.2rem;
+  }
+  .dusk-footer .dusk-link-col a {
+    min-height: 44px;
+    align-items: center;
+  }
+  .dusk-footer .dusk-skyline-wrap {
+    margin-top: -1.1rem;
+  }
+  .dusk-footer .dusk-baseline {
     flex-direction: column;
     align-items: center;
+    gap: .3rem;
     text-align: center;
-    gap: 2.2rem;
-  }
-
-  .dusk-footer .dusk-brand-col {
-    max-width: none;
-  }
-
-  .dusk-footer .dusk-link-col a {
-    justify-content: center;
-  }
-
-  .dusk-footer .dusk-motto {
-    margin-bottom: -.55rem;
-  }
-
-  .dusk-footer .dusk-skyline-wrap {
-    margin-top: -1.6rem;
   }
 }
 
