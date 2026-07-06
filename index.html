@@ -3,50 +3,35 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description"
-    content="The Concierge Ledger — tonight's verified events across New York, Hoboken and Jersey City. Gallery openings, live music, markets and free evenings, printed only when we can verify them.">
-  <meta name="theme-color" content="#171009">
-
-  <link rel="canonical" href="https://soiree.today/">
+    content="Discover curated pop-up events in New York City. Art galleries, live music, culinary experiences, and fashion showcases - all free entry.">
+  <meta name="keywords" content="NYC events, pop-ups, art, music, culinary, fashion, free events, New York City">
+  <meta name="theme-color" content="#FAF8F3">
 
   <!-- Open Graph -->
-  <meta property="og:site_name" content="Soirée">
-  <meta property="og:title" content="soirée — the concierge ledger">
+  <meta property="og:title" content="Soirée - Curated Pop-Up Events">
   <meta property="og:description"
-    content="Tonight's verified events across New York, Hoboken and Jersey City. We print what we can verify, and nothing else.">
+    content="Discover exclusive pop-up events in NYC. Art, music, culinary experiences & more.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://soiree.today/">
-  <meta property="og:image" content="https://soiree.today/api/og">
+  <meta property="og:image" content="https://soiree-one.vercel.app/api/og">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:type" content="image/svg+xml">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="soirée — the concierge ledger">
-  <meta name="twitter:description" content="Tonight's verified events across NYC, Hoboken and Jersey City.">
-  <meta name="twitter:image" content="https://soiree.today/api/og">
+  <meta name="twitter:title" content="Soirée - Curated Pop-Up Events">
+  <meta name="twitter:description" content="Discover exclusive pop-up events in NYC">
+  <meta name="twitter:image" content="https://soiree-one.vercel.app/api/og">
 
-  <title>soirée — the concierge ledger · New York, Hoboken &amp; Jersey City</title>
-
-  <!-- Structured data: site-level (event pages inject their own Event JSON-LD server-side) -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Soirée",
-    "alternateName": "The Concierge Ledger",
-    "url": "https://soiree.today/",
-    "description": "Verified evenings in New York, Hoboken and Jersey City — we print what we can verify, and nothing else."
-  }
-  </script>
+  <title>Soirée - Curated Pop-Up Events in NYC</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Spline+Sans+Mono:wght@300;400;500;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500;600&display=swap"
     rel="stylesheet">
 
   <!-- Styles -->
@@ -57,139 +42,651 @@
 </head>
 
 <body>
-  <a class="skip" href="#ledger">Skip to the ledger</a>
+  <!-- Region backdrop (mobile) -->
+  <div class="region-backdrop" id="region-backdrop"></div>
 
-  <header class="masthead">
-    <p class="mast-kicker">New York<span class="dot">◆</span>Hoboken<span class="dot">◆</span>Jersey City</p>
-    <h1>soir<span class="accent">é</span>e</h1>
-    <p class="mast-sub">the concierge ledger</p>
-    <div class="mast-rule" aria-hidden="true"><span class="diamond"></span></div>
-    <p class="almanac" id="almanac"></p>
-    <p class="mast-greeting" id="mastGreeting"></p>
-    <div class="register" id="register" role="group" aria-label="Choose your side of the Hudson">
-      <button type="button" data-region="both" aria-pressed="true"><span>Both banks</span></button>
-      <button type="button" data-region="nyc" aria-pressed="false"><span>New York</span></button>
-      <button type="button" data-region="hoboken-jc" aria-pressed="false"><span>Hoboken + JC</span></button>
+  <!-- Navigation -->
+  <nav class="nav-bar" role="navigation" aria-label="Main navigation">
+    <div class="nav-brand" id="nav-brand-home" role="button" tabindex="0" aria-label="Home">
+      <img src="assets/images/nav-logo-transparent.png" alt="Soirée" class="nav-brand-img">
     </div>
-  </header>
-
-  <nav class="shelfnav" id="shelfnav" aria-label="Shelves">
-    <div class="shelfnav-in" id="shelfnavIn"></div>
+    <div class="nav-items">
+      <div class="nav-item" data-view="all" role="button" tabindex="0" aria-label="All events">
+        <span class="nav-label">All</span>
+      </div>
+      <div class="nav-item" data-view="today" role="button" tabindex="0" aria-label="Today's events">
+        <span class="nav-label">Today</span>
+      </div>
+      <div class="nav-item" data-view="week" role="button" tabindex="0" aria-label="This week's events">
+        <span class="nav-label">This Week</span>
+      </div>
+      <div class="nav-separator" aria-hidden="true"></div>
+      <div class="nav-item nav-item-icon" data-view="favorites" role="button" tabindex="0" aria-label="Favorites">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path
+            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+          </path>
+        </svg>
+        <span class="favorite-badge" style="display: none;">0</span>
+      </div>
+      <div class="nav-item" data-view="about" role="button" tabindex="0" aria-label="About">
+        <span class="nav-label">About</span>
+      </div>
+    </div>
   </nav>
 
-  <main class="wrap">
-    <div class="ledger" id="ledger">
-      <div class="loading">Setting the table…</div>
-    </div>
-    <aside class="well" aria-hidden="true">
-      <div class="well-inner">
-        <div class="well-frame">
-          <div class="well-photo" id="wellPhoto"><img id="wellA" alt="" referrerpolicy="no-referrer"><img id="wellB" alt=""
-              referrerpolicy="no-referrer"></div>
+  <!-- Main Content -->
+  <main class="app-container">
+    <!-- Discover View -->
+    <div id="discover-view" class="view-home">
+      <!-- Hero — Full-viewport immersive -->
+      <header class="hero hero-landing">
+        <div class="hero-bg" aria-hidden="true"></div>
+        <div class="hero-grain" aria-hidden="true"></div>
+        <div class="hero-content">
+          <!-- Title panel — default state -->
+          <div class="hero-title-panel" id="hero-title-panel">
+            <div class="hero-rule" aria-hidden="true"></div>
+            <h1 class="hero-title">
+              <span class="title-rotating">
+                <span class="title-word active">Tonight's</span>
+                <span class="title-word">Today's</span>
+                <span class="title-word">This Week's</span>
+                <span class="title-word">Tomorrow's</span>
+              </span><br>
+              <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="hero-title-logo">
+            </h1>
+          </div>
+
+          <!-- Region picker panel — full-screen immersive overlay -->
+          <div class="hero-region-panel" id="hero-region-panel" aria-hidden="true">
+            <div class="region-panel-bg" aria-hidden="true"></div>
+            <div class="region-panel-inner">
+              <div class="region-panel-handle" aria-hidden="true"><div class="region-panel-handle-bar"></div></div>
+              <button class="region-panel-close" id="region-panel-close" aria-label="Close region picker">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+
+              <div class="region-panel-hero">
+                <svg class="region-panel-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <h2 class="region-panel-title">Choose your city</h2>
+                <p class="region-panel-subtitle">We'll show you what's happening nearby.</p>
+              </div>
+
+              <div class="region-panel-list" role="listbox" aria-label="Select a region">
+                <div class="region-panel-option region-panel-option--auto" data-region="auto" role="option" tabindex="0" aria-selected="false">
+                  <div class="region-option-content">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                      class="region-panel-auto-icon" aria-hidden="true">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1l2.1-2.1M17 7l2.1-2.1" />
+                    </svg>
+                    <span class="region-auto-label">
+                      <span>Auto-detect</span>
+                      <span class="region-auto-detected" id="region-auto-detected"></span>
+                    </span>
+                  </div>
+                  <span class="region-option-arrow">→</span>
+                  <span class="region-option-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                </div>
+
+                <div class="region-panel-divider"></div>
+
+                <div class="region-panel-group">
+                  <div class="region-panel-group-label">New York</div>
+                  <div class="region-panel-option" data-region="nyc" role="option" tabindex="0" aria-selected="false">
+                    <span class="region-option-content">New York City</span>
+                    <span class="region-option-arrow">→</span>
+                    <span class="region-option-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                  </div>
+                </div>
+
+                <div class="region-panel-divider"></div>
+
+                <div class="region-panel-group">
+                  <div class="region-panel-group-label">New Jersey</div>
+                  <div class="region-panel-option" data-region="hoboken-jc" role="option" tabindex="0" aria-selected="false">
+                    <span class="region-option-content">Hoboken · Jersey City</span>
+                    <span class="region-option-arrow">→</span>
+                    <span class="region-option-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                  </div>
+                  <div class="region-panel-option" data-region="nj-state" role="option" tabindex="0" aria-selected="false">
+                    <span class="region-option-content">Statewide</span>
+                    <span class="region-option-arrow">→</span>
+                    <span class="region-option-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                  </div>
+                </div>
+
+                <div class="region-panel-divider"></div>
+
+                <div class="region-panel-group">
+                  <div class="region-panel-group-label">Pennsylvania</div>
+                  <div class="region-panel-option" data-region="philly" role="option" tabindex="0" aria-selected="false">
+                    <span class="region-option-content">Philadelphia</span>
+                    <span class="region-option-arrow">→</span>
+                    <span class="region-option-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Location toggle — always visible -->
+          <div class="hero-location-row">
+            <button class="region-toggle" id="region-toggle" aria-label="Change region" aria-haspopup="listbox" aria-expanded="false">
+              <svg class="region-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span class="region-name" id="current-region-name">NYC</span>
+              <svg class="region-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+          </div>
+
         </div>
-        <div class="well-cap">
-          <p class="wc-time" id="wellTime"></p>
-          <p class="wc-name" id="wellName"></p>
-          <p class="wc-where" id="wellWhere"></p>
+      </header>
+
+      <!-- Value Line -->
+      <p class="value-line" aria-label="Platform highlights">
+        Curating <span class="value-line-num" id="value-events">120</span> experiences for you<span
+          id="value-free-suffix">.</span>
+      </p>
+
+      <!-- Search -->
+      <section class="search-container event-controls" aria-label="Search events"
+        style="display: flex; gap: 12px; align-items: center;">
+        <div class="search-box" style="flex: 1;">
+          <input type="search" id="search-input" class="search-input" placeholder="Search events, locations..."
+            aria-label="Search events">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <button id="search-clear" class="search-clear" aria-label="Clear search">×</button>
+        </div>
+
+        <!-- Free Events Toggle -->
+        <div class="free-toggle-container">
+          <label class="free-toggle-label" for="free-mode-toggle">
+            <span class="free-toggle-text">Free Only</span>
+            <div class="toggle-switch">
+              <input type="checkbox" id="free-mode-toggle" class="toggle-input" aria-label="Show Free Events Only">
+              <span class="toggle-slider"></span>
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <!-- Filters -->
+      <section class="filters event-controls" role="radiogroup" aria-label="Event categories">
+        <button class="filter-chip active" data-filter="all" data-color="#D4AF37" role="radio"
+          aria-checked="true">All</button>
+        <button class="filter-chip" data-filter="art" data-color="#A0686B" role="radio"
+          aria-checked="false">Art</button>
+        <button class="filter-chip" data-filter="perks" data-color="#8B6347" role="radio"
+          aria-checked="false">Perks & Pop-Ups</button>
+        <button class="filter-chip" data-filter="community" data-color="#8BA89B" role="radio"
+          aria-checked="false">Culture & Community</button>
+      </section>
+
+      <!-- Art sub-filter: Openings vs All Shows (visible only when Art filter is active on list views) -->
+      <div class="art-subfilter hidden" id="art-subfilter">
+        <button class="art-subfilter-btn active" data-art-filter="openings">Openings</button>
+        <button class="art-subfilter-btn" data-art-filter="all">All Shows</button>
+      </div>
+
+      <!-- Unified Gallery (home view) -->
+      <div id="unified-gallery" class="unified-gallery" aria-label="Browse events">
+
+        <!-- Category tabs -->
+        <div class="gallery-tabs" role="tablist" aria-label="Event categories">
+          <button class="gallery-tab active" data-filter="art" role="tab" aria-selected="true">Art</button>
+          <button class="gallery-tab" data-filter="perks" role="tab" aria-selected="false">Perks &amp; Pop-Ups</button>
+          <button class="gallery-tab" data-filter="community" role="tab" aria-selected="false">Culture &amp; Community</button>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="gallery-progress-track">
+          <div class="gallery-progress-bar" id="gallery-progress-bar"></div>
+        </div>
+
+        <!-- Mobile: Card Stack -->
+        <div class="gallery-stack" id="gallery-stack">
+          <div class="gallery-stack-counter" id="gallery-stack-counter"></div>
+          <div class="gallery-stack-cards" id="gallery-stack-cards"></div>
+          <div class="gallery-stack-actions">
+            <button class="stack-action stack-action-skip" id="stack-skip" aria-label="Skip event">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <button class="stack-action stack-action-fav" id="stack-fav" aria-label="Favorite event">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="gallery-stack-empty hidden" id="gallery-stack-empty">
+            <div class="gallery-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+            <div class="gallery-empty-title">No events here yet</div>
+            <div class="gallery-empty-text">Try a different category</div>
+          </div>
+        </div>
+
+        <!-- Desktop: Featured + Sidebar -->
+        <div class="gallery-featured" id="gallery-featured">
+          <div class="gallery-featured-main" id="gallery-featured-main"></div>
+          <div class="gallery-featured-sidebar" id="gallery-featured-sidebar"></div>
+          <div class="gallery-featured-empty hidden" id="gallery-featured-empty">
+            <div class="gallery-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+            <div class="gallery-empty-title">No events found</div>
+            <div class="gallery-empty-text">Try a different category or region</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Instagram CTA — Full-bleed editorial -->
+      <section class="subscribe-section reveal-section" id="subscribe-strip-home">
+        <div class="subscribe-section-bg" aria-hidden="true"></div>
+        <div class="subscribe-section-content" style="text-align:center; max-width:540px; margin:0 auto;">
+          <h2 class="subscribe-section-heading" style="text-align:center;">Right where <em>you swipe.</em></h2>
+          <div class="ig-profile-header">
+            <div class="ig-profile-avatar">
+              <img src="assets/images/nav-logo-transparent.png" alt="">
+            </div>
+            <span class="ig-profile-name">yourdailysoiree</span>
+            <a href="https://www.instagram.com/yourdailysoiree/" target="_blank" rel="noopener" class="ig-follow-btn">Follow</a>
+          </div>
+          <div class="ig-grid" id="ig-grid-home"></div>
+          <p class="subscribe-section-text" style="text-align:center; max-width:none; margin:24px auto 0;">New event roundups every Tuesday on Instagram.</p>
+        </div>
+      </section>
+
+      <!-- Events List (Today / This Week views) -->
+      <section class="events hidden" id="events-list" aria-label="Event listings">
+        <div class="loading">
+          <div class="loading-spinner" aria-hidden="true"></div>
+          <p>Loading...</p>
+        </div>
+      </section>
+
+      <!-- Instagram CTA — Events List Footer -->
+      <section class="subscribe-section reveal-section hidden" id="subscribe-strip-events">
+        <div class="subscribe-section-bg" aria-hidden="true"></div>
+        <div class="subscribe-section-content" style="text-align:center; max-width:540px; margin:0 auto;">
+          <h2 class="subscribe-section-heading" style="text-align:center;">Right where <em>you swipe.</em></h2>
+          <div class="ig-profile-header">
+            <div class="ig-profile-avatar">
+              <img src="assets/images/nav-logo-transparent.png" alt="">
+            </div>
+            <span class="ig-profile-name">yourdailysoiree</span>
+            <a href="https://www.instagram.com/yourdailysoiree/" target="_blank" rel="noopener" class="ig-follow-btn">Follow</a>
+          </div>
+          <div class="ig-grid" id="ig-grid-events"></div>
+          <p class="subscribe-section-text" style="text-align:center; max-width:none; margin:24px auto 0;">New event roundups every Tuesday on Instagram.</p>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Favorites View -->
+    <div id="favorites-view" class="hidden">
+      <header class="header">
+        <div class="decorative-line" aria-hidden="true"></div>
+        <p class="greeting">Your collection</p>
+        <h1 class="title">Saved<br>Events</h1>
+        <div class="location">Ready when you are</div>
+      </header>
+      <div class="empty-state">
+        <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+            width="48" height="48">
+            <path
+              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg></div>
+        <div class="empty-state-title">No favorites yet</div>
+        <div class="empty-state-text">Tap the heart on events you love</div>
+      </div>
+    </div>
+
+    <!-- About View -->
+    <div id="about-view" class="hidden">
+
+      <!-- Hero — identical structure to discover hero -->
+      <header class="hero">
+        <div class="hero-bg" aria-hidden="true"></div>
+        <div class="hero-grain" aria-hidden="true"></div>
+        <div class="hero-content">
+          <div class="hero-title-panel">
+            <div class="hero-rule" aria-hidden="true"></div>
+            <h1 class="hero-title">
+              What powers<br>
+              <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="hero-title-logo">
+            </h1>
+            <p class="hero-sub">The engine behind the experience.</p>
+          </div>
+        </div>
+      </header>
+
+      <!-- Live Stats Row -->
+      <div class="about-stats-row">
+        <div class="about-stat-card">
+          <span class="about-stat-val" id="stat-events">—</span>
+          <span class="about-stat-lbl">events indexed</span>
+        </div>
+        <div class="about-stat-card">
+          <span class="about-stat-val" id="stat-views">—</span>
+          <span class="about-stat-lbl">page views</span>
+        </div>
+        <div class="about-stat-card">
+          <span class="about-stat-val" id="stat-unique">—</span>
+          <span class="about-stat-lbl">unique today</span>
         </div>
       </div>
-    </aside>
+
+      <!-- Content Flow -->
+      <div class="about-flow">
+
+        <!-- Mission -->
+        <section class="about-section">
+          <p class="about-overline">Mission</p>
+          <h2 class="about-heading">Curating local experience.<br><em>Connecting communities.</em></h2>
+          <p class="about-body">We surface the best pop-up events across New York City — from intimate gallery
+            openings to exclusive culinary experiences — so you always discover something worth your time.
+            No algorithms, no noise. Just the best of what's happening, right now.</p>
+        </section>
+
+        <!-- System Architecture — Always visible dashboard -->
+        <section class="about-section about-arch-section">
+          <div class="about-arch-header">
+            <div class="about-arch-header-left">
+              <p class="about-overline" style="margin-bottom:4px;">System Architecture</p>
+              <div class="about-arch-meta">
+                <span class="about-arch-tag">v2.1</span>
+                <span class="about-arch-status"><span class="about-arch-dot"></span>Operational</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tech-dashboard-grid" id="tech-dashboard">
+            <div class="tech-card graph-module">
+              <div class="module-header">
+                <span>TOPOLOGY</span>
+                <span class="module-id">NET-01</span>
+              </div>
+              <div class="graph-wrapper-refined">
+                <canvas id="network-graph"></canvas>
+                <div class="graph-overlay">
+                  <div class="g-stat">
+                    <span class="g-val" id="network-nodes">0</span>
+                    <span class="g-lbl">NODES</span>
+                  </div>
+                  <div class="g-stat">
+                    <span class="g-val" id="network-events">0</span>
+                    <span class="g-lbl">EVENTS</span>
+                  </div>
+                </div>
+              </div>
+              <div class="tech-legend-refined" id="js-tech-legend"></div>
+            </div>
+
+            <div class="tech-side-column">
+              <div class="tech-card specs-module">
+                <div class="module-header">
+                  <span>SPECIFICATIONS</span>
+                  <span class="module-id">SYS-02</span>
+                </div>
+                <div class="specs-list">
+                  <div class="spec-item"><span class="spec-key">Core</span><span class="spec-val">Node.js +
+                      Puppeteer</span></div>
+                  <div class="spec-item"><span class="spec-key">Database</span><span
+                      class="spec-val">PostgreSQL</span></div>
+                  <div class="spec-item"><span class="spec-key">Sync Cycle</span><span class="spec-val">Daily 06:00
+                      EST</span></div>
+                  <div class="spec-item"><span class="spec-key">Last Sync</span><span class="spec-val"
+                      id="last-scrape">Loading...</span></div>
+                </div>
+              </div>
+              <div class="tech-card activity-module">
+                <div class="module-header">
+                  <span>ACTIVITY</span>
+                  <span class="module-id">ACT-01</span>
+                </div>
+                <div class="activity-chart-wrapper">
+                  <canvas id="activity-chart"></canvas>
+                </div>
+                <div class="activity-legend">
+                  <span class="activity-legend-item"><span class="legend-dot" style="background:#7C6AE8;"></span>Scrapes</span>
+                  <span class="activity-legend-item"><span class="legend-dot" style="background:#FF6B9D;"></span>Instagram</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Instagram CTA — About Page -->
+        <section class="subscribe-section reveal-section" id="subscribe-strip-about">
+          <div class="subscribe-section-bg" aria-hidden="true"></div>
+          <div class="subscribe-section-content" style="text-align:center; max-width:540px; margin:0 auto;">
+            <h2 class="subscribe-section-heading" style="text-align:center;">Right where <em>you swipe.</em></h2>
+            <div class="ig-profile-header">
+              <div class="ig-profile-avatar">
+                <img src="assets/images/nav-logo-transparent.png" alt="">
+              </div>
+              <span class="ig-profile-name">yourdailysoiree</span>
+              <a href="https://www.instagram.com/yourdailysoiree/" target="_blank" rel="noopener" class="ig-follow-btn">Follow</a>
+            </div>
+            <div class="ig-grid" id="ig-grid-about"></div>
+            <p class="subscribe-section-text" style="text-align:center; max-width:none; margin:24px auto 0;">New event roundups every Tuesday on Instagram.</p>
+          </div>
+        </section>
+
+
+      </div><!-- .about-flow -->
+
+    </div>
+
+    <!-- Social Media View (Hidden - /social route) -->
+    <div id="social-view" class="hidden">
+      <div class="social-posts-container">
+
+        <div class="social-post" id="social-art">
+          <div class="social-post-inner">
+            <div class="social-post-top">
+              <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="social-logo">
+              <div class="social-post-category">Art</div>
+              <div class="social-post-week" id="social-week-art"></div>
+            </div>
+            <div class="social-rule"></div>
+            <div class="social-events-list" id="social-art-events"></div>
+            <div class="social-rule"></div>
+            <div class="social-post-bottom">
+              <div class="social-tagline"></div>
+              <div class="social-url">soiree.today</div>
+            </div>
+          </div>
+        </div>
+        <div class="social-caption" id="social-art-caption"></div>
+
+        <div class="social-post" id="social-perks">
+          <div class="social-post-inner">
+            <div class="social-post-top">
+              <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="social-logo">
+              <div class="social-post-category">Perks & Pop-Ups</div>
+              <div class="social-post-week" id="social-week-perks"></div>
+            </div>
+            <div class="social-rule"></div>
+            <div class="social-events-list" id="social-perks-events"></div>
+            <div class="social-rule"></div>
+            <div class="social-post-bottom">
+              <div class="social-tagline"></div>
+              <div class="social-url">soiree.today</div>
+            </div>
+          </div>
+        </div>
+        <div class="social-caption" id="social-perks-caption"></div>
+
+        <div class="social-post" id="social-community">
+          <div class="social-post-inner">
+            <div class="social-post-top">
+              <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="social-logo">
+              <div class="social-post-category">Culture & Community</div>
+              <div class="social-post-week" id="social-week-community"></div>
+            </div>
+            <div class="social-rule"></div>
+            <div class="social-events-list" id="social-community-events"></div>
+            <div class="social-rule"></div>
+            <div class="social-post-bottom">
+              <div class="social-tagline"></div>
+              <div class="social-url">soiree.today</div>
+            </div>
+          </div>
+        </div>
+        <div class="social-caption" id="social-community-caption"></div>
+
+      </div>
+    </div>
+
+    <!-- Pinned Posts View (Hidden - /pins route)
+         Instagram grid order: post 1st → appears rightmost.
+         Post order: Categories → Logo → NYC Curated
+         Grid result: Categories | Logo | NYC Curated  (L→R) -->
+    <div id="pins-view" class="hidden">
+      <div class="pins-container">
+
+        <!-- Card 1 — will appear RIGHTMOST on grid. Post this LAST. -->
+        <div class="pin-card pin-card-1">
+          <!-- Wave: enters from left at ~620, sweeps up to ~520, exits right at ~580 -->
+          <svg class="pin-wave" viewBox="0 0 1080 1350" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="wg1" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#C4956A" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#C4956A" stop-opacity="0.08"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,620 C200,580 350,500 540,520 C730,540 900,600 1080,580
+                     L1080,740 C900,760 730,700 540,680 C350,660 200,740 0,780 Z" fill="url(#wg1)"/>
+          </svg>
+          <div class="pin-inner">
+            <img src="assets/images/nav-logo-transparent.png" alt="" class="pin-heart">
+            <div class="pin-text-stack">
+              <div class="pin-headline">NYC</div>
+              <div class="pin-headline">Curated</div>
+              <div class="pin-rule"></div>
+              <div class="pin-sub">100% Free</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 — will appear CENTER on grid. Post this SECOND. -->
+        <div class="pin-card pin-card-2">
+          <!-- Wave: enters left at ~580 (matches card 3 exit), dips to ~680, exits right at ~620 (matches card 1 entry) -->
+          <svg class="pin-wave" viewBox="0 0 1080 1350" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="wg2" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#C4956A" stop-opacity="0.12"/>
+                <stop offset="50%" stop-color="#C4956A" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#C4956A" stop-opacity="0.12"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,580 C180,620 360,700 540,680 C720,660 900,600 1080,620
+                     L1080,780 C900,760 720,820 540,840 C360,860 180,780 0,740 Z" fill="url(#wg2)"/>
+          </svg>
+          <div class="pin-inner">
+            <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="pin-logo">
+            <div class="pin-rule"></div>
+            <div class="pin-url">soiree.today</div>
+          </div>
+        </div>
+
+        <!-- Card 3 — will appear LEFTMOST on grid. Post this FIRST. -->
+        <div class="pin-card pin-card-3">
+          <!-- Wave: enters left at ~560, sweeps down to ~620, exits right at ~580 (matches card 2 entry) -->
+          <svg class="pin-wave" viewBox="0 0 1080 1350" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="wg3" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#C4956A" stop-opacity="0.08"/>
+                <stop offset="100%" stop-color="#C4956A" stop-opacity="0.3"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,560 C200,580 350,640 540,620 C730,600 900,560 1080,580
+                     L1080,740 C900,720 730,760 540,780 C350,800 200,740 0,720 Z" fill="url(#wg3)"/>
+          </svg>
+          <div class="pin-inner">
+            <img src="assets/images/nav-logo-transparent.png" alt="" class="pin-heart">
+            <div class="pin-cats">
+              <span>Art & Culture</span>
+              <span>Food & Drink</span>
+              <span>Music</span>
+              <span>Perks & Pop-Ups</span>
+              <span>Lifestyle</span>
+              <span>Community</span>
+            </div>
+            <div class="pin-rule"></div>
+            <div class="pin-cats-tagline">Curated weekly in NYC</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer (Global) -->
+    <footer class="app-footer">
+      <p class="footer-motto">stay curious.</p>
+      <div class="footer-bottom">
+        <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="footer-logo">
+        <a href="https://www.instagram.com/soiree.nyc/" target="_blank" rel="noopener noreferrer" class="footer-link footer-link-ig">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14" aria-hidden="true">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+          </svg>
+          <span>Follow us</span>
+        </a>
+      </div>
+    </footer>
   </main>
 
-  <!-- instagram band: rendered only when /api/instagram-feed returns posts -->
-  <section class="igband" id="igband" hidden aria-label="Soirée on Instagram">
-    <p class="ig-k">On Instagram</p>
-    <h2>Right where you swipe.</h2>
-    <div class="ig-grid" id="igGrid"></div>
-    <a class="ig-follow" href="https://www.instagram.com/yourdailysoiree/" target="_blank"
-      rel="noopener">Follow @yourdailysoiree</a>
-  </section>
-
-  <!-- subscribe -->
-  <section class="dispatch" id="dispatch" aria-label="Subscribe">
-    <p class="d-k">The evening dispatch</p>
-    <h2>The ledger, delivered.</h2>
-    <p class="d-sub">What holds for the week, verified and set — in your inbox.</p>
-    <form id="dispatchForm" novalidate>
-      <label class="skip" for="dispatchEmail">Email address</label>
-      <input type="email" id="dispatchEmail" name="email" placeholder="your@address.com" autocomplete="email" required>
-      <label class="skip" for="dispatchRegion">Region</label>
-      <select id="dispatchRegion" name="region" aria-label="Region">
-        <option value="nyc">New York</option>
-        <option value="hoboken-jc">Hoboken + JC</option>
-      </select>
-      <button class="btn solid" type="submit">Subscribe</button>
-    </form>
-    <p class="d-ok">Noted. The next dispatch will find you.</p>
-  </section>
-
-  <!-- colophon -->
-  <footer class="colophon" id="colophon">
-    <div class="c-rule"></div>
-    <p id="colophonLine"></p>
-    <p id="colophonSources"></p>
-    <nav class="c-links" aria-label="Footer">
-      <a href="/about" id="aboutLink">About the house</a>
-      <a href="https://www.instagram.com/yourdailysoiree/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-    <p class="sig">until this evening —</p>
-  </footer>
-
-  <div class="scrim" id="scrim"></div>
-
-  <section class="sheet" id="detailSheet" role="dialog" aria-modal="true" aria-label="Event details">
-    <div class="sh-grab" aria-hidden="true"><i></i></div>
-    <button class="sh-close" id="detailClose" aria-label="Close details"><svg width="14" height="14"
-        viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-        <path d="M2 2l10 10M12 2L2 12" />
-      </svg></button>
-    <div id="detailContent"></div>
-  </section>
-
-  <section class="sheet" id="cardSheet" role="dialog" aria-modal="true" aria-label="Your evening card">
-    <div class="sh-grab" aria-hidden="true"><i></i></div>
-    <button class="sh-close" id="cardClose" aria-label="Close evening card"><svg width="14" height="14"
-        viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-        <path d="M2 2l10 10M12 2L2 12" />
-      </svg></button>
-    <div id="cardContent"></div>
-  </section>
-
-  <section class="sheet" id="aboutSheet" role="dialog" aria-modal="true" aria-label="About soirée">
-    <div class="sh-grab" aria-hidden="true"><i></i></div>
-    <button class="sh-close" id="aboutClose" aria-label="Close about"><svg width="14" height="14" viewBox="0 0 14 14"
-        fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-        <path d="M2 2l10 10M12 2L2 12" />
-      </svg></button>
-    <div class="sh-body">
-      <p class="about-k">The house</p>
-      <h2 class="about-h">Curating local experience.<br><em>Connecting communities.</em></h2>
-      <p class="about-body">We surface the best pop-up events across New York City — from intimate gallery openings
-        to exclusive culinary experiences — so you always discover something worth your time. No algorithms, no
-        noise. Just the best of what's happening, right now.</p>
-      <div class="facts about-facts">
-        <div class="fact"><span class="fk">Core</span><span class="fv">Node.js + Puppeteer</span></div>
-        <div class="fact"><span class="fk">Database</span><span class="fv">PostgreSQL</span></div>
-        <div class="fact"><span class="fk">Sync</span><span class="fv">Daily, 6:00 AM Eastern</span></div>
-        <div class="fact"><span class="fk">Sources</span><span class="fv" id="aboutSources">—</span></div>
-      </div>
-      <div class="sh-actions">
-        <a class="btn" href="https://www.instagram.com/yourdailysoiree/" target="_blank"
-          rel="noopener">@yourdailysoiree</a>
-      </div>
-      <p class="card-kept" style="margin-top:22px">We print what we can verify, and nothing else.</p>
+  <!-- Event Detail Modal -->
+  <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <button id="modal-close" class="modal-close" aria-label="Close modal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div id="modal-body"></div>
     </div>
-  </section>
+  </div>
+  </div>
 
-  <button class="seal" id="sealBtn" aria-label="Open your evening card">
-    <span class="s-mono" aria-hidden="true">s</span>
-    <span class="s-count" id="sealCount">0</span>
-  </button>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+  <!-- html2canvas for social card downloads -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- Truth pass (data verification) then App Script -->
   <script src="js/truthpass.js"></script>
-
   <script src="app.js"></script>
 </body>
 

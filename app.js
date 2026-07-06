@@ -1,894 +1,4053 @@
-/* ============================================================
-   soirée — the concierge ledger (app)
-   Consumes window.TruthPass.verify(rawEvents, now) only.
-   All scraped strings pass through esc() before innerHTML.
-   ============================================================ */
-(function () {
-  'use strict';
+// Configuration
+const API_BASE_URL = window.location.origin;
+const USE_API = true; // Set to false to use fallback data
 
-  /* ---------------- constants & helpers ---------------- */
-  var PLACEHOLDER = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
-    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'>" +
-    "<rect width='400' height='300' fill='#241a11'/>" +
-    "<rect x='14' y='14' width='372' height='272' fill='none' stroke='#c9a96a' stroke-opacity='.35' stroke-width='1'/>" +
-    "<text x='200' y='176' font-family='Georgia,serif' font-style='italic' font-size='96' fill='#c9a96a' fill-opacity='.8' text-anchor='middle'>s</text>" +
-    "<text x='200' y='232' font-family='Georgia,serif' font-style='italic' font-size='15' fill='#8d7c63' text-anchor='middle'>photograph to follow</text>" +
-    "</svg>").replace(/'/g, '%27');
+// ============================================================================
+// DATE UTILITIES - Consistent timezone handling
+// ============================================================================
+// IMPORTANT: Always use these helpers to avoid UTC/local timezone bugs
 
-  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  var MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  var DAY_MS = 86400000;
+function getTodayLocal() {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
 
-  var NOW = new Date();
-  var TODAY = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
-  var TODAY_KEY = TODAY.getFullYear() + '-' + String(TODAY.getMonth() + 1).padStart(2, '0') + '-' + String(TODAY.getDate()).padStart(2, '0');
+function getTomorrowLocal() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+}
 
-  function $(id) { return document.getElementById(id); }
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
+function formatDateLocal(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function extractDateFromISO(isoString) {
+  return isoString.split('T')[0];
+}
+
+function getEndOfWeekLocal() {
+  const today = new Date();
+  const endOfWeek = new Date(today);
+  endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
+  return formatDateLocal(endOfWeek);
+}
+// ============================================================================
+
+// Event Data (fallback if API fails)
+let events = [
+  {
+    id: 1,
+    name: "Immersive Gallery Opening",
+    category: "art",
+    date: "Tonight",
+    time: "7:00 PM - 11:00 PM",
+    location: "Chelsea Arts District",
+    address: "541 W 25th St, New York, NY",
+    price: "free",
+    spots: 150,
+    image: "https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=800&q=80",
+    description: "Experience contemporary art in an intimate gallery setting. This exclusive opening features works from emerging artists pushing the boundaries of modern expression.",
+    highlights: [
+      "Featured works from 8 emerging artists",
+      "Curated wine tasting from local vineyards",
+      "Live ambient music performance",
+      "Meet the artists Q&A session at 8:30 PM"
+    ]
+  },
+  {
+    id: 2,
+    name: "Rooftop Jazz Session",
+    category: "community",
+    date: "Tomorrow",
+    time: "6:30 PM - 10:00 PM",
+    location: "Williamsburg",
+    address: "90 Kent Ave, Brooklyn, NY",
+    price: "free",
+    spots: 82,
+    image: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&q=80",
+    description: "Enjoy an evening of smooth jazz under the stars. Our resident quartet performs classic and contemporary pieces with the Manhattan skyline as your backdrop.",
+    highlights: [
+      "Live performance by Brooklyn Jazz Collective",
+      "Complimentary welcome cocktail",
+      "Panoramic city views",
+      "Food trucks on-site"
+    ]
+  },
+  {
+    id: 3,
+    name: "Chef's Table Pop-Up",
+    category: "community",
+    date: "Friday",
+    time: "8:00 PM - 12:00 AM",
+    location: "SoHo",
+    address: "112 Spring St, New York, NY",
+    price: "free",
+    spots: 28,
+    image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80",
+    description: "An intimate 6-course tasting menu from Michelin-trained Chef Marcus Chen. Each dish tells a story, blending classical French techniques with modern Asian flavors.",
+    highlights: [
+      "6-course progressive tasting menu",
+      "Wine pairing available",
+      "Interactive chef demonstration",
+      "Limited to 28 guests for intimate experience"
+    ]
+  },
+  {
+    id: 4,
+    name: "Underground Fashion Showcase",
+    category: "perks",
+    date: "Saturday",
+    time: "9:00 PM - 1:00 AM",
+    location: "Meatpacking District",
+    address: "18 Ninth Ave, New York, NY",
+    price: "free",
+    spots: 200,
+    image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80",
+    description: "Discover the next generation of fashion innovators. This underground showcase features bold designs from 12 independent designers redefining streetwear and haute couture.",
+    highlights: [
+      "12 emerging designers on the runway",
+      "DJ set by rising electronic artist",
+      "Pop-up shop with exclusive pieces",
+      "Cocktails and light bites included"
+    ]
+  },
+  {
+    id: 5,
+    name: "Sunset Sculpture Garden",
+    category: "art",
+    date: "Sunday",
+    time: "5:00 PM - 9:00 PM",
+    location: "Brooklyn Heights",
+    address: "334 Furman St, Brooklyn, NY",
+    price: "free",
+    spots: 120,
+    image: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800&q=80",
+    description: "Wander through an outdoor exhibition of large-scale sculptures as the sun sets over the harbor. Interactive installations invite you to become part of the art.",
+    highlights: [
+      "15 large-scale outdoor sculptures",
+      "Golden hour photography opportunities",
+      "Artist talks at 6:00 PM and 7:30 PM",
+      "Light refreshments provided"
+    ]
+  },
+  {
+    id: 6,
+    name: "Acoustic Songwriters Circle",
+    category: "community",
+    date: "Monday",
+    time: "7:30 PM - 10:30 PM",
+    location: "East Village",
+    address: "78 E 4th St, New York, NY",
+    price: "free",
+    spots: 65,
+    image: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=800&q=80",
+    description: "An intimate evening with NYC's finest singer-songwriters. Each artist performs original compositions in a cozy, living room atmosphere.",
+    highlights: [
+      "6 featured singer-songwriters",
+      "Stories behind the songs",
+      "Open mic slot for audience members",
+      "Craft beer and wine available"
+    ]
+  },
+  {
+    id: 7,
+    name: "Farm-to-Table Dinner Series",
+    category: "community",
+    date: "Tuesday",
+    time: "7:00 PM - 11:00 PM",
+    location: "DUMBO",
+    address: "55 Water St, Brooklyn, NY",
+    price: "free",
+    spots: 40,
+    image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80",
+    description: "Celebrate local agriculture with a seasonal menu sourced entirely from Hudson Valley farms. Meet the farmers and learn about sustainable food systems.",
+    highlights: [
+      "4-course seasonal menu",
+      "Meet local farmers and producers",
+      "Zero-waste preparation demonstration",
+      "Natural wine selection"
+    ]
+  },
+  {
+    id: 8,
+    name: "Experimental Electronic Showcase",
+    category: "community",
+    date: "Wednesday",
+    time: "10:00 PM - 2:00 AM",
+    location: "Bushwick",
+    address: "1084 Flushing Ave, Brooklyn, NY",
+    price: "free",
+    spots: 180,
+    image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80",
+    description: "Push the boundaries of sound with experimental electronic artists using modular synthesizers, custom instruments, and generative algorithms.",
+    highlights: [
+      "4 live electronic performances",
+      "Visual projection mapping",
+      "Immersive sound system",
+      "Late night vibes"
+    ]
+  },
+  {
+    id: 9,
+    name: "Photography Walk & Talk",
+    category: "art",
+    date: "Thursday",
+    time: "3:00 PM - 6:00 PM",
+    location: "Lower East Side",
+    address: "Meet at Essex Market",
+    price: "free",
+    spots: 35,
+    image: "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=800&q=80",
+    description: "Join acclaimed street photographer Elena Rodriguez for a walking tour focused on capturing the essence of NYC neighborhoods. All skill levels welcome.",
+    highlights: [
+      "2-hour guided photo walk",
+      "Street photography techniques",
+      "Portfolio review session",
+      "Bring your own camera or phone"
+    ]
+  },
+  {
+    id: 10,
+    name: "Sustainable Fashion Panel",
+    category: "perks",
+    date: "Next Friday",
+    time: "6:00 PM - 8:30 PM",
+    location: "Tribeca",
+    address: "45 Harrison St, New York, NY",
+    price: "free",
+    spots: 90,
+    image: "https://images.unsplash.com/photo-1558769132-cb1aea592f0b?w=800&q=80",
+    description: "Industry leaders discuss the future of ethical fashion. Learn about sustainable materials, circular design, and how to build a conscious wardrobe.",
+    highlights: [
+      "Panel with 4 sustainable fashion pioneers",
+      "Q&A session",
+      "Sustainable fashion marketplace",
+      "Networking reception with light bites"
+    ]
+  },
+  {
+    id: 11,
+    name: "Molecular Mixology Workshop",
+    category: "community",
+    date: "Next Saturday",
+    time: "5:00 PM - 8:00 PM",
+    location: "Midtown",
+    address: "230 Fifth Ave, New York, NY",
+    price: "free",
+    spots: 24,
+    image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80",
+    description: "Learn the science of cocktails with master mixologist James Park. Explore molecular gastronomy techniques to create Instagram-worthy drinks.",
+    highlights: [
+      "Hands-on cocktail making",
+      "Learn 4 signature techniques",
+      "Taste 5 innovative cocktails",
+      "Take home recipe cards"
+    ]
+  },
+  {
+    id: 12,
+    name: "World Music Fusion Night",
+    category: "community",
+    date: "Next Sunday",
+    time: "8:00 PM - 12:00 AM",
+    location: "Queens",
+    address: "37-24 24th St, Long Island City, NY",
+    price: "free",
+    spots: 150,
+    image: "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80",
+    description: "A celebration of global sounds featuring musicians blending traditional instruments with modern beats. Dance the night away to Afrobeat, cumbia, and more.",
+    highlights: [
+      "3 live world music acts",
+      "Dance floor with pro instruction",
+      "Global street food vendors",
+      "Cultural exchange and celebration"
+    ]
   }
-  function dayDiff(d) { return Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - TODAY) / DAY_MS); }
-  function fmtShort(d) {
-    var s = MONTHS[d.getMonth()].toUpperCase() + ' ' + d.getDate();
-    if (d.getFullYear() !== TODAY.getFullYear()) s += ' ’' + String(d.getFullYear()).slice(2);
-    return s;
-  }
-  function fmtLong(d) {
-    var s = DAYS[d.getDay()] + ', ' + MONTHS_FULL[d.getMonth()] + ' ' + d.getDate();
-    if (d.getFullYear() !== TODAY.getFullYear()) s += ', ' + d.getFullYear();
-    return s;
-  }
-  function localDate(iso) { if (!iso) return null; var p = String(iso).slice(0, 10).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
-  function reduceMotion() { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+];
 
-  /* ---------------- NOAA solar almanac (NYC 40.71 / -74.01) ---------------- */
-  function sunEvent(date, zenith) {
-    var lat = 40.71, lng = -74.01, rad = Math.PI / 180;
-    var n = Math.round((date - new Date(date.getFullYear(), 0, 0)) / DAY_MS);
-    var lngHour = lng / 15;
-    var t = n + ((18 - lngHour) / 24);                               /* evening events */
-    var M = (0.9856 * t) - 3.289;
-    var L = M + (1.916 * Math.sin(M * rad)) + (0.020 * Math.sin(2 * M * rad)) + 282.634;
-    L = ((L % 360) + 360) % 360;
-    var RA = Math.atan(0.91764 * Math.tan(L * rad)) / rad;
-    RA = ((RA % 360) + 360) % 360;
-    RA = (RA + (Math.floor(L / 90) * 90 - Math.floor(RA / 90) * 90)) / 15;
-    var sinDec = 0.39782 * Math.sin(L * rad);
-    var cosDec = Math.cos(Math.asin(sinDec));
-    var cosH = (Math.cos(zenith * rad) - (sinDec * Math.sin(lat * rad))) / (cosDec * Math.cos(lat * rad));
-    if (cosH < -1 || cosH > 1) return null;
-    var H = (Math.acos(cosH) / rad) / 15;
-    var T = H + RA - (0.06571 * t) - 6.622;
-    var UT = (((T - lngHour) % 24) + 24) % 24;
-    return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) + UT * 3600000);
+// App State
+let currentFilter = 'all';
+let searchQuery = '';
+let currentTimeFilter = 'all'; // 'all', 'today', 'week'
+let favorites = JSON.parse(localStorage.getItem('soireeFavorites') || '[]');
+let currentPage = 1;
+const EVENTS_PER_PAGE = 10;
+
+// Region State
+let currentRegion = localStorage.getItem('soireeRegion') || null;
+let detectedRegion = null;
+let manualRegionOverride = localStorage.getItem('soireeManualRegion') === 'true';
+let freeMode = false;
+
+// Unified Gallery State
+let galleryFilter = 'art';
+let galleryEvents = [];
+let stackIndex = 0;
+let featuredIndex = 0;
+let isSwipeAnimating = false;
+const SWIPE_THRESHOLD = 80;
+
+// Art sub-filter: 'openings' or 'all' (list views only)
+let artSubFilter = 'openings';
+
+// Region Definitions
+const REGIONS = {
+  'nyc': { name: 'New York City', shortName: 'NYC', coords: { lat: 40.7128, lng: -74.0060 } },
+  'hoboken-jc': { name: 'Hoboken/Jersey City', shortName: 'Hoboken/JC', coords: { lat: 40.7439, lng: -74.0324 } },
+  'nj-state': { name: 'New Jersey (All)', shortName: 'NJ', coords: { lat: 40.0583, lng: -74.4057 } },
+  'north-nj': { name: 'North NJ', shortName: 'North', coords: { lat: 40.7357, lng: -74.1724 } },
+  'central-nj': { name: 'Central NJ', shortName: 'Central', coords: { lat: 40.3573, lng: -74.6672 } },
+  'south-nj': { name: 'South NJ', shortName: 'South', coords: { lat: 39.9259, lng: -75.0259 } },
+  'jersey-shore': { name: 'Jersey Shore', shortName: 'Shore', coords: { lat: 40.2206, lng: -74.0076 } },
+  'philly': { name: 'Philadelphia', shortName: 'Philly', coords: { lat: 39.9526, lng: -75.1652 } }
+};
+
+// Data Sources deemed "Always Free" by user definition
+const FREE_SOURCES = ['NYC For Free', 'The Local Girl', 'Hoboken Girl', 'The Hoboken Girl'];
+
+// Daily/Weekly Deals by Region
+const DEALS_BY_REGION = {
+  'nyc': {
+    daily: {
+      'Monday': ['$1 oysters at Grand Banks, 4-7pm', 'Half-price wine at Dante, all day', '$5 martinis at Temple Bar'],
+      'Tuesday': ['2-for-1 tacos at Los Tacos No.1', 'Industry night at The Flower Shop', '$10 burger + beer at The Smith'],
+      'Wednesday': ['Wine Wednesday at Terroir - 50% off bottles', '$1 oysters at Maison Premiere', 'Trivia night at The Richardson'],
+      'Thursday': ['Ladies night at Le Bain', '$8 cocktails at Please Don\'t Tell', 'Half-price apps at The Mermaid Inn'],
+      'Friday': ['Happy hour at Freehold - $5 beers', '$12 margaritas at Tacombi', 'Live music at Rockwood Music Hall'],
+      'Saturday': ['Bottomless brunch at Jack\'s Wife Freda - $25', 'DJ brunch at Sunday in Brooklyn', 'Farmers market deals at Union Square'],
+      'Sunday': ['Drag brunch at Lips', 'Jazz brunch at Birdland', '$10 bloody mary bar at The Smith', '$15 bottomless mimosas at Cafeteria', 'NFL game day specials at The Ainsworth', 'Live gospel brunch at Sylvia\'s in Harlem', 'Comedy brunch at The Stand']
+    },
+    weekly: ['Monday: $1 oysters citywide', 'Tuesday: Taco specials', 'Wednesday: Wine night', 'Thursday: Cocktail deals', 'Friday: Happy hours 4-7pm', 'Saturday: Brunch bottomless', 'Sunday: NFL watch parties']
+  },
+  'hoboken-jc': {
+    daily: {
+      'Monday': ['$25 unlimited wings all day at Madd Hatter', '$15 unlimited wings all day at 10th & Willow', 'All day HH at 8th St. Tavern - $5 High Lifes, $2 off Big Beers', '50% off oysters + sparkling 4-6pm at Stingray', '$1.50 oysters 4-6pm at Antique Bar + Bakery', '$1.50 oysters all day at Halifax', '4-7pm HH at Onieal\'s', '1-7pm HH at Louise & Jerry\'s', '$21.95 Prime Rib all day at Court Street', '4-6pm Aperitivo at Sorellina', '5-8pm HH at Texas Arizona - $5 drafts/house drinks'],
+      'Tuesday': ['$24.99 unlimited tacos all day at Madd Hatter', '$15 unlimited wings 4pm-close at Black Bear', 'Half-price tacos all night at Green Rock', '$7.99 unlimited boneless wings all day at McSwiggan\'s', '4-6pm: 50% off oysters + sparkling at Stingray', '$3 green tea shots all night at Mike\'s Wild Moose', '$2 Miller Lite/$3 Yuengling all day at The Shannon', '8pm Souper Tuesday Trivia at 8th St. Tavern', 'All night HH at Sirenetta - half-price raw bar', '7pm Trivia at Louise & Jerry\'s', '7:30pm Trivia at Farside, The Ale House, McSwiggans, Schmitty\'s', '5-8pm HH at Texas Arizona'],
+      'Wednesday': ['All day 99¢ wings at 8th St. Tavern', 'All day half-price Aperol + margaritas at 8th St. Tavern', 'All night $1 beers + $5 bar pies at Green Rock', 'All day 50% off wings at Hoboken Biergarten', '4-6pm: 50% off oysters + sparkling at Stingray', 'All night half-price wine + martinis at The Shannon', '5pm-close: $8 select wines at Onieal\'s', '8pm Trivia at The Shepherd & Knucklehead - $5 beer/wine', '8pm Trivia at Black Bear + Willie McBrides', 'Half-price wine all day at Bin 14'],
+      'Thursday': ['All day 99¢ wings at 8th St. Tavern', '$1 beers til 8pm at Green Rock', '8pm start: Half-off High Noons + house drinks at Madd Hatter', '4-6pm: $20 lobster rolls + 50% off beers at Stingray', 'All day $5 margaritas at Black Bear', '8-10pm Power Hour at The Shannon - $5 u-call-it', 'All day Tacos + Tequila at Black Bear - $9 tacos, $6 Modelos', '50% off wings all day at Farside + Psycho Mike\'s', '5-8pm HH at Texas Arizona - $5 drafts'],
+      'Friday': ['$1 beers til 10pm at Green Rock', 'Noon-7pm: $3 domestic drafts at Urban Coalhouse', '8-10pm Power Hour at The Shannon - $5 u-call-it', '4-6pm: $10 house cocktails at Stingray', '9pm-2am late night HH at The Lola - $10 cocktails', '10pm-12am late night HH at Sirenetta - $10 cocktails, $8 mules/wine', '4-7pm half-price beer + cocktails at The Ferryman, 10th & Willow, The Shepherd', 'Noon-7pm: $5 High Lifes at 8th St. Tavern', '4-7pm HH at Belo, River Street Garage, Sorellina, Sirenetta'],
+      'Saturday': ['8-10pm Power Hour at The Shannon - $5 u-call-it', '$1 wings + $5 pints all day at Green Rock', '3-5pm: $10 house cocktails at Stingray', '11am-3pm: $49 bottomless champagne at Halifax', '11am-3pm: $35 bottomless for 2hrs at Halifax', 'Sat-Sun 11am-4pm: $29 brunch at Bin 14 w/ zeppoles + drink', '11am-4pm: $45 brunch at The Lola', 'Brunch hours: $10 bottomless mimosas at Willie McBride\'s', 'Brunch hours: Bottomless brunch at Farside', 'All day: $15 tequila buckets + $10 mimosa buckets at Fat Taco', '9pm-2am late night HH at The Lola'],
+      'Sunday': ['$1 wings + $5 pints all day at Green Rock', '12:30-4pm: 50% off oysters + sparkling at Stingray', '11am-3pm: $49 bottomless champagne at Halifax', 'Sun 11am-4pm: $29 brunch at Bin 14', '11am-4pm: $45 brunch at The Lola', '10am-3:30pm: 2-for-1 brunch cocktails at Dear Maud', 'Brunch hours: $4 mimosas at The Ferryman', 'All day: $10 spritzes at Grand Vin', 'Brunch hours: Jazz brunch at Madison Bar & Grill', '$3 green tea shots all night at Mike\'s Wild Moose', '5-8pm HH at Texas Arizona']
+    },
+    weekly: ['Monday: Wing nights + oyster specials', 'Tuesday: Taco Tuesday + trivia nights', 'Wednesday: Wine specials + trivia', 'Thursday: Power hours + wing nights', 'Weekend: Bottomless brunch citywide']
+  },
+  'philly': {
+    daily: {
+      'Monday': ['$1 oysters at Oyster House', 'Half-price wine at Tria'],
+      'Tuesday': ['Taco Tuesday at Lolita', '$5 margaritas at El Vez'],
+      'Wednesday': ['Wine Wednesday at Good Dog Bar', 'Trivia at Millcreek Tavern'],
+      'Thursday': ['$3 drafts at Monk\'s Café', 'Live music at World Café Live'],
+      'Friday': ['Happy hour at Tradesman\'s', 'Fish fry at Abyssinia'],
+      'Saturday': ['Brunch at Sabrina\'s Café', 'Reading Terminal Market deals'],
+      'Sunday': ['Drag brunch at Tabu', 'Jazz brunch at South']
+    },
+    weekly: ['Monday: Oyster deals', 'Tuesday: Taco specials', 'Wednesday: Wine night', 'Weekend: Brunch & markets']
   }
-  function fmtSun(d) {
-    if (!d) return '—';
-    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
-  }
-  function renderAlmanac() {
-    var dayOfYear = Math.round((TODAY - new Date(TODAY.getFullYear(), 0, 0)) / DAY_MS);
-    var golden = sunEvent(TODAY, 84);      /* sun 6° above horizon */
-    var sunset = sunEvent(TODAY, 90.833);  /* official sunset */
-    var last = sunEvent(TODAY, 96);        /* civil dusk — last light */
-    var dot = '<span class="dot">·</span>';
-    /* each segment is a nowrap span so line breaks land on the dots,
-       never inside a label ("LAST / LIGHT") */
-    var seg = function (s) { return '<span class="alm-seg">' + s + '</span>'; };
-    $('almanac').innerHTML =
-      seg('Vol. I') + ' ' + dot + seg('No. ' + dayOfYear) + ' ' + dot +
-      seg('<b>' + esc(DAYS[TODAY.getDay()] + ', ' + MONTHS_FULL[TODAY.getMonth()] + ' ' + TODAY.getDate() + ', ' + TODAY.getFullYear()) + '</b>') + '<br>' +
-      seg('Golden hour ' + esc(fmtSun(golden))) + ' ' + dot +
-      seg('Sunset ' + esc(fmtSun(sunset))) + ' ' + dot +
-      seg('Last light ' + esc(fmtSun(last)));
+};
+
+// DOM Elements
+const eventsList = document.getElementById('events-list');
+const filterChips = document.querySelectorAll('.filter-chip');
+const searchInput = document.getElementById('search-input');
+const searchClear = document.getElementById('search-clear');
+const navItems = document.querySelectorAll('.nav-item');
+const modalOverlay = document.getElementById('modal-overlay');
+const modalClose = document.getElementById('modal-close');
+const favoritesView = document.getElementById('favorites-view');
+const discoverView = document.getElementById('discover-view');
+const aboutView = document.getElementById('about-view');
+
+// Geolocation Functions
+// Haversine distance formula (in km)
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Calculate closest region using Haversine distance
+function getClosestRegion(lat, lng) {
+  let closestRegion = 'nyc';
+  let minDistance = Infinity;
+
+  for (const [regionKey, regionData] of Object.entries(REGIONS)) {
+    const distance = haversineDistance(
+      lat, lng,
+      regionData.coords.lat, regionData.coords.lng
+    );
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestRegion = regionKey;
+    }
   }
 
-  /* ---------------- state ---------------- */
-  var RAW = [];
-  var R = null;              /* TruthPass.verify result */
-  var byId = {};
-  var artOk = {};            /* id -> image load succeeded */
-  var region = 'both';
-  try { region = localStorage.getItem('soiree.region') || 'both'; } catch (e) { }
-  if (['both', 'nyc', 'hoboken-jc'].indexOf(region) < 0) region = 'both';
+  return closestRegion;
+}
 
-  var plan = {};
+// Detect user region via geolocation
+async function detectUserRegion() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve('nyc'); // Fallback to NYC
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const region = getClosestRegion(latitude, longitude);
+        resolve(region);
+      },
+      (error) => {
+        console.warn('Geolocation denied or failed:', error);
+        resolve('nyc'); // Fallback to NYC
+      },
+      { timeout: 5000, enableHighAccuracy: false }
+    );
+  });
+}
+
+// ── Truth pass ──────────────────────────────────────────────────────────────
+// Feeds the old UI honest data: past events dropped, duplicates collapsed,
+// titles/descriptions cleaned, FREE derived from published price only, and
+// the list ordered upcoming-first (tonight → tomorrow → this week → horizon
+// → on view) instead of raw scrape order. Rendering stays exactly as it was.
+let truthPassApplied = false; // gates favorites pruning to verified data only
+
+function applyTruthPass(rawEvents) {
+  if (!window.TruthPass || typeof window.TruthPass.verify !== 'function') {
+    return rawEvents;
+  }
   try {
-    /* purge stale per-date cards, then load today's */
-    Object.keys(localStorage).forEach(function (k) {
-      if (/^soiree\.card\./.test(k) && k !== 'soiree.card.' + TODAY_KEY) localStorage.removeItem(k);
-    });
-    plan = JSON.parse(localStorage.getItem('soiree.card.' + TODAY_KEY) || '{}');
-  } catch (e) { plan = {}; }
-  function savePlan() { try { localStorage.setItem('soiree.card.' + TODAY_KEY, JSON.stringify(plan)); } catch (e) { } }
-
-  /* ---------------- region ---------------- */
-  function regionOf(raw) {
-    return /hoboken|jersey city/i.test(String(raw.location || '')) ? 'hoboken-jc' : 'nyc';
-  }
-  function wireRegister() {
-    var reg = $('register');
-    reg.addEventListener('click', function (ev) {
-      var b = ev.target.closest('[data-region]');
-      if (!b) return;
-      region = b.getAttribute('data-region');
-      try { localStorage.setItem('soiree.region', region); } catch (e) { }
-      reg.querySelectorAll('[data-region]').forEach(function (x) {
-        x.setAttribute('aria-pressed', String(x === b));
-      });
-      var sel = $('dispatchRegion');
-      if (sel && region !== 'both') sel.value = region;
-      runPipeline();
-    });
-    reg.querySelectorAll('[data-region]').forEach(function (x) {
-      x.setAttribute('aria-pressed', String(x.getAttribute('data-region') === region));
-    });
-  }
-
-  /* ---------------- pipeline ---------------- */
-  function runPipeline() {
-    var filtered = region === 'both' ? RAW : RAW.filter(function (e) { return regionOf(e) === region; });
-    R = window.TruthPass.verify(filtered, new Date());
-    byId = {};
-    R.events.forEach(function (e) { byId[e.id] = e; });
-    /* purge card picks that expired or vanished from the verified set */
-    var dirty = false;
-    Object.keys(plan).forEach(function (id) { if (!byId[id]) { delete plan[id]; dirty = true; } });
-    if (dirty) savePlan();
-    preloadTonightArt().then(function () { render(); });
-    refreshSeal();
-  }
-
-  function preloadTonightArt() {
-    var list = R.shelves.tonight.concat(R.shelves.earlierToday).filter(function (e) { return e.image && artOk[e.id] === undefined; });
-    if (!list.length) return Promise.resolve();
-    return Promise.all(list.map(function (e) {
-      return new Promise(function (res) {
-        var img = new Image();
-        /* some venues (AMNH) 403 hotlinked requests that carry a referrer */
-        img.referrerPolicy = 'no-referrer';
-        var done = function (ok) { return function () { artOk[e.id] = ok; res(); }; };
-        var timer = setTimeout(done(false), 2200);
-        img.onload = function () { clearTimeout(timer); done(true)(); };
-        img.onerror = function () { clearTimeout(timer); done(false)(); };
-        img.src = e.image;
-      });
+    const verified = window.TruthPass.verify(rawEvents, new Date());
+    truthPassApplied = true;
+    return verified.events.map(e => ({
+      ...e,
+      name: e.cleanName || e.name,
+      // cleanDescription is null when the scrape only had junk/template text —
+      // surface nothing rather than "Event in Hoboken: …"
+      description: e.cleanDescription || '',
+      location: e.location || ''
     }));
+  } catch (err) {
+    console.error('Truth pass failed, falling back to raw events:', err);
+    return rawEvents;
+  }
+}
+
+// Fetch Events from API
+async function fetchEvents() {
+  if (!USE_API) {
+    return events; // Use fallback data
   }
 
-  /* ---------------- row rendering ---------------- */
-  function isOnView(e) { return e.event_type === 'exhibition' || R.shelves.onView.indexOf(e) >= 0; }
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/events`);
+    const data = await response.json();
 
-  /* address hygiene for display: collapse whitespace, strip "(map)" */
-  function cleanAddr(e) {
-    return String(e.address || '').replace(/\(map\)/gi, '').replace(/\s+/g, ' ').trim();
-  }
-
-  /* venue line: gallery/venue name when we have one, else street · neighborhood */
-  function whereLine(e) {
-    if (e.where) return e.where;
-    var street = cleanAddr(e).split(',')[0].trim();
-    var loc = String(e.location || '').replace(/\s+/g, ' ').trim();
-    var isCity = /^(new york( city)?|nyc|hoboken|jersey city)$/i.test(loc);
-    if (loc && !isCity) return loc + (street && street.toLowerCase() !== loc.toLowerCase() && !/new york|nyc/i.test(street) ? ' · ' + street : '');
-    var hood = e.neighborhood || (isCity ? loc : 'New York');
-    if (street && street.toLowerCase() !== hood.toLowerCase() && street.toLowerCase() !== 'nyc') return street + ' · ' + hood;
-    return hood;
-  }
-
-  /* start minutes: from the module when present, else parsed off displayTime */
-  function minutesOf(e) {
-    if (e.startMin != null) return e.startMin;
-    var m = String(e.displayTime || '').match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (!m) return null;
-    var h = +m[1] % 12;
-    if (/pm/i.test(m[3])) h += 12;
-    return h * 60 + (+m[2]);
-  }
-
-  function timeCellHtml(e, mode) {
-    if (mode === 'onview') {
-      var dt = String(e.dateChip || e.displayTime || '');
-      var m = dt.match(/^(THRU|OPENS)\s+(.+)$/i);
-      if (m) return '<div class="tcell"><span class="tl">' + esc(m[1]) + '</span><span class="td">' + esc(m[2]) + '</span></div>';
-      return '<div class="tcell"><span class="td">' + esc(dt) + '</span></div>';
+    if (data.success && data.events && data.events.length > 0) {
+      // Ensure all events have required fields
+      const mapped = data.events.map(event => ({
+        ...event,
+        highlights: typeof event.highlights === 'string'
+          ? JSON.parse(event.highlights)
+          : event.highlights || []
+      }));
+      // Run the truth pass: drops past events, dedupes, cleans titles and
+      // descriptions, derives honest FREE flags, sorts soonest-first
+      return applyTruthPass(mapped);
+    } else {
+      console.warn('No events from API, using fallback');
+      return events; // Fallback to hardcoded events
     }
-    if (mode === 'horizon') {
-      var d = e.startAt || localDate(e.start_date);
-      return '<div class="tcell"><span class="tl">' + DAYS[d.getDay()].slice(0, 3) + '</span><span class="td">' + esc(fmtShort(d)) + '</span></div>';
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    return events; // Fallback to hardcoded events
+  }
+}
+
+// Initialize region on app load
+async function initRegion() {
+  const savedRegion = localStorage.getItem('soireeRegion');
+  const manualOverride = localStorage.getItem('soireeManualRegion') === 'true';
+
+  if (manualOverride && savedRegion) {
+    currentRegion = savedRegion;
+    manualRegionOverride = true;
+  } else {
+    detectedRegion = await detectUserRegion();
+    currentRegion = detectedRegion;
+    localStorage.setItem('soireeRegion', currentRegion);
+  }
+
+  // Show detected city in auto-detect option
+  const detectedLabel = document.getElementById('region-auto-detected');
+  if (detectedLabel && (detectedRegion || currentRegion)) {
+    const regionInfo = REGIONS[detectedRegion || currentRegion];
+    if (regionInfo) {
+      detectedLabel.textContent = `Near ${regionInfo.name}`;
     }
-    var t = String(e.displayTime || 'TBA');
-    var tm = t.match(/^(\d{1,2}:\d{2})\s*(AM|PM)$/i);
-    if (tm) return '<div class="tcell"><span class="tv">' + tm[1] + '</span><span class="tm">' + tm[2].toUpperCase() + '</span></div>';
-    return '<div class="tcell tba" aria-label="Time to be announced"><span class="tv">TBA</span></div>';
   }
 
-  function chipsHtml(e, mode) {
-    var c = '';
-    if (e.isFree) c += ' <span class="chip free">Free</span>';
-    if (e.soldOut) c += ' <span class="chip wine">Sold out</span>';
-    if (e.earlierToday) c += ' <span class="chip earlier">Earlier today</span>';
-    if (mode === 'onview' && e.endAt && !(/OPENS/i.test(e.dateChip || '')) && dayDiff(e.endAt) <= 14) {
-      c += ' <span class="chip closing">Final days</span>';
+  updateRegionUI();
+}
+
+// Update region UI
+function updateRegionUI() {
+  const regionNameEl = document.getElementById('current-region-name');
+  const regionData = REGIONS[currentRegion];
+  if (regionNameEl && regionData) {
+    regionNameEl.textContent = regionData.shortName;
+  }
+
+  // Update header location text
+  const locationDiv = document.querySelector('.location');
+  if (locationDiv && regionData) {
+    locationDiv.textContent = regionData.name;
+  }
+
+  // Mark active option in region picker panel + ARIA
+  document.querySelectorAll('.region-panel-option').forEach(option => {
+    const optionRegion = option.dataset.region;
+    let isActive;
+    if (optionRegion === 'auto') {
+      isActive = !manualRegionOverride;
+    } else {
+      isActive = optionRegion === currentRegion && manualRegionOverride;
     }
-    return c;
+    option.classList.toggle('active', isActive);
+    option.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+}
+
+// Handle region selection
+function handleRegionChange(newRegion) {
+  if (newRegion === 'auto') {
+    manualRegionOverride = false;
+    localStorage.setItem('soireeManualRegion', 'false');
+    initRegion();
+  } else {
+    currentRegion = newRegion;
+    manualRegionOverride = true;
+    localStorage.setItem('soireeRegion', newRegion);
+    localStorage.setItem('soireeManualRegion', 'true');
+    updateRegionUI();
+    renderEvents();
+    updateCategoryCounts();
   }
 
-  function rowHtml(e, mode) {
-    var end = localDate(e.end_date), start = localDate(e.start_date);
-    var multi = (!isOnView(e) && end && start && end > start && dayDiff(end) > 0)
-      ? '<span class="sep">·</span><span> through ' + esc(fmtShort(end)) + '</span>' : '';
-    /* poster promotion needs strong art AND a real parsed time — TBA/artless
-       events stay as rows (brief §2.4) */
-    var poster = (mode === 'tonight' && !e.earlierToday && artOk[e.id] && minutesOf(e) != null) ? ' poster' : '';
-    return '<article class="row' + (e.earlierToday ? ' past-today' : '') + poster + '" role="button" tabindex="0" data-id="' + esc(String(e.id)) + '" aria-label="' + esc(e.cleanName) + '">' +
-      timeCellHtml(e, mode) +
-      '<div class="thumb"><img loading="lazy" referrerpolicy="no-referrer" src="' + esc(e.image || PLACEHOLDER) + '" alt="" onerror="this.onerror=null;this.src=\'' + PLACEHOLDER + '\'"></div>' +
-      '<div class="rbody"><h3 class="rname">' + esc(e.cleanName) + '</h3>' +
-      '<p class="rmeta"><span>' + esc(whereLine(e)) + '</span>' + multi + chipsHtml(e, mode) + '</p></div>' +
-      sealBtnHtml(e.id) +
-      '</article>';
+  closeRegionDropdown();
+}
+
+// Lock/unlock body scroll (iOS-safe)
+function lockBodyScroll() {
+  const scrollY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${scrollY}px`;
+  document.body.style.width = '100%';
+  document.body.style.overflow = 'hidden';
+}
+
+function unlockBodyScroll() {
+  const scrollY = Math.abs(parseInt(document.body.style.top || '0', 10));
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+  document.body.style.overflow = '';
+  window.scrollTo(0, scrollY);
+}
+
+// Toggle region picker (morphs hero title ↔ city list)
+function toggleRegionDropdown() {
+  const hero = document.querySelector('.hero');
+  const backdrop = document.getElementById('region-backdrop');
+  const panel = document.getElementById('hero-region-panel');
+  const toggle = document.getElementById('region-toggle');
+
+  if (!hero) return;
+
+  const opening = !hero.classList.contains('hero--picking');
+  hero.classList.toggle('hero--picking');
+  document.body.classList.toggle('region-picking', opening);
+  if (backdrop) backdrop.classList.toggle('active', opening);
+  if (panel) panel.setAttribute('aria-hidden', !opening);
+  if (toggle) toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+
+  if (opening) {
+    if (window.innerWidth < 768) lockBodyScroll();
+    // Focus active option after animation settles
+    setTimeout(() => {
+      if (panel) {
+        const activeOption = panel.querySelector('.region-panel-option.active')
+                          || panel.querySelector('.region-panel-option');
+        if (activeOption) activeOption.focus();
+      }
+    }, 300);
+  } else {
+    unlockBodyScroll();
+    if (toggle) toggle.focus();
+  }
+}
+
+// Close region picker
+function closeRegionDropdown() {
+  const hero = document.querySelector('.hero');
+  const backdrop = document.getElementById('region-backdrop');
+  const panel = document.getElementById('hero-region-panel');
+  const toggle = document.getElementById('region-toggle');
+  if (!hero) return;
+  if (hero.classList.contains('hero--picking')) {
+    hero.classList.remove('hero--picking');
+    document.body.classList.remove('region-picking');
+    if (backdrop) backdrop.classList.remove('active');
+    if (panel) panel.setAttribute('aria-hidden', 'true');
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    unlockBodyScroll();
+  }
+}
+
+// Keyboard navigation for region picker
+function setupRegionKeyboardNav() {
+  const panel = document.getElementById('hero-region-panel');
+  if (!panel) return;
+
+  panel.addEventListener('keydown', (e) => {
+    const options = Array.from(panel.querySelectorAll('.region-panel-option'));
+    const currentFocus = document.activeElement;
+    const currentIndex = options.indexOf(currentFocus);
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        options[currentIndex < options.length - 1 ? currentIndex + 1 : 0].focus();
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        options[currentIndex > 0 ? currentIndex - 1 : options.length - 1].focus();
+        break;
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        if (currentFocus && currentFocus.dataset.region !== undefined) {
+          handleRegionChange(currentFocus.dataset.region);
+        }
+        break;
+      case 'Tab':
+        if (!e.shiftKey && currentIndex === options.length - 1) {
+          e.preventDefault();
+          options[0].focus();
+        } else if (e.shiftKey && currentIndex === 0) {
+          e.preventDefault();
+          options[options.length - 1].focus();
+        }
+        break;
+    }
+  });
+}
+
+// Swipe-to-dismiss for mobile region picker
+function setupSwipeToDismiss() {
+  const panel = document.getElementById('hero-region-panel');
+  if (!panel) return;
+
+  const panelInner = panel.querySelector('.region-panel-inner');
+  const handle = panel.querySelector('.region-panel-handle');
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+
+  function shouldCapture(e) {
+    if (window.innerWidth >= 768) return false;
+    if (handle && handle.contains(e.target)) return true;
+    const list = panel.querySelector('.region-panel-list');
+    if (list && list.scrollTop <= 0) return true;
+    return false;
   }
 
-  function sealBtnHtml(id) {
-    var inPlan = !!plan[id];
-    return '<button class="addbtn' + (inPlan ? ' inplan' : '') + '" data-add="' + esc(String(id)) + '" aria-pressed="' + inPlan + '" aria-label="' + (inPlan ? 'Remove from' : 'Note on') + ' your evening card">' +
-      (inPlan
-        ? '<svg viewBox="0 0 13 13" aria-hidden="true"><path d="M2 7l3 3 6-8"/></svg>'
-        : '<svg viewBox="0 0 13 13" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11"/></svg>') +
-      '</button>';
+  panel.addEventListener('touchstart', (e) => {
+    if (!shouldCapture(e)) return;
+    startY = e.touches[0].clientY;
+    currentY = startY;
+    isDragging = true;
+  }, { passive: true });
+
+  panel.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    currentY = e.touches[0].clientY;
+    const deltaY = currentY - startY;
+    if (deltaY > 0 && panelInner) {
+      const dampened = deltaY * 0.4;
+      panelInner.style.transform = `translateY(${dampened}px)`;
+      panelInner.style.opacity = Math.max(0.5, 1 - (deltaY / 500));
+    }
+  }, { passive: true });
+
+  panel.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    const deltaY = currentY - startY;
+
+    if (panelInner) {
+      panelInner.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease';
+      panelInner.style.transform = '';
+      panelInner.style.opacity = '';
+      setTimeout(() => { panelInner.style.transition = ''; }, 300);
+    }
+
+    if (deltaY > 80) closeRegionDropdown();
+    startY = 0;
+    currentY = 0;
+  }, { passive: true });
+}
+
+// Render coming soon placeholder for non-NYC regions
+function renderComingSoon(regionName) {
+  eventsList.innerHTML = `
+    <div class="coming-soon-state">
+      <div class="coming-soon-icon">🚀</div>
+      <div class="coming-soon-title">New areas being added soon!</div>
+      <div class="coming-soon-text">
+        Check back in ${regionName} for exciting events coming your way.
+      </div>
+      <button class="btn btn-primary" onclick="handleRegionChange('nyc')">
+        Explore NYC Events
+      </button>
+    </div>
+  `;
+}
+
+// Initialize App
+async function init() {
+  // Show skeleton loading cards
+  eventsList.innerHTML = Array.from({ length: 3 }, () => `
+    <div class="skeleton-card" aria-hidden="true">
+      <div class="skeleton-header"></div>
+      <div class="skeleton-label">
+        <div class="skeleton-line medium"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+      <div style="min-height:20px"></div>
+      <div class="skeleton-footer">
+        <div class="skeleton-line" style="width:80px;height:24px"></div>
+        <div class="skeleton-line" style="width:50px"></div>
+      </div>
+    </div>
+  `).join('');
+
+  // Track page view
+  trackPageView();
+
+  // Initialize region (detects location)
+  await initRegion();
+
+  // Fetch events from API
+  const fetchedEvents = await fetchEvents();
+  if (fetchedEvents && fetchedEvents.length > 0) {
+    events = fetchedEvents;
+  }
+  eventsLoaded = true;
+
+  // Truth-pass hygiene: favorites whose ids fell out of the verified feed
+  // would inflate the nav badge forever. Prune them — but only against a
+  // truth-passed list, never the hardcoded fallback (API-down would
+  // otherwise wipe real favorites).
+  if (truthPassApplied) {
+    const validIds = new Set(events.map(e => e.id));
+    const prunedFavorites = favorites.filter(id => validIds.has(id));
+    if (prunedFavorites.length !== favorites.length) {
+      favorites = prunedFavorites;
+      localStorage.setItem('soireeFavorites', JSON.stringify(favorites));
+    }
   }
 
-  function shelfHtml(id, title, sub, count, inner) {
-    return '<section class="shelf" id="' + id + '" data-shelf aria-label="' + esc(title) + '">' +
-      '<div class="shelf-head"><h2>' + esc(title) + '</h2><div class="rule"></div><span class="count">' + count + (count === 1 ? ' occasion' : ' occasions') + '</span></div>' +
-      (sub ? '<p class="shelf-sub">' + esc(sub) + '</p>' : '') +
-      '<div class="rows">' + inner + '</div></section>';
+  // Render and setup
+  renderEvents();
+  setupEventListeners();
+  updateFavoriteBadge();
+  updateCategoryCounts();
+  updateValueStrip();
+
+  // Navigate to URL path on initial load (e.g. direct link to /today)
+  const initialView = PATH_VIEWS[location.pathname] || 'discover';
+  if (initialView !== 'discover') {
+    navigateToView(initialView, { pushHistory: false });
+  } else {
+    history.replaceState({ view: 'discover' }, '', location.pathname);
   }
 
-  /* ---------------- editorial lead ---------------- */
-  function pickLead() {
-    var nowMin = NOW.getHours() * 60 + NOW.getMinutes();
-    var q = R.shelves.tonight.filter(function (e) {
-      var m = minutesOf(e);
-      return m != null && m >= 17 * 60 && m > nowMin && artOk[e.id];
+  // Deep link: /e/* pages inject window.__DEEP_EVENT_ID__ server-side —
+  // open that event's detail modal once the verified list is in
+  if (window.__DEEP_EVENT_ID__ != null) {
+    const deepId = parseInt(window.__DEEP_EVENT_ID__, 10);
+    window.__DEEP_EVENT_ID__ = null;
+    if (!Number.isNaN(deepId) && events.some(e => e.id === deepId)) {
+      openModal(deepId);
+    }
+  }
+}
+
+// Setup Event Listeners
+function setupEventListeners() {
+  // Filter chips — set accent colors and listeners
+  filterChips.forEach(chip => {
+    const color = chip.dataset.color;
+    if (color) chip.style.setProperty('--chip-color', color);
+    chip.addEventListener('click', () => handleFilterClick(chip));
+  });
+
+  // Art sub-filter toggle (Openings / All Shows)
+  document.querySelectorAll('.art-subfilter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.art-subfilter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      artSubFilter = btn.dataset.artFilter;
+      currentPage = 1;
+      renderEvents();
     });
-    if (!q.length) return null;
-    q.sort(function (a, b) { return (minutesOf(a) - minutesOf(b)) || ((b.isFree ? 1 : 0) - (a.isFree ? 1 : 0)); });
-    return q[0];
+  });
+
+  // Search
+  searchInput.addEventListener('input', handleSearch);
+  searchClear.addEventListener('click', clearSearch);
+
+  // Navigation
+  navItems.forEach(item => {
+    item.addEventListener('click', () => handleNavClick(item));
+  });
+
+  // Logo → home
+  const navBrandHome = document.getElementById('nav-brand-home');
+  if (navBrandHome) {
+    navBrandHome.addEventListener('click', () => navigateToView('discover'));
+    navBrandHome.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') navigateToView('discover');
+    });
   }
 
-  function leadHtml(e) {
-    return '<article class="lead" data-lead="' + esc(String(e.id)) + '">' +
-      '<div class="lead-photo"><img referrerpolicy="no-referrer" src="' + esc(e.image) + '" alt="" onerror="this.onerror=null;this.src=\'' + PLACEHOLDER + '\'"></div>' +
-      '<div class="lead-body">' +
-      '<p class="lead-k">Tonight’s lead</p>' +
-      '<h3 class="lead-name" role="button" tabindex="0" data-detail="' + esc(String(e.id)) + '">' + esc(e.cleanName) + '</h3>' +
-      '<p class="lead-meta"><span>' + esc(e.displayTime) + '</span><span class="sep">·</span><span>' + esc(whereLine(e)) + '</span>' + chipsHtml(e, 'tonight') + '</p>' +
-      '<div class="lead-actions">' +
-      '<button class="btn solid" data-detail="' + esc(String(e.id)) + '">Details</button>' +
-      '<a class="btn" href="' + esc(e.mapsUrl) + '" target="_blank" rel="noopener">Directions</a>' +
-      '</div></div></article>';
+  // Browser back/forward
+  window.addEventListener('popstate', (e) => {
+    const view = (e.state && e.state.view) || PATH_VIEWS[location.pathname] || 'discover';
+    navigateToView(view, { pushHistory: false });
+  });
+
+  // Modal
+  modalOverlay.addEventListener('click', (e) => {
+    // Ghost-click guard: a tap on a swipe-stack card opens the modal from
+    // touchend, then the browser fires the synthetic click a moment later —
+    // it lands on the freshly-opened overlay and would instantly close it.
+    // Ignore any overlay click in the first beats after opening.
+    if (Date.now() - modalOpenedAt < 500) return;
+    if (e.target === modalOverlay) closeModal();
+  });
+  modalClose.addEventListener('click', closeModal);
+
+  // Region selector
+  const regionToggle = document.getElementById('region-toggle');
+  if (regionToggle) {
+    regionToggle.addEventListener('click', toggleRegionDropdown);
+  }
+  const regionPanelClose = document.getElementById('region-panel-close');
+  if (regionPanelClose) {
+    regionPanelClose.addEventListener('click', closeRegionDropdown);
+  }
+  const regionBackdrop = document.getElementById('region-backdrop');
+  if (regionBackdrop) {
+    regionBackdrop.addEventListener('click', closeRegionDropdown);
   }
 
-  /* ---------------- dated copy (derived-only, defaults to nothing) ---------------- */
-  var DATED_COPY = {
-    '07-05': 'The Fourth has burned off and the city exhales.',
-    '01-01': 'The year is an hour old; the city sleeps it off.',
-    '12-31': 'The last page of the year — write it well.'
-  };
+  document.querySelectorAll('.region-panel-option').forEach(option => {
+    option.addEventListener('click', () => {
+      const region = option.dataset.region;
+      handleRegionChange(region);
+    });
+  });
 
-  /* ---------------- render ---------------- */
-  function render() {
-    var L = $('ledger');
-    var s = R.shelves, c = R.counts;
-    var html = '';
+  // On desktop, prevent page scroll when touching the region picker panel
+  const regionPanel = document.getElementById('hero-region-panel');
+  if (regionPanel) {
+    regionPanel.addEventListener('touchmove', (e) => {
+      // Only prevent default on desktop (inline panel); full-screen mobile needs to scroll
+      if (window.innerWidth >= 768) e.preventDefault();
+    }, { passive: false });
+  }
 
-    /* --- tonight --- */
-    var lead = pickLead();
-    var tonightRows = s.tonight.filter(function (e) { return !lead || e.id !== lead.id; });
-    var inner = (lead ? leadHtml(lead) : '') +
-      tonightRows.map(function (e) { return rowHtml(e, 'tonight'); }).join('') +
-      s.earlierToday.map(function (e) { return rowHtml(e, 'tonight'); }).join('');
-    if (c.tonight === 0) {
-      inner = '<div class="note"><p class="n-k">From the concierge</p><p>Nothing on the books tonight — it happens to the best of cities. May we suggest ' +
-        (c.tomorrow ? '<a href="#tomorrow">tomorrow</a>' : '<a href="#week">the week ahead</a>') +
-        (c.onView ? ', or a gallery <a href="#onview">still on view</a>.' : '.') + '</p></div>' + inner;
-    } else if (c.tonight <= 2) {
-      inner += '<div class="note"><p class="n-k">From the concierge</p><p>A quiet ' + DAYS[TODAY.getDay()] + ' — the city catches its breath. ' +
-        (c.tomorrow ? 'Tomorrow the ledger holds <a href="#tomorrow">' + c.tomorrow + ' occasion' + (c.tomorrow === 1 ? '' : 's') + '</a>' : 'The week ahead fills quickly') +
-        (c.onView ? ', and <a href="#onview">' + c.onView + ' exhibition' + (c.onView === 1 ? '' : 's') + '</a> remain on view, no reservation required.' : '.') +
-        '</p></div>';
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+      closeModal();
     }
-    html += shelfHtml('tonight', 'Tonight', fmtLong(TODAY), c.tonight, inner);
-
-    /* --- tomorrow --- */
-    if (c.tomorrow) {
-      html += shelfHtml('tomorrow', 'Tomorrow', fmtLong(new Date(TODAY.getTime() + DAY_MS)), c.tomorrow,
-        s.tomorrow.map(function (e) { return rowHtml(e, 'tomorrow'); }).join(''));
-    }
-
-    /* --- this week with day dividers --- */
-    if (c.thisWeek) {
-      var wk = '', lastDay = '';
-      s.thisWeek.forEach(function (e) {
-        var d = localDate(e.start_date);
-        var dk = DAYS[d.getDay()].slice(0, 3).toUpperCase() + ' ' + fmtShort(d);
-        if (dk !== lastDay) { wk += '<div class="daydiv"><span>' + esc(dk) + '</span><i></i></div>'; lastDay = dk; }
-        wk += rowHtml(e, 'week');
-      });
-      html += shelfHtml('week', 'This Week', 'Through ' + fmtLong(new Date(TODAY.getTime() + 7 * DAY_MS)), c.thisWeek, wk);
-    }
-
-    /* --- horizon --- */
-    if (c.horizon) {
-      html += shelfHtml('horizon', 'On the Horizon', 'Worth marking the calendar', c.horizon,
-        s.horizon.map(function (e) { return rowHtml(e, 'horizon'); }).join(''));
-    }
-
-    /* --- on view --- */
-    if (c.onView) {
-      html += shelfHtml('onview', 'On View', 'Exhibitions — walk in whenever', c.onView,
-        s.onView.map(function (e) { return rowHtml(e, 'onview'); }).join(''));
-    }
-
-    L.innerHTML = html;
-
-    /* --- rail --- */
-    var navDefs = [
-      ['tonight', 'Tonight', c.tonight],
-      ['tomorrow', 'Tomorrow', c.tomorrow],
-      ['week', 'This Week', c.thisWeek],
-      ['horizon', 'Horizon', c.horizon],
-      ['onview', 'On View', c.onView]
-    ];
-    $('shelfnavIn').innerHTML = navDefs
-      .filter(function (n) { return n[2] > 0 || n[0] === 'tonight'; })
-      .map(function (n) { return '<a href="#' + n[0] + '" data-nav="' + n[0] + '">' + n[1] + ' <b>' + n[2] + '</b></a>'; }).join('');
-
-    /* --- greeting (same counts as rail & footer: R.counts) --- */
-    var hr = NOW.getHours();
-    var salute = hr < 12 ? 'Good morning.' : hr < 17 ? 'Good afternoon.' : 'Good evening.';
-    var g = salute + ' ';
-    g += c.tonight
-      ? c.tonight + (c.tonight === 1 ? ' occasion holds' : ' occasions hold') + ' for tonight'
-      : 'Tonight is quiet';
-    var more = c.tomorrow + c.thisWeek;
-    if (more) g += '; the week keeps ' + more + ' more';
-    g += '.';
-    var mmdd = String(TODAY.getMonth() + 1).padStart(2, '0') + '-' + String(TODAY.getDate()).padStart(2, '0');
-    if (DATED_COPY[mmdd]) g += ' ' + DATED_COPY[mmdd];
-    $('mastGreeting').textContent = g;
-
-    /* --- colophon (same verified set) --- */
-    $('colophonLine').innerHTML = '<b>' + R.events.length + ' events on the ledger, verified ' + esc(fmtLong(TODAY)) + '</b><br>— we print what we can verify, and nothing else —';
-    $('colophonSources').textContent = R.sources.length ? 'Sourced from ' + R.sources.join(' · ') + '.' : '';
-    var ab = $('aboutSources');
-    if (ab) ab.textContent = R.sources.length ? R.sources.length + ' hand-checked feeds' : '—';
-
-    observeShelves();
-    var first = (lead || s.tonight[0] || s.tomorrow[0] || s.onView[0]);
-    if (first) setWell(first);
-  }
-
-  /* ---------------- photo well (desktop) ---------------- */
-  var wellFlip = false, wellCurrent = null;
-  function setWell(e) {
-    if (!e || e === wellCurrent || !window.matchMedia('(min-width:900px)').matches) return;
-    wellCurrent = e;
-    var incoming = $(wellFlip ? 'wellA' : 'wellB');
-    var outgoing = $(wellFlip ? 'wellB' : 'wellA');
-    wellFlip = !wellFlip;
-    incoming.onerror = function () { this.onerror = null; this.src = PLACEHOLDER; };
-    incoming.src = e.image || PLACEHOLDER;
-    incoming.classList.add('show'); outgoing.classList.remove('show');
-    var t = isOnView(e) ? (e.dateChip || e.displayTime || '') :
-      ((dayDiff(e.startAt || localDate(e.start_date)) === 0 ? 'Tonight' : fmtShort(localDate(e.start_date))) +
-        (e.displayTime && e.displayTime !== 'TBA' ? ' · ' + e.displayTime : ''));
-    $('wellTime').textContent = t;
-    $('wellName').textContent = e.cleanName;
-    $('wellWhere').textContent = whereLine(e) + (e.isFree ? '  ·  free' : '');
-  }
-
-  /* ---------------- sheets: open/close, focus trap, drag ---------------- */
-  var scrim = $('scrim');
-  var openSheet = null;
-  var lastFocus = null;
-
-  function focusables(el) {
-    return Array.prototype.filter.call(
-      el.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
-      function (n) { return n.offsetParent !== null && !n.disabled; });
-  }
-  function show(sheetEl, invoker) {
-    if (openSheet) openSheet.classList.remove('open');
-    openSheet = sheetEl;
-    lastFocus = invoker || document.activeElement;
-    sheetEl.classList.add('open');
-    scrim.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    sheetEl.scrollTop = 0;
-    setTimeout(function () {
-      if (openSheet !== sheetEl) return;
-      var close = sheetEl.querySelector('.sh-close');
-      if (close) close.focus({ preventScroll: true });
-    }, 60);
-  }
-  function hideSheets() {
-    if (!openSheet) return;
-    openSheet.classList.remove('open');
-    openSheet = null;
-    scrim.classList.remove('open');
-    document.body.style.overflow = '';
-    if (/^\/(about|pins|favorites)$/.test(location.pathname)) history.replaceState({}, '', '/');
-    if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
-    lastFocus = null;
-  }
-  scrim.addEventListener('click', hideSheets);
-  $('detailClose').addEventListener('click', hideSheets);
-  $('cardClose').addEventListener('click', hideSheets);
-  $('aboutClose').addEventListener('click', hideSheets);
-  document.addEventListener('keydown', function (ev) {
-    if (!openSheet) return;
-    if (ev.key === 'Escape') { ev.preventDefault(); hideSheets(); return; }
-    if (ev.key !== 'Tab') return;
-    var f = focusables(openSheet);
-    if (!f.length) return;
-    var first = f[0], last = f[f.length - 1];
-    if (!openSheet.contains(document.activeElement)) {
-      ev.preventDefault(); (ev.shiftKey ? last : first).focus(); return;
-    }
-    if (ev.shiftKey && document.activeElement === first) {
-      ev.preventDefault(); last.focus();
-    } else if (!ev.shiftKey && document.activeElement === last) {
-      ev.preventDefault(); first.focus();
+    if (e.key === 'Escape') {
+      closeRegionDropdown();
     }
   });
 
-  /* drag-to-dismiss on the grab handle (mobile) */
-  document.querySelectorAll('.sheet').forEach(function (sheet) {
-    var grab = sheet.querySelector('.sh-grab');
-    if (!grab) return;
-    var startY = null;
-    grab.addEventListener('pointerdown', function (ev) {
-      if (window.matchMedia('(min-width:900px)').matches) return;
-      startY = ev.clientY;
-      sheet.style.transition = 'none';
-      grab.setPointerCapture(ev.pointerId);
-    });
-    grab.addEventListener('pointermove', function (ev) {
-      if (startY == null) return;
-      var dy = Math.max(0, ev.clientY - startY);
-      sheet.style.transform = 'translateY(' + dy + 'px)';
-    });
-    function release(ev) {
-      if (startY == null) return;
-      var dy = Math.max(0, ev.clientY - startY);
-      sheet.style.transition = '';
-      sheet.style.transform = '';
-      startY = null;
-      if (dy > 90) hideSheets();
+  // Region picker: keyboard nav + swipe-to-dismiss
+  setupRegionKeyboardNav();
+  setupSwipeToDismiss();
+}
+
+// Filter Events
+function handleFilterClick(chip) {
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.classList.remove('active');
+    c.classList.remove('filter-chip-pop');
+    c.setAttribute('aria-checked', 'false');
+  });
+  chip.classList.add('active');
+  chip.classList.add('filter-chip-pop');
+  chip.setAttribute('aria-checked', 'true');
+  currentFilter = chip.dataset.filter;
+  currentPage = 1;
+
+  // Show art sub-filter when Art is active on list views
+  const artSubEl = document.getElementById('art-subfilter');
+  if (artSubEl) {
+    artSubEl.classList.toggle('hidden', currentFilter !== 'art');
+  }
+
+  renderEvents();
+  setTimeout(() => chip.classList.remove('filter-chip-pop'), 300);
+}
+
+// Search Events
+function handleSearch(e) {
+  searchQuery = e.target.value.toLowerCase();
+  searchClear.classList.toggle('visible', searchQuery.length > 0);
+  currentPage = 1;
+  renderEvents();
+}
+
+function clearSearch() {
+  searchInput.value = '';
+  searchQuery = '';
+  searchClear.classList.remove('visible');
+  currentPage = 1;
+  renderEvents();
+}
+
+// Navigation
+// Map view name → URL path
+const VIEW_PATHS = { discover: '/', all: '/all', today: '/today', week: '/week', favorites: '/favorites', about: '/about', social: '/social', pins: '/pins' };
+const PATH_VIEWS = { '/': 'discover', '/all': 'all', '/today': 'today', '/week': 'week', '/favorites': 'favorites', '/about': 'about', '/social': 'social', '/pins': 'pins' };
+
+function navigateToView(view, opts = {}) {
+  const navItem = document.querySelector(`[data-view="${view}"]`);
+  if (navItem) {
+    handleNavClick(navItem, opts);
+  } else {
+    // Home (discover) has no nav item — call handleNavClick with a synthetic element
+    handleNavClick({ dataset: { view }, classList: { contains: () => false, add: () => {}, remove: () => {} } }, opts);
+  }
+}
+
+function handleNavClick(item, { pushHistory = true } = {}) {
+  const view = item.dataset.view;
+
+  // Update active state (logo/home has no nav item to activate)
+  navItems.forEach(n => n.classList.remove('active'));
+  if (item.classList) item.classList.add('active');
+
+  // Update browser URL
+  if (pushHistory) {
+    const path = VIEW_PATHS[view] || '/';
+    history.pushState({ view }, '', path);
+  }
+
+  // Find the currently visible view
+  const socialView = document.getElementById('social-view');
+  const pinsView = document.getElementById('pins-view');
+  const views = [discoverView, favoritesView, aboutView, socialView, pinsView];
+  const visibleView = views.find(v => !v.classList.contains('hidden'));
+
+  function showView() {
+    const unifiedGallery = document.getElementById('unified-gallery');
+    const eventsListEl = document.getElementById('events-list');
+
+    // Restore nav/footer if coming from social/pins view
+    document.querySelector('.nav-bar').style.display = '';
+    document.querySelector('.app-footer').style.display = '';
+
+    if (view === 'discover') {
+      currentTimeFilter = 'all';
+      discoverView.classList.remove('hidden');
+      discoverView.classList.add('view-home');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.add('hidden');
+      socialView.classList.add('hidden');
+      pinsView.classList.add('hidden');
+      if (unifiedGallery) unifiedGallery.classList.remove('hidden');
+      if (eventsListEl) eventsListEl.classList.add('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
+      // Hide art sub-filter on home view
+      const artSubEl = document.getElementById('art-subfilter');
+      if (artSubEl) artSubEl.classList.add('hidden');
+      startRotating();
+      updateCategoryCounts();
+    } else if (view === 'all') {
+      currentTimeFilter = 'all';
+      currentPage = 1;
+      discoverView.classList.remove('hidden');
+      discoverView.classList.remove('view-home');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.add('hidden');
+      socialView.classList.add('hidden');
+      pinsView.classList.add('hidden');
+      if (unifiedGallery) unifiedGallery.classList.add('hidden');
+      if (eventsListEl) eventsListEl.classList.remove('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.remove('hidden');
+      setFixedTitle("This Week's");
+      renderEvents();
+    } else if (view === 'today') {
+      currentTimeFilter = 'today';
+      currentPage = 1;
+      discoverView.classList.remove('hidden');
+      discoverView.classList.remove('view-home');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.add('hidden');
+      socialView.classList.add('hidden');
+      pinsView.classList.add('hidden');
+      if (unifiedGallery) unifiedGallery.classList.add('hidden');
+      if (eventsListEl) eventsListEl.classList.remove('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.remove('hidden');
+      setFixedTitle("Today's");
+      renderEvents();
+    } else if (view === 'week') {
+      currentTimeFilter = 'week';
+      currentPage = 1;
+      discoverView.classList.remove('hidden');
+      discoverView.classList.remove('view-home');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.add('hidden');
+      socialView.classList.add('hidden');
+      pinsView.classList.add('hidden');
+      if (unifiedGallery) unifiedGallery.classList.add('hidden');
+      if (eventsListEl) eventsListEl.classList.remove('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.remove('hidden');
+      setFixedTitle("This Week's");
+      renderEvents();
+    } else if (view === 'favorites') {
+      discoverView.classList.add('hidden');
+      favoritesView.classList.remove('hidden');
+      aboutView.classList.add('hidden');
+      socialView.classList.add('hidden');
+      pinsView.classList.add('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
+      renderFavorites();
+    } else if (view === 'about') {
+      discoverView.classList.add('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.remove('hidden');
+      socialView.classList.add('hidden');
+      pinsView.classList.add('hidden');
+      loadStats();
+    } else if (view === 'social') {
+      discoverView.classList.add('hidden');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.add('hidden');
+      socialView.classList.remove('hidden');
+      pinsView.classList.add('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
+      document.querySelector('.nav-bar').style.display = 'none';
+      document.querySelector('.app-footer').style.display = 'none';
+      renderSocialPosts();
+    } else if (view === 'pins') {
+      discoverView.classList.add('hidden');
+      favoritesView.classList.add('hidden');
+      aboutView.classList.add('hidden');
+      socialView.classList.add('hidden');
+      pinsView.classList.remove('hidden');
+      const subscribeStripEvents = document.getElementById('subscribe-strip-events');
+      if (subscribeStripEvents) subscribeStripEvents.classList.add('hidden');
+      document.querySelector('.nav-bar').style.display = 'none';
+      document.querySelector('.app-footer').style.display = 'none';
     }
-    grab.addEventListener('pointerup', release);
-    grab.addEventListener('pointercancel', release);
+  }
+
+  // If switching to a different view container, fade out then in
+  const targetView = (view === 'favorites') ? favoritesView : (view === 'about') ? aboutView : (view === 'social') ? socialView : (view === 'pins') ? pinsView : discoverView;
+  if (visibleView && visibleView !== targetView) {
+    visibleView.classList.add('view-fade-out');
+    setTimeout(() => {
+      visibleView.classList.remove('view-fade-out');
+      showView();
+      targetView.classList.add('view-fade-in');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          targetView.classList.remove('view-fade-in');
+        });
+      });
+    }, 280);
+  } else {
+    showView();
+  }
+}
+
+// Helper: Event Region Classification
+// Whole-word keyword test — substring matching misfiled venues ("Sean Kelly"
+// contains 'sea', "Deal Lake" vs "dealer") into the wrong region entirely.
+const hasWord = (text, kw) =>
+  new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(text);
+
+const getEventRegion = (event) => {
+  const loc = (event.location || '').toLowerCase();
+  const addr = (event.address || '').toLowerCase();
+  const source = (event.source || '').toLowerCase();
+  const shoreK = ['shore', 'beach', 'ocean', 'sea', 'asbury', 'long branch', 'belmar', 'point pleasant', 'seaside', 'avalon', 'stone harbor', 'brigantine', 'atlantic city', 'cape may', 'wildwood', 'manasquan', 'bradley beach', 'ocean grove', 'spring lake', 'sea girt', 'deal'];
+  const southK = ['camden', 'cherry hill', 'mount laurel', 'medford', 'glassboro', 'vineland', 'millville', 'bridgeton', 'salem', 'deptford', 'moorestown', 'haddonfield', 'collingswood'];
+  const centralK = ['princeton', 'new brunswick', 'edison', 'woodbridge', 'manalapan', 'freehold', 'marlboro', 'sayreville', 'old bridge', 'rahway', 'somerville', 'flemington', 'plainfield', 'trenton', 'hamilton', 'ewing', 'lawrence', 'robbinsville'];
+  const northK = ['newark', 'paterson', 'clifton', 'passaic', 'wayne', 'hackensack', 'teaneck', 'fort lee', 'paramus', 'ridgewood', 'montclair', 'morristown', 'mahwah', 'summit', 'chatham', 'madison', 'dover', 'sparta', 'sussex'];
+
+  if (loc.includes('hoboken') || loc.includes('jersey city') || addr.includes('hoboken') || addr.includes('jersey city')) return 'hoboken-jc';
+  if (shoreK.some(k => hasWord(loc, k) || hasWord(addr, k))) return 'jersey-shore';
+  if (southK.some(k => hasWord(loc, k) || hasWord(addr, k))) return 'south-nj';
+  if (centralK.some(k => hasWord(loc, k) || hasWord(addr, k))) return 'central-nj';
+  if (northK.some(k => hasWord(loc, k) || hasWord(addr, k))) return 'north-nj';
+  if (source.includes('visit nj') || hasWord(loc, 'nj') || addr.includes('new jersey')) return 'jersey-shore';
+  return 'nyc';
+};
+
+const matchesCurrentRegion = (event) => {
+  const r = getEventRegion(event);
+  if (currentRegion === 'nyc') return r === 'nyc';
+  if (currentRegion === 'hoboken-jc') return r === 'hoboken-jc';
+  if (currentRegion === 'nj-state') return r !== 'nyc' && r !== 'hoboken-jc';
+  return r === currentRegion;
+};
+
+// Helper function to check if event matches time filter
+function matchesTimeFilter(event) {
+  if (currentTimeFilter === 'all') return true;
+  if (!event.start_date) return false;
+
+  const todayStr = getTodayLocal();
+  const startDateStr = extractDateFromISO(event.start_date);
+  const endDateStr = event.end_date ? extractDateFromISO(event.end_date) : startDateStr;
+
+  if (currentTimeFilter === 'today') {
+    return todayStr >= startDateStr && todayStr <= endDateStr;
+  }
+
+  if (currentTimeFilter === 'week') {
+    const endOfWeekStr = getEndOfWeekLocal();
+    return startDateStr <= endOfWeekStr && endDateStr >= todayStr;
+  }
+
+  return true;
+}
+
+// Update filter chip count badges
+function updateFilterCounts() {
+  const counts = {};
+  let total = 0;
+
+  events.forEach(event => {
+    const matchesSearch = !searchQuery ||
+      event.name.toLowerCase().includes(searchQuery) ||
+      event.location.toLowerCase().includes(searchQuery) ||
+      event.description.toLowerCase().includes(searchQuery);
+    const matchesTime = matchesTimeFilter(event);
+    // Use consistent region logic
+    const matchesRegion = matchesCurrentRegion(event);
+
+    if (matchesSearch && matchesTime && matchesRegion) {
+      total++;
+      counts[event.category] = (counts[event.category] || 0) + 1;
+    }
   });
 
-  /* ---------------- detail sheet ---------------- */
-  function openDetail(id, invoker) {
-    var e = byId[id]; if (!e) return;
-    var onView = isOnView(e);
-    var timeFact = (e.displayTime && e.displayTime !== 'TBA' && !onView)
-      ? esc(e.displayTime)
-      : (onView ? esc(e.displayTime || '') : 'Time TBA <span class="sub">check the listing</span>');
-    var priceFact = e.isFree
-      ? '<span class="fv gold" style="padding:0">Free — as published</span>'
-      : 'Not published <span class="sub">see the listing</span>';
-    var addr = cleanAddr(e);
-    if (!addr || addr.toLowerCase() === 'nyc') addr = e.location;
-    var html =
-      '<div class="sh-photo">' +
-      (e.soldOut ? '<span class="soldbadge">Sold out</span>' : '') +
-      '<img referrerpolicy="no-referrer" src="' + esc(e.image || PLACEHOLDER) + '" alt="" onerror="this.onerror=null;this.src=\'' + PLACEHOLDER + '\'"></div>' +
-      '<div class="sh-body">' +
-      '<p class="sh-when">' + esc(e.displayDate || '') + chipsHtml(e, onView ? 'onview' : 'event') + '</p>' +
-      '<h2 class="sh-name" id="detailName">' + esc(e.cleanName) + '</h2>' +
-      (e.credit ? '<p class="sh-credit">' + esc(/^curated/i.test(e.credit) ? e.credit : 'Curated by ' + e.credit) + '</p>' : '') +
-      '<div class="facts">' +
-      '<div class="fact"><span class="fk">When</span><span class="fv">' + esc(e.displayDate || '') + '</span></div>' +
-      (!onView ? '<div class="fact"><span class="fk">Time</span><span class="fv">' + timeFact + '</span></div>' : '') +
-      '<div class="fact"><span class="fk">Where</span><span class="fv">' + esc(addr) + '</span></div>' +
-      '<div class="fact"><span class="fk">Price</span><span class="fv">' + priceFact + '</span></div>' +
-      '</div>' +
-      '<div class="sh-actions">' +
-      '<a class="btn" href="' + esc(e.mapsUrl) + '" target="_blank" rel="noopener"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 11S2 7.6 2 4.8a4 4 0 118 0C10 7.6 6 11 6 11z"/><circle cx="6" cy="4.8" r="1.4"/></svg>Directions</a>' +
-      '<a class="btn solid" href="' + esc(e.url) + '" target="_blank" rel="noopener">Event page<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9l6-6M4.5 3H9v4.5"/></svg></a>' +
-      '</div>' +
-      '<div class="sh-actions">' +
-      '<button class="btn" data-add="' + esc(String(e.id)) + '">' + (plan[e.id] ? '✓ On your card' : 'Note on your card') + '</button>' +
-      '<button class="btn" data-ics="' + esc(String(e.id)) + '"><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="2.5" width="9" height="8" rx="1"/><path d="M1.5 5h9M4 1v2.5M8 1v2.5"/></svg>Add to calendar</button>' +
-      '</div>' +
-      /* description after the action row (brief §3: actions are item 4, description item 5) */
-      (e.cleanDescription ? '<p class="sh-desc">' + esc(e.cleanDescription) + '</p>' : '') +
-      dealsHtml(e) +
-      '<div class="provenance">' +
-      '<div class="prow"><span>Source</span><b>— ' + esc(e.source || 'the venue') + '</b></div>' +
-      (e.note ? '<div class="prow"><span class="pnote">' + esc(e.note) + '</span></div>' : '') +
-      '</div>' +
-      '</div>';
-    $('detailContent').innerHTML = html;
-    var sheet = $('detailSheet');
-    sheet.setAttribute('aria-label', e.cleanName);
-    show(sheet, invoker);
-  }
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    const filter = chip.dataset.filter;
+    let countEl = chip.querySelector('.filter-count');
 
-  /* per-event, data-driven deals only — the hardcoded regional deals panel is gone */
-  function dealsHtml(e) {
-    var deals = e.deals;
-    if (!deals) return '';
-    if (typeof deals === 'string') deals = [deals];
-    if (!Array.isArray(deals) || !deals.length) return '';
-    return '<div class="note" style="margin-top:16px"><p class="n-k">On the house</p>' +
-      deals.map(function (d) { return '<p>' + esc(typeof d === 'string' ? d : (d && d.text) || '') + '</p>'; }).join('') +
-      '</div>';
-  }
-
-  /* ---------------- ICS (ported from the legacy app) ---------------- */
-  function downloadICS(e) {
-    var pad = function (n) { return String(n).padStart(2, '0'); };
-    var ymdOf = function (d) { return '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()); };
-    var dtLines;
-    var start = localDate(e.start_date), end = localDate(e.end_date) || start;
-    if (end && start && start > end) start = end;   /* healed dates */
-    var mins = minutesOf(e);
-    if (start && mins != null) {
-      var ymd = ymdOf(start);
-      var h = Math.floor(mins / 60), m = mins % 60;
-      var dtStart = ymd + 'T' + pad(h) + pad(m) + '00';
-      var dtEnd = (end && end > start)
-        ? ymdOf(end) + 'T230000'
-        : ymd + 'T' + pad(Math.min(23, h + 3)) + pad(m) + '00';
-      dtLines = ['DTSTART:' + dtStart, 'DTEND:' + dtEnd];
-    } else {
-      /* time TBA — export an all-day entry; we never fabricate a 7 PM the
-         ledger itself refuses to print (DTEND is exclusive per RFC 5545) */
-      var s = start || TODAY;
-      var last = (end && end > s) ? end : s;
-      var next = new Date(last.getFullYear(), last.getMonth(), last.getDate() + 1);
-      dtLines = ['DTSTART;VALUE=DATE:' + ymdOf(s), 'DTEND;VALUE=DATE:' + ymdOf(next)];
+    if (!countEl) {
+      countEl = document.createElement('span');
+      countEl.className = 'filter-count';
+      chip.appendChild(countEl);
     }
-    var escIcs = function (s) { return String(s || '').replace(/\\/g, '\\\\').replace(/[,;]/g, '\\$&').replace(/\n/g, '\\n'); };
-    var ics = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Soiree//Event//EN',
-      'BEGIN:VEVENT',
-      dtLines[0],
-      dtLines[1],
-      'SUMMARY:' + escIcs(e.cleanName),
-      'DESCRIPTION:' + escIcs(e.cleanDescription || ''),
-      'LOCATION:' + escIcs(cleanAddr(e) || e.location || ''),
-      e.url ? 'URL:' + e.url : '',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].filter(Boolean).join('\r\n');
-    var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = String(e.cleanName).replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-') + '.ics';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast('Calendar file saved');
+
+    const count = filter === 'all' ? total : (counts[filter] || 0);
+    countEl.textContent = count;
+
+    // Hide zero-count chips (except All)
+    if (filter !== 'all' && count === 0) {
+      chip.style.display = 'none';
+    } else {
+      chip.style.display = '';
+    }
+  });
+}
+
+// Create Deals Card — collapsed = tiny peek, expanded = full detail
+function createDealsCard(timeFilter) {
+  const regionDeals = DEALS_BY_REGION[currentRegion];
+  if (!regionDeals) return '';
+
+  const regionName = REGIONS[currentRegion]?.shortName || REGIONS[currentRegion]?.name || 'your area';
+  const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+  if (timeFilter === 'today') {
+    const todayDeals = regionDeals.daily?.[todayName] || [];
+    if (todayDeals.length === 0) return '';
+
+    // Build expanded content
+    const expandedHTML = todayDeals.map(deal => {
+      const atIdx = deal.lastIndexOf(' at ');
+      const offer = atIdx > -1 ? deal.substring(0, atIdx) : deal;
+      const venue = atIdx > -1 ? deal.substring(atIdx + 4) : '';
+      return `<div class="deals-exp-item"><span class="deals-exp-offer">${offer}</span>${venue ? `<span class="deals-exp-venue">${venue}</span>` : ''}</div>`;
+    }).join('');
+
+    return `
+      <div class="deals-peek" id="deals-peek-today" onclick="toggleDealsCard('today')">
+        <span class="deals-peek-label">${todayName}'s Deals</span>
+        <span class="deals-peek-count">${todayDeals.length} in ${regionName}</span>
+        <svg class="deals-peek-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="deals-expanded" id="deals-expanded-today" style="display:none;">
+        <div class="deals-exp-header">
+          <div>
+            <div class="deals-exp-label">${regionName}</div>
+            <h3 class="deals-exp-title">${todayName}'s Deals</h3>
+          </div>
+          <button class="deals-exp-close" onclick="toggleDealsCard('today')" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="deals-exp-list">${expandedHTML}</div>
+      </div>
+    `;
+  } else if (timeFilter === 'week') {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const allDays = days.filter(d => (regionDeals.daily?.[d] || []).length > 0);
+    if (allDays.length === 0) return '';
+    const totalDeals = allDays.reduce((sum, d) => sum + regionDeals.daily[d].length, 0);
+
+    // Build expanded content
+    const expandedHTML = allDays.map(day => {
+      const dayDeals = regionDeals.daily[day];
+      const isToday = day === todayName;
+      const items = dayDeals.map(deal => {
+        const atIdx = deal.lastIndexOf(' at ');
+        const offer = atIdx > -1 ? deal.substring(0, atIdx) : deal;
+        const venue = atIdx > -1 ? deal.substring(atIdx + 4) : '';
+        return `<div class="deals-exp-item"><span class="deals-exp-offer">${offer}</span>${venue ? `<span class="deals-exp-venue">${venue}</span>` : ''}</div>`;
+      }).join('');
+      return `
+        <div class="deals-exp-day ${isToday ? 'deals-exp-day-today' : ''}">
+          <div class="deals-exp-day-label">
+            <span>${day}</span>
+            ${isToday ? '<span class="deals-exp-today-badge">Today</span>' : ''}
+          </div>
+          <div class="deals-exp-list">${items}</div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="deals-peek" id="deals-peek-week" onclick="toggleDealsCard('week')">
+        <span class="deals-peek-label">This Week's Deals</span>
+        <span class="deals-peek-count">${totalDeals} deals in ${regionName}</span>
+        <svg class="deals-peek-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="deals-expanded" id="deals-expanded-week" style="display:none;">
+        <div class="deals-exp-header">
+          <div>
+            <div class="deals-exp-label">${regionName}</div>
+            <h3 class="deals-exp-title">This Week's Deals</h3>
+          </div>
+          <button class="deals-exp-close" onclick="toggleDealsCard('week')" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="deals-exp-days">${expandedHTML}</div>
+      </div>
+    `;
   }
 
-  /* ---------------- evening card ---------------- */
-  function planList() {
-    return Object.keys(plan).map(function (id) { return byId[id]; }).filter(Boolean)
-      .sort(function (a, b) {
-        var sd = function (e) { return isOnView(e) ? (e.startAt || e.endAt || TODAY) : (e.startAt || localDate(e.start_date) || TODAY); };
-        var da = sd(a), db = sd(b);
-        if (da - db) return da - db;
-        var ma = minutesOf(a), mb = minutesOf(b);
-        if (ma == null) return 1;
-        if (mb == null) return -1;
-        return ma - mb;
-      });
+  return '';
+}
+
+// Toggle Deals Card
+function toggleDealsCard(timeFilter) {
+  const peek = document.getElementById(`deals-peek-${timeFilter}`);
+  const expanded = document.getElementById(`deals-expanded-${timeFilter}`);
+  const isOpen = expanded.style.display !== 'none';
+
+  if (isOpen) {
+    expanded.style.display = 'none';
+    peek.style.display = '';
+  } else {
+    expanded.style.display = '';
+    peek.style.display = 'none';
   }
-  function refreshSeal() {
-    var n = Object.keys(plan).length;
-    $('sealCount').textContent = n;
-    $('sealBtn').classList.toggle('show', n > 0);
+}
+
+// Render Events
+function renderEvents() {
+  // Show/hide art sub-filter based on current category
+  const artSubEl = document.getElementById('art-subfilter');
+  if (artSubEl) {
+    artSubEl.classList.toggle('hidden', currentFilter !== 'art');
   }
-  function bumpSeal() {
-    if (reduceMotion()) return;
-    var s = $('sealBtn');
-    s.classList.remove('bump');
-    void s.offsetWidth;
-    s.classList.add('bump');
+
+  // Check if current region is legitimate
+  const validRegions = ['nyc', 'hoboken-jc', 'nj-state', 'north-nj', 'central-nj', 'south-nj', 'jersey-shore'];
+  if (currentRegion && !validRegions.includes(currentRegion)) {
+    const regionData = REGIONS[currentRegion];
+    renderComingSoon(regionData ? regionData.name : 'this area');
+    return;
   }
-  function cardTimeLabel(e) {
-    if (isOnView(e)) return /OPENS/i.test(e.dateChip || '') ? e.dateChip : 'ON VIEW';
-    var d = localDate(e.start_date);
-    var pre = dayDiff(d) === 0 ? '' : fmtShort(d) + ' · ';
-    return pre + (e.displayTime && e.displayTime !== 'TBA' ? e.displayTime : 'TIME TBA');
-  }
-  function renderCard() {
-    var list = planList();
-    var html = '<div class="card-head"><p class="ch-k">The concierge has noted</p><h3>Your Evening</h3>' +
-      '<p class="ch-d">' + esc(fmtLong(TODAY)) + ' · ' + list.length + (list.length === 1 ? ' stop' : ' stops') + '</p></div>' +
-      '<div class="sh-body">';
-    if (!list.length) {
-      html += '<p class="card-empty">The card is blank — for now.<br>Tap the <b style="font-style:normal">+</b> beside any occasion and the evening writes itself.</p>';
-    } else {
-      html += '<div class="card-rows">' + list.map(function (e) {
-        return '<div class="crow"><div class="tcell"><span class="tv" style="font-size:10.5px;letter-spacing:.04em">' + esc(cardTimeLabel(e)) + '</span></div>' +
-          '<div class="cb"><p class="cn">' + esc(e.cleanName) + '</p><p class="cw">' + esc(whereLine(e)) + (e.isFree ? ' · free' : '') + '</p></div>' +
-          '<button class="rm" data-remove="' + esc(String(e.id)) + '" aria-label="Remove ' + esc(e.cleanName) + '"><svg viewBox="0 0 13 13" aria-hidden="true"><path d="M2 2l9 9M11 2l-9 9"/></svg></button></div>';
-      }).join('') + '</div>' +
-        '<div class="sh-actions"><button class="btn solid" id="copyPlan">Copy the plan</button><button class="btn" id="clearPlan">Clear</button></div>';
+
+  updateFilterCounts();
+  const filteredEvents = events.filter(event => {
+    const matchesFilter = currentFilter === 'all' || event.category === currentFilter;
+    const matchesSearch = !searchQuery ||
+      event.name.toLowerCase().includes(searchQuery) ||
+      event.location.toLowerCase().includes(searchQuery) ||
+      event.description.toLowerCase().includes(searchQuery);
+    const matchesTime = matchesTimeFilter(event);
+
+    // Use consistent region logic
+    const matchesRegion = matchesCurrentRegion(event);
+
+    // Free Filter Logic (Source-based: User Defined)
+    let matchesFree = true;
+    if (freeMode) {
+      // Truth pass derives isFree from the published price/tags only
+      matchesFree = event.isFree === true;
     }
-    html += '<p class="card-kept">Kept on this device — no account, no fuss.</p></div>';
-    $('cardContent').innerHTML = html;
+
+    // Art sub-filter: when viewing art category, filter by openings vs all
+    let matchesArtType = true;
+    if (currentFilter === 'art' && artSubFilter === 'openings') {
+      matchesArtType = !event.event_type || event.event_type === 'opening';
+    }
+
+    return matchesFilter && matchesSearch && matchesTime && matchesRegion && matchesFree && matchesArtType;
+  });
+
+  // Add deals card at top for today/week views (even if no events)
+  const dealsCard = (currentTimeFilter === 'today' || currentTimeFilter === 'week')
+    ? createDealsCard(currentTimeFilter)
+    : '';
+
+  if (filteredEvents.length === 0) {
+    eventsList.innerHTML = dealsCard + `
+      <div class="empty-state">
+        <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <div class="empty-state-title">No events found</div>
+        <div class="empty-state-text">Try adjusting your filters or search</div>
+      </div>
+    `;
+    return;
   }
-  function togglePlan(id) {
-    var adding = !plan[id];
-    if (adding) plan[id] = 1; else delete plan[id];
-    savePlan(); refreshSeal();
-    if (adding) bumpSeal();
-    document.querySelectorAll('[data-add="' + id + '"]').forEach(function (b) {
-      if (b.classList.contains('addbtn')) {
-        b.classList.toggle('inplan', adding);
-        b.setAttribute('aria-pressed', String(adding));
-        b.innerHTML = adding
-          ? '<svg viewBox="0 0 13 13" aria-hidden="true"><path d="M2 7l3 3 6-8"/></svg>'
-          : '<svg viewBox="0 0 13 13" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11"/></svg>';
-        b.setAttribute('aria-label', (adding ? 'Remove from' : 'Note on') + ' your evening card');
-        if (!reduceMotion()) { b.classList.add('pop'); setTimeout(function () { b.classList.remove('pop'); }, 220); }
-      } else {
-        b.innerHTML = adding ? '✓ On your card' : 'Note on your card';
+
+  // Pagination
+  const totalPages = Math.ceil(filteredEvents.length / EVENTS_PER_PAGE);
+  const startIndex = (currentPage - 1) * EVENTS_PER_PAGE;
+  const endIndex = startIndex + EVENTS_PER_PAGE;
+  const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
+
+  let paginationHTML = '';
+  if (totalPages > 1) {
+    paginationHTML = `
+      <div class="pagination">
+        <button class="pagination-btn" id="prev-page" ${currentPage === 1 ? 'disabled' : ''}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+          Previous
+        </button>
+        <span class="pagination-info">Page ${currentPage} of ${totalPages}</span>
+        <button class="pagination-btn" id="next-page" ${currentPage === totalPages ? 'disabled' : ''}>
+          Next
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+    `;
+  }
+
+  eventsList.innerHTML = dealsCard + paginatedEvents.map((event, index) =>
+    createEventCard(event, startIndex + index)
+  ).join('') + paginationHTML;
+
+  // Add event listeners to cards
+  document.querySelectorAll('.event-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.favorite-btn')) {
+        const eventId = parseInt(card.dataset.id);
+        openModal(eventId);
       }
     });
-    toast(adding ? 'Noted on your card' : 'Struck from the card');
-  }
-  function openCard(invoker) {
-    renderCard();
-    show($('cardSheet'), invoker);
-  }
-  $('sealBtn').addEventListener('click', function () { openCard(this); });
-  $('cardContent').addEventListener('click', function (ev) {
-    var rm = ev.target.closest('[data-remove]');
-    if (rm) {
-      togglePlan(rm.getAttribute('data-remove'));
-      renderCard();
-      if (!Object.keys(plan).length) hideSheets();
-      return;
-    }
-    if (ev.target.closest('#copyPlan')) {
-      var txt = 'soirée — ' + fmtLong(TODAY) + '\n' + planList().map(function (e) {
-        var venue = whereLine(e).split(' · ')[0];
-        return cardTimeLabel(e) + ' — ' + e.cleanName + ' @ ' + venue + ' (' + (e.neighborhood || '') + ')';
-      }).join('\n');
-      (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(
-        function () { toast('Plan copied'); },
-        function () { toast('Could not copy'); });
-      return;
-    }
-    if (ev.target.closest('#clearPlan')) {
-      Object.keys(plan).forEach(function (id) { togglePlan(id); });
-      renderCard();
-      hideSheets();
-    }
+    card.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.favorite-btn')) {
+        e.preventDefault();
+        openModal(parseInt(card.dataset.id));
+      }
+    });
   });
 
-  /* ---------------- toast ---------------- */
-  var toastTimer;
-  function toast(msg) {
-    var t = $('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 1900);
-  }
+  // Add favorite button listeners
+  document.querySelectorAll('.favorite-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const eventId = parseInt(btn.dataset.id);
+      toggleFavorite(eventId);
+    });
+  });
 
-  /* ---------------- wiring (delegated once) ---------------- */
-  function wire() {
-    var L = $('ledger');
-    L.addEventListener('click', function (ev) {
-      var add = ev.target.closest('[data-add]');
-      if (add) { ev.stopPropagation(); togglePlan(add.getAttribute('data-add')); return; }
-      if (ev.target.closest('a')) return;
-      var det = ev.target.closest('[data-detail]');
-      if (det) { openDetail(det.getAttribute('data-detail'), det); return; }
-      if (ev.target.closest('.lead')) return;
-      var row = ev.target.closest('.row');
-      if (row) openDetail(row.getAttribute('data-id'), row);
+  // Add pagination listeners
+  const prevBtn = document.getElementById('prev-page');
+  const nextBtn = document.getElementById('next-page');
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderEvents();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     });
-    L.addEventListener('keydown', function (ev) {
-      if (ev.key !== 'Enter' && ev.key !== ' ') return;
-      var det = ev.target.closest('[data-detail]');
-      if (det) { ev.preventDefault(); openDetail(det.getAttribute('data-detail'), det); return; }
-      var row = ev.target.closest('.row');
-      if (row && ev.target === row) { ev.preventDefault(); openDetail(row.getAttribute('data-id'), row); }
-    });
-    L.addEventListener('mouseover', function (ev) {
-      var row = ev.target.closest('[data-id],[data-lead]');
-      if (row) setWell(byId[row.getAttribute('data-id') || row.getAttribute('data-lead')]);
-    });
-    L.addEventListener('focusin', function (ev) {
-      var row = ev.target.closest('[data-id],[data-lead]');
-      if (row) setWell(byId[row.getAttribute('data-id') || row.getAttribute('data-lead')]);
-    });
-    $('detailContent').addEventListener('click', function (ev) {
-      var add = ev.target.closest('[data-add]');
-      if (add) { togglePlan(add.getAttribute('data-add')); return; }
-      var ics = ev.target.closest('[data-ics]');
-      if (ics) { var e = byId[ics.getAttribute('data-ics')]; if (e) downloadICS(e); }
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderEvents();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     });
   }
 
-  /* the well crossfades to the row nearest viewport center on scroll (brief §2) */
-  function wellSpy() {
-    if (!window.matchMedia('(min-width:900px)').matches) return;
-    var rows = $('ledger').querySelectorAll('[data-id],[data-lead]');
+  // Trigger scroll-reveal for cards
+  initCardReveal();
+}
+
+// ── Scroll-triggered card reveal with stagger ──
+let cardRevealObserver = null;
+
+function initCardReveal() {
+  // Disconnect previous observer
+  if (cardRevealObserver) cardRevealObserver.disconnect();
+
+  const cards = document.querySelectorAll('.event-card:not(.card-revealed)');
+  if (!cards.length) return;
+
+  let batchIndex = 0;
+  let batchTimer = null;
+
+  cardRevealObserver = new IntersectionObserver((entries) => {
+    const visible = entries.filter(e => e.isIntersecting);
+    if (!visible.length) return;
+
+    visible.forEach(entry => {
+      const card = entry.target;
+      // Stagger within batch
+      const delay = Math.min(batchIndex, 4) * 60;
+      card.style.transitionDelay = `${delay}ms`;
+      card.classList.add('card-revealed');
+      cardRevealObserver.unobserve(card);
+      batchIndex++;
+    });
+
+    // Reset batch after a pause
+    clearTimeout(batchTimer);
+    batchTimer = setTimeout(() => { batchIndex = 0; }, 200);
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+  cards.forEach(c => cardRevealObserver.observe(c));
+}
+
+// Render Favorites
+function renderFavorites() {
+  const favoriteEvents = events.filter(e => favorites.includes(e.id));
+
+  if (favoriteEvents.length === 0) {
+    favoritesView.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+        <div class="empty-state-title">No favorites yet</div>
+        <div class="empty-state-text">Tap the heart on events you love</div>
+        <button class="btn btn-primary empty-state-cta" onclick="navigateToView('all')">Browse Events</button>
+      </div>
+    `;
+    return;
+  }
+
+  favoritesView.innerHTML = `
+    <div class="events">
+      ${favoriteEvents.map((event, index) => createEventCard(event, index)).join('')}
+    </div>
+  `;
+
+  // Add event listeners
+  favoritesView.querySelectorAll('.event-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.favorite-btn')) {
+        const eventId = parseInt(card.dataset.id);
+        openModal(eventId);
+      }
+    });
+    card.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.favorite-btn')) {
+        e.preventDefault();
+        openModal(parseInt(card.dataset.id));
+      }
+    });
+  });
+
+  favoritesView.querySelectorAll('.favorite-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const eventId = parseInt(btn.dataset.id);
+      toggleFavorite(eventId);
+    });
+  });
+
+  initCardReveal();
+}
+
+// Render Social Media Posts for Instagram
+function renderSocialPosts() {
+  const nycEvents = events.filter(event => getEventRegion(event) === 'nyc');
+
+  // Date range: today → +7 days
+  const today = new Date();
+  const endOfWeek = new Date(today);
+  endOfWeek.setDate(today.getDate() + 7);
+  const todayStr = formatDateLocal(today);
+  const endOfWeekStr = formatDateLocal(endOfWeek);
+
+  // Format week label: "Feb 21 – 28, 2026"
+  const weekLabel = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    + ' – ' + endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  // Set week labels
+  ['social-week-art', 'social-week-perks', 'social-week-community'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = weekLabel;
+  });
+
+  const thisWeekEvents = nycEvents.filter(event => {
+    const eventDate = event.start_date || extractDateFromISO(event.date) || event.date;
+    if (!eventDate) return false;
+    return eventDate >= todayStr && eventDate <= endOfWeekStr;
+  });
+
+  // All events per category for NYC this week
+  const artEvents = thisWeekEvents.filter(e => e.category === 'art');
+  const perksEvents = thisWeekEvents.filter(e => e.category === 'perks');
+  const communityEvents = thisWeekEvents.filter(e => e.category === 'community');
+
+  // Max 8 in the card visual; ALL events go in the caption below
+  renderSocialCategory('social-art-events', artEvents.slice(0, 8));
+  renderSocialCategory('social-perks-events', perksEvents.slice(0, 8));
+  renderSocialCategory('social-community-events', communityEvents.slice(0, 8));
+
+  // Generate caption blocks with ALL events + hashtags
+  renderSocialCaption('social-art-caption', artEvents, 'Art', weekLabel);
+  renderSocialCaption('social-perks-caption', perksEvents, 'Perks & Pop-Ups', weekLabel);
+  renderSocialCaption('social-community-caption', communityEvents, 'Culture & Community', weekLabel);
+
+  // Set footer taglines with total curated event count
+  const totalCount = thisWeekEvents.length;
+  document.querySelectorAll('.social-tagline').forEach(el => {
+    el.textContent = `Visit for all ${totalCount} curated events this week`;
+  });
+
+  // Dynamically distribute vertical space across event rows to fill 4:5 frame
+  requestAnimationFrame(() => distributeSocialSpacing());
+}
+
+function distributeSocialSpacing() {
+  document.querySelectorAll('.social-post').forEach(post => {
+    const list = post.querySelector('.social-events-list');
+    const rows = list ? list.querySelectorAll('.social-event-row') : [];
     if (!rows.length) return;
-    var mid = window.innerHeight / 2, best = null, bestD = Infinity;
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i].getBoundingClientRect();
-      if (r.bottom < 0 || r.top > window.innerHeight) continue;
-      var d = Math.abs((r.top + r.bottom) / 2 - mid);
-      if (d < bestD) { bestD = d; best = rows[i]; }
-    }
-    if (best) setWell(byId[best.getAttribute('data-id') || best.getAttribute('data-lead')]);
-  }
 
-  /* ---------------- scrollspy ---------------- */
-  var spyWired = false;
-  var spyTick = false;
-  function spy() {
-    var links = {};
-    document.querySelectorAll('[data-nav]').forEach(function (a) { links[a.getAttribute('data-nav')] = a; });
-    var shelves = document.querySelectorAll('[data-shelf]');
-    var currentId = null;
-    shelves.forEach(function (s) {
-      if (s.getBoundingClientRect().top <= 140) currentId = s.id;
+    const count = rows.length;
+
+    // Scale font size down for dense cards
+    const fontSize = count <= 4 ? 17 : count <= 6 ? 15 : 14;
+    rows.forEach(r => {
+      const name = r.querySelector('.social-event-name');
+      if (name) name.style.fontSize = fontSize + 'px';
     });
-    if (!currentId && shelves.length) currentId = shelves[0].id;
-    Object.keys(links).forEach(function (k) { links[k].classList.toggle('on', k === currentId); });
-    var on = links[currentId];
-    if (on) {
-      var navIn = $('shelfnavIn');
-      var target = on.offsetLeft - (navIn.clientWidth - on.offsetWidth) / 2;
-      if (Math.abs(navIn.scrollLeft - target) > 40) navIn.scrollTo({ left: target, behavior: reduceMotion() ? 'auto' : 'smooth' });
-    }
-  }
-  function observeShelves() {
-    if (!spyWired) {
-      spyWired = true;
-      window.addEventListener('scroll', function () {
-        if (spyTick) return;
-        spyTick = true;
-        requestAnimationFrame(function () { spyTick = false; spy(); wellSpy(); });
-      }, { passive: true });
-    }
-    spy();
+
+    // Reset padding to measure natural height
+    rows.forEach(r => r.style.padding = '0');
+
+    const listHeight = list.clientHeight;
+    let contentHeight = 0;
+    rows.forEach(r => { contentHeight += r.scrollHeight; });
+
+    const availableSpace = listHeight - contentHeight;
+    const verticalPad = Math.max(2, Math.floor(availableSpace / (count * 2)));
+
+    rows.forEach(r => {
+      r.style.paddingTop = verticalPad + 'px';
+      r.style.paddingBottom = verticalPad + 'px';
+    });
+  });
+}
+
+
+function renderSocialCategory(containerId, categoryEvents) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (categoryEvents.length === 0) {
+    container.innerHTML = '<div class="social-empty">No events this week</div>';
+    return;
   }
 
-  /* ---------------- deep link (/e/* pages inject window.__DEEP_EVENT_ID__) ---------------- */
-  function openDeepLink() {
-    var id = window.__DEEP_EVENT_ID__;
-    if (id == null) return;
-    window.__DEEP_EVENT_ID__ = null;
-    if (!byId[id] && region !== 'both') {
-      /* the linked occasion may sit across the river — widen the register */
-      region = 'both';
-      try { localStorage.setItem('soiree.region', region); } catch (e) { }
-      $('register').querySelectorAll('[data-region]').forEach(function (x) {
-        x.setAttribute('aria-pressed', String(x.getAttribute('data-region') === 'both'));
+  container.innerHTML = categoryEvents.map((event, i) => {
+    // Short date: "Fri 2/21"
+    let shortDate = '';
+    const dateStr = event.start_date ? event.start_date.split('T')[0] : null;
+    if (dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      const day = dt.toLocaleDateString('en-US', { weekday: 'short' });
+      shortDate = `${day} ${m}/${d}`;
+    }
+
+    return `<div class="social-event-row">
+      <span class="social-event-num">${String(i + 1).padStart(2, '0')}</span>
+      <span class="social-event-name">${event.name}</span>
+      ${shortDate ? `<span class="social-event-meta">${shortDate}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderSocialCaption(captionId, allEvents, categoryName, weekLabel) {
+  const el = document.getElementById(captionId);
+  if (!el) return;
+
+  if (allEvents.length === 0) {
+    el.innerHTML = '';
+    return;
+  }
+
+  // Build plain-text caption for clipboard
+  const eventLines = allEvents.map(event => {
+    let detail = '';
+    const dateStr = event.start_date ? event.start_date.split('T')[0] : null;
+    if (dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      detail = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    if (event.location) detail += (detail ? ' · ' : '') + event.location;
+    return `• ${event.name} — ${detail}`;
+  }).join('\n');
+
+  const categoryHashtags = {
+    'Art': '#NYCArt #ArtGallery #GalleryOpening #ContemporaryArt #ArtExhibition #NYCCulture #ArtLovers #NYCArtists #ArtShow #CulturalNYC',
+    'Perks & Pop-Ups': '#NYCPerks #PopUpNYC #SampleSale #NYCDeals #PopUpShop #ExclusiveNYC #LimitedTime #NYCPopUps #NYCSavings',
+    'Culture & Community': '#NYCCommunity #NYCLocal #ThingsToDoNYC #NYCWeekend #NYCFree #NYCEvents #NYCLife #CommunityNYC #FreeNYC #NYCFun'
+  };
+
+  const baseHashtags = '#NYC #NewYorkCity #NYCEvents #ThingsToDoNYC #NYCLife #NewYork #WeekendNYC #Soiree #SoireeToday';
+  const catTags = categoryHashtags[categoryName] || '';
+
+  const captionText = `${categoryName} in NYC this week (${weekLabel}) — ${allEvents.length} curated events.\n\n${eventLines}\n\nDiscover the full lineup at soiree.today\n\n${baseHashtags}\n${catTags}`;
+
+  // Determine the social-post ID from the caption ID (e.g. social-art-caption → social-art)
+  const postId = captionId.replace('-caption', '');
+
+  el.innerHTML = `
+    <div class="social-caption-buttons">
+      <button class="social-copy-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span>Copy Caption</span>
+      </button>
+      <button class="social-download-btn" data-post-id="${postId}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Save Photo</span>
+      </button>
+    </div>
+    <div class="social-preview-image" style="display:none;">
+      <p class="social-preview-hint">Long-press the image below to save to Photos</p>
+      <img class="social-preview-img" alt="Soirée ${categoryName}">
+      <button class="social-preview-close">Dismiss</button>
+    </div>
+  `;
+
+  el.querySelector('.social-copy-btn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    try {
+      await navigator.clipboard.writeText(captionText);
+      btn.querySelector('span').textContent = 'Copied!';
+      setTimeout(() => { btn.querySelector('span').textContent = 'Copy Caption'; }, 2000);
+    } catch (err) {
+      btn.querySelector('span').textContent = 'Failed';
+      setTimeout(() => { btn.querySelector('span').textContent = 'Copy Caption'; }, 2000);
+    }
+  });
+
+  el.querySelector('.social-download-btn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const postEl = document.getElementById(postId);
+    if (!postEl) return;
+
+    const previewContainer = el.querySelector('.social-preview-image');
+    const previewImg = el.querySelector('.social-preview-img');
+
+    btn.querySelector('span').textContent = 'Generating...';
+    try {
+      // Clone at the same viewport size, then use scale to produce 1080x1350 output
+      const rect = postEl.getBoundingClientRect();
+      const clone = postEl.cloneNode(true);
+      clone.style.cssText = `position:fixed;left:-9999px;top:0;width:${rect.width}px;height:${rect.height}px;z-index:-1;`;
+      document.body.appendChild(clone);
+
+      // Scale factor: output 1080px from the element's current rendered width
+      const scaleFactor = 1080 / rect.width;
+
+      const canvas = await html2canvas(clone, {
+        width: rect.width,
+        height: rect.height,
+        scale: scaleFactor,
+        useCORS: true,
+        backgroundColor: '#EDE8E0'
       });
-      runPipeline(); /* verify() is synchronous — byId is repopulated before we look */
+
+      document.body.removeChild(clone);
+
+      const fileName = `soiree-${categoryName.toLowerCase().replace(/[^a-z]/g, '-')}.png`;
+
+      // Try Web Share API first (works on iOS — opens native share sheet with "Save to Photos")
+      if (navigator.canShare) {
+        canvas.toBlob(async (blob) => {
+          const file = new File([blob], fileName, { type: 'image/png' });
+          try {
+            await navigator.share({ files: [file] });
+            btn.querySelector('span').textContent = 'Save Photo';
+          } catch (shareErr) {
+            // User cancelled share — show inline fallback
+            showPreviewFallback(canvas, previewImg, previewContainer, btn);
+          }
+        }, 'image/png');
+      } else {
+        showPreviewFallback(canvas, previewImg, previewContainer, btn);
+      }
+    } catch (err) {
+      console.error('Download failed:', err);
+      btn.querySelector('span').textContent = 'Failed';
+      setTimeout(() => { btn.querySelector('span').textContent = 'Save Photo'; }, 2000);
     }
-    if (byId[id]) openDetail(String(id));
-  }
-
-  /* ---------------- routes ---------------- */
-  function scrollToShelf(id) {
-    var el = $(id) || $('tonight');
-    if (el) el.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
-  }
-  function applyRoute() {
-    var p = location.pathname;
-    if (p === '/social' || p === '/all') { history.replaceState({}, '', '/'); return; }
-    if (p === '/today') { requestAnimationFrame(function () { scrollToShelf('tonight'); }); }
-    else if (p === '/week') { requestAnimationFrame(function () { scrollToShelf('week'); }); }
-    else if (p === '/pins' || p === '/favorites') { openCard(); }
-    else if (p === '/about') { show($('aboutSheet')); }
-  }
-  $('aboutLink').addEventListener('click', function (ev) {
-    ev.preventDefault();
-    history.pushState({}, '', '/about');
-    show($('aboutSheet'), this);
-  });
-  window.addEventListener('popstate', function () {
-    if (location.pathname === '/about') show($('aboutSheet'));
-    else if (openSheet) { openSheet.classList.remove('open'); openSheet = null; scrim.classList.remove('open'); document.body.style.overflow = ''; }
   });
 
-  /* ---------------- subscribe ---------------- */
-  function wireDispatch() {
-    var form = $('dispatchForm');
-    var sel = $('dispatchRegion');
-    if (region !== 'both' && sel) sel.value = region;
-    form.addEventListener('submit', function (ev) {
-      ev.preventDefault();
-      var email = $('dispatchEmail').value.trim();
-      if (!email || email.indexOf('@') < 0) { toast('An address, if you please'); return; }
-      var btn = form.querySelector('button[type=submit]');
-      btn.disabled = true;
-      fetch('/api/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, region: sel.value })
-      }).then(function (r) { return r.json().catch(function () { return {}; }); })
-        .then(function (data) {
-          if (data && data.success) { $('dispatch').classList.add('sent'); }
-          else { toast((data && data.error) || 'Something went wrong'); btn.disabled = false; }
-        })
-        .catch(function () { toast('Network hiccough — try again'); btn.disabled = false; });
+  function showPreviewFallback(canvas, previewImg, previewContainer, btn) {
+    const dataUrl = canvas.toDataURL('image/png');
+    previewImg.src = dataUrl;
+    previewContainer.style.display = 'block';
+    btn.querySelector('span').textContent = 'Save Photo';
+  }
+
+  el.querySelector('.social-preview-close').addEventListener('click', () => {
+    el.querySelector('.social-preview-image').style.display = 'none';
+  });
+}
+
+// Format Date for Display
+// Clean up scraped descriptions for display — strips junk, deduplicates, truncates
+function sanitizeDescription(text) {
+  if (!text || typeof text !== 'string') return '';
+  let desc = text
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&#\d+;/g, ' ')
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/read more\.?\.?\.?/gi, '')
+    .replace(/click here\.?/gi, '')
+    .replace(/learn more\.?/gi, '')
+    .replace(/sign up (now|today|here)\.?/gi, '')
+    .replace(/register (now|today|here)\.?/gi, '')
+    .replace(/buy tickets?\.?/gi, '')
+    .replace(/get tickets?\.?/gi, '')
+    .replace(/follow us on\.*/gi, '')
+    .replace(/share this event\.?/gi, '')
+    .replace(/add to calendar\.?/gi, '')
+    .replace(/all rights reserved\.?/gi, '')
+    .replace(/©.*/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Remove duplicate sentences
+  const sentences = desc.split(/(?<=[.!?])\s+/);
+  const seen = new Set();
+  const unique = [];
+  for (const s of sentences) {
+    const norm = s.toLowerCase().trim();
+    if (norm.length < 5 || seen.has(norm)) continue;
+    seen.add(norm);
+    unique.push(s);
+  }
+  desc = unique.join(' ');
+
+  // Truncate at sentence boundary around 500 chars
+  if (desc.length > 500) {
+    const cut = desc.substring(0, 500);
+    const bp = Math.max(cut.lastIndexOf('.'), cut.lastIndexOf('!'), cut.lastIndexOf('?'));
+    desc = bp > 200 ? desc.substring(0, bp + 1) : cut.trim();
+  }
+
+  return desc;
+}
+
+function formatEventDate(event) {
+  // If we have structured dates, format them nicely
+  if (event.start_date) {
+    // Parse as UTC to avoid timezone conversion
+    const startDateStr = event.start_date.split('T')[0];
+    const endDateStr = event.end_date ? event.end_date.split('T')[0] : startDateStr;
+
+    // Check if this is a placeholder date (Feb 15, 2026)
+    if (startDateStr === '2026-02-15') {
+      return `Ongoing${event.time && event.time !== 'See details' ? ' • ' + event.time : ''}`;
+    }
+
+    const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
+    const [endYear, endMonth, endDay] = endDateStr.split('-').map(Number);
+
+    const startDate = new Date(Date.UTC(startYear, startMonth - 1, startDay));
+    const endDate = new Date(Date.UTC(endYear, endMonth - 1, endDay));
+
+    const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
+    const startFormatted = startDate.toLocaleDateString('en-US', options);
+
+    // If single day event
+    if (startDateStr === endDateStr) {
+      return `${startFormatted}${event.time ? ' • ' + event.time : ''}`;
+    } else {
+      // Multi-day event
+      const endFormatted = endDate.toLocaleDateString('en-US', options);
+      return `${startFormatted} - ${endFormatted}${event.time ? ' • ' + event.time : ''}`;
+    }
+  }
+
+  // Fallback to original format
+  return `${event.date}${event.time ? ' • ' + event.time : ''}`;
+}
+
+// Format Short Date for Badge
+function formatBadgeDate(event) {
+  // Exhibitions carry a healed chip from the truth pass ("THRU JUL 17",
+  // "THRU JAN 9 ’27", "OPENS SEP 12") — the raw start_date bypasses that
+  // healing and printed corrupted opening dates. Trust the chip.
+  if (event.isExhibition && event.dateChip) {
+    return event.dateChip.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
+  }
+  // Only use structured dates if they exist and seem valid
+  if (event.start_date) {
+    try {
+      const startDateStr = extractDateFromISO(event.start_date);
+      const todayStr = getTodayLocal();
+      const tomorrowStr = getTomorrowLocal();
+
+      const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
+      const [todayYear] = todayStr.split('-').map(Number);
+
+      // Sanity check: only use if date is within reasonable range
+      const yearsDiff = startYear - todayYear;
+      if (yearsDiff < -1 || yearsDiff > 2) {
+        return event.date || 'See Details';
+      }
+
+      // Check if it's today
+      if (startDateStr === todayStr) {
+        return 'Today';
+      }
+
+      // Check if it's tomorrow
+      if (startDateStr === tomorrowStr) {
+        return 'Tomorrow';
+      }
+
+      // Otherwise show formatted date
+      const startDate = new Date(Date.UTC(startYear, startMonth - 1, startDay));
+      const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
+      return startDate.toLocaleDateString('en-US', options);
+    } catch (e) {
+      // If date parsing fails, fall back to text
+      return event.date || 'See Details';
+    }
+  }
+
+  // No structured date - show generic message for clarity
+  // Don't show generic placeholders like "Upcoming", "This Week", "Today" without confirmation
+  const genericTerms = ['upcoming', 'this week', 'this weekend', 'today', 'tonight', 'tomorrow'];
+  const dateText = (event.date || '').toLowerCase();
+  if (genericTerms.some(term => dateText === term)) {
+    return 'See Details';
+  }
+
+  // If there's specific date text (like "Jan 24"), show it
+  return event.date || 'See Details';
+}
+
+// Category fallback gradients for cards without images
+const CATEGORY_GRADIENTS = {
+  art: 'linear-gradient(135deg, #A0686B 0%, #8B4545 100%)',
+  perks: 'linear-gradient(135deg, #B8956A 0%, #8B6347 100%)',
+  community: 'linear-gradient(135deg, #8BA89B 0%, #6B8B7B 100%)',
+  music: 'linear-gradient(135deg, #8B8B8B 0%, #5A5A5A 100%)',
+  culinary: 'linear-gradient(135deg, #A8906E 0%, #8B6F47 100%)',
+  fashion: 'linear-gradient(135deg, #6B6B6B 0%, #3D3D3D 100%)',
+  lifestyle: 'linear-gradient(135deg, #C9A18E 0%, #B8826B 100%)',
+};
+
+// Category doodle illustrations — the brand fallback art
+const CATEGORY_DOODLES = {
+  art: 'assets/images/art-doodles.png',
+  perks: 'assets/images/perks-doodles.png',
+  community: 'assets/images/community-doodles.png',
+};
+
+// Card artwork: the doodle crop always paints underneath (hash of the title
+// keeps the crop consistent per event); when the listing has a real
+// photograph we layer it on top, and onerror peels it away to the doodle.
+function eventCardArt(event) {
+  let style;
+  if (CATEGORY_DOODLES[event.category]) {
+    let h = 0;
+    for (let i = 0; i < event.name.length; i++) h = ((h << 5) - h) + event.name.charCodeAt(i) | 0;
+    const x = Math.abs(h % 80) + 10;          // 10-89%
+    const y = Math.abs((h >>> 8) % 80) + 10;  // 10-89%
+    style = `background-image: url('${CATEGORY_DOODLES[event.category]}'); background-size: 280%; background-position: ${x}% ${y}%`;
+  } else {
+    style = `background: ${CATEGORY_GRADIENTS[event.category] || CATEGORY_GRADIENTS.community}`;
+  }
+  const img = event.image
+    ? `<img class="event-art-photo" src="${event.image}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`
+    : '';
+  return { style, img };
+}
+
+// Create Event Card
+function createEventCard(event, index) {
+  const isFavorited = favorites.includes(event.id);
+  const isFree = event.isFree === true;
+  const badgeDate = formatBadgeDate(event);
+  const timeText = event.time && event.time !== 'See details' ? event.time : '';
+  const displayName = event.name.replace(/American Museum of Natural History/gi, 'AMNH');
+  const categoryName = getCategoryName(event.category);
+  const art = eventCardArt(event);
+
+  return `
+    <div class="event-card" data-id="${event.id}" data-category="${event.category}" data-start-date="${event.start_date || ''}" data-end-date="${event.end_date || ''}" role="article" tabindex="0">
+      <div class="event-card-accent"></div>
+      <div class="event-card-image" style="${art.style}">${art.img}</div>
+      <div class="event-card-inner">
+        <div class="event-card-top">
+          <div class="event-card-meta">
+            <span class="event-card-category">${categoryName}</span>
+            <span class="event-card-date">${badgeDate}${timeText ? ' · ' + timeText : ''}</span>
+          </div>
+          <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" data-id="${event.id}" aria-label="${isFavorited ? 'Remove from' : 'Add to'} favorites">
+            <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="event-card-body">
+          <h3 class="event-name">${displayName}</h3>
+        </div>
+        <div class="event-card-footer">
+          <div class="event-footer-location">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span>${event.location}</span>
+          </div>
+          <div class="event-footer-badges">
+            ${event.soldOut === true ? '<span class="event-footer-soldout">Sold Out</span>' : ''}
+            ${isFree ? '<span class="event-footer-free">Free</span>' : ''}
+            ${(event.deals && Array.isArray(event.deals) && event.deals.length > 0) ? '<span class="event-footer-deals">Daily Deals</span>' : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Modal
+let modalOpenedAt = 0; // see the ghost-click guard on the overlay listener
+
+function openModal(eventId) {
+  const event = events.find(e => e.id === eventId);
+  if (!event) return;
+  modalOpenedAt = Date.now();
+
+  const isFavorited = favorites.includes(event.id);
+  const isFree = event.isFree === true;
+  const dateDisplay = formatEventDate(event);
+  const categoryName = getCategoryName(event.category);
+  const descriptionText = sanitizeDescription(event.description);
+
+  // Build info pills
+  const datePill = `
+    <div class="modal-info-pill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <div class="modal-pill-content">
+        <span class="modal-pill-label">When</span>
+        <span class="modal-pill-value">${formatBadgeDate(event)}</span>
+        ${event.time && event.time !== 'See details' ? `<span class="modal-pill-sub">${event.time}</span>` : ''}
+      </div>
+    </div>`;
+
+  const locationPill = `
+    <div class="modal-info-pill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      <div class="modal-pill-content">
+        <span class="modal-pill-label">Where</span>
+        <span class="modal-pill-value">${event.location}</span>
+        ${event.address ? `<span class="modal-pill-sub">${event.address}</span>` : ''}
+      </div>
+    </div>`;
+
+  const freePill = isFree ? `<div class="modal-free-pill">Free Entry</div>` : '';
+  const soldOutPill = event.soldOut === true ? `<div class="modal-soldout-pill">Sold Out</div>` : '';
+
+  // Build highlights
+  const highlightsHTML = (event.highlights && event.highlights.length > 0) ? `
+    <div class="modal-highlights-section">
+      <span class="modal-section-label">What to Expect</span>
+      <div class="modal-highlights-grid">
+        ${event.highlights.map(h => `
+          <div class="modal-highlight-item">
+            <div class="modal-highlight-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="modal-highlight-text">${h}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>` : '';
+
+  // Build deals section (daily drink/food specials)
+  const dealsHTML = (event.deals && Array.isArray(event.deals) && event.deals.length > 0) ? `
+    <div class="modal-deals-section">
+      <span class="modal-section-label">Daily Specials</span>
+      <div class="modal-deals-grid">
+        ${event.deals.map(deal => `
+          <div class="modal-deal-item">
+            <div class="modal-deal-day">${deal.day}</div>
+            <div class="modal-deal-text">${deal.offer}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>` : '';
+
+  // CTA button
+  const ctaHTML = event.url
+    ? `<a href="${event.url}" target="_blank" rel="noopener noreferrer" class="modal-cta-btn">
+        View Full Details
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>
+        </svg>
+      </a>`
+    : `<button class="modal-cta-btn rsvp-btn" onclick="handleRSVP(${event.id})">
+        Reserve Your Spot
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>`;
+
+  const modalContent = `
+    <div class="modal-handle"></div>
+
+    <!-- Hero — compact header with category swatch -->
+    <div class="modal-hero">
+      <div class="modal-hero-swatch" data-category="${event.category}">
+        ${event.category === 'art' ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`
+        : event.category === 'perks' ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg>`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`}
+      </div>
+      <div class="modal-hero-title-block">
+        <span class="modal-hero-category">${categoryName}</span>
+        <h2 class="modal-hero-title" id="modal-dynamic-title">${event.name}</h2>
+        ${event.source ? `<div class="modal-source-badge"><span class="modal-source-dot"></span>${event.source}</div>` : ''}
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="modal-actions-bar">
+      <button class="modal-action-btn ${isFavorited ? 'favorited' : ''}" id="modal-fav-btn"
+        onclick="toggleFavorite(${event.id}); updateModalFavBtn(${event.id})"
+        aria-label="${isFavorited ? 'Remove from favorites' : 'Save event'}">
+        <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        ${isFavorited ? 'Saved' : 'Save'}
+      </button>
+      <button class="modal-action-btn" onclick="shareEvent(${event.id})" aria-label="Share event">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+        Share
+      </button>
+      <button class="modal-action-btn" onclick="downloadICS(${event.id})" aria-label="Add to calendar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Calendar
+      </button>
+    </div>
+
+    <!-- Info Pills -->
+    <div class="modal-info-pills">
+      ${datePill}
+      ${locationPill}
+      ${freePill}
+      ${soldOutPill}
+    </div>
+
+    <!-- Description (omitted entirely when the scrape had only template junk) -->
+    ${descriptionText ? `
+    <div class="modal-body-content">
+      <span class="modal-section-label">About This Event</span>
+      <p class="modal-description">${descriptionText}</p>
+    </div>` : ''}
+
+    <!-- Highlights -->
+    ${highlightsHTML}
+
+    <!-- Deals -->
+    ${dealsHTML}
+
+    <!-- CTA -->
+    <div class="modal-cta-section">
+      <div class="modal-cta-divider"></div>
+      ${ctaHTML}
+    </div>
+  `;
+
+  document.getElementById('modal-body').innerHTML = modalContent;
+
+  // Set dynamic aria-labelledby to the modal title
+  const modalTitleEl = document.querySelector('.modal-hero-title');
+  if (modalTitleEl) {
+    modalTitleEl.id = 'modal-dynamic-title';
+    modalOverlay.setAttribute('aria-labelledby', 'modal-dynamic-title');
+  }
+
+  // Remember which element had focus before opening
+  modalOverlay._previousFocus = document.activeElement;
+
+  modalOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  // Move focus into the modal (close button)
+  requestAnimationFrame(() => {
+    modalClose.focus();
+  });
+
+  // Focus trapping
+  modalOverlay._trapFocus = (e) => {
+    if (e.key !== 'Tab') return;
+    const focusable = modalOverlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  };
+  modalOverlay.addEventListener('keydown', modalOverlay._trapFocus);
+}
+
+function closeModal() {
+  // Remove focus trap
+  if (modalOverlay._trapFocus) {
+    modalOverlay.removeEventListener('keydown', modalOverlay._trapFocus);
+    modalOverlay._trapFocus = null;
+  }
+
+  modalOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+
+  // Restore focus to the element that opened the modal
+  if (modalOverlay._previousFocus) {
+    modalOverlay._previousFocus.focus();
+    modalOverlay._previousFocus = null;
+  }
+}
+
+function handleRSVP(eventId) {
+  const event = events.find(e => e.id === eventId);
+  closeModal();
+  showToast(`You're on the list for ${event.name}`);
+}
+
+function updateModalFavoriteBtn(eventId) {
+  const isFavorited = favorites.includes(eventId);
+  const btn = document.querySelector('.modal-actions .btn-secondary');
+  if (btn) {
+    btn.textContent = isFavorited ? 'Remove from Favorites' : 'Add to Favorites';
+  }
+}
+
+// Update the new modal favorite button state
+function updateModalFavBtn(eventId) {
+  const isFavorited = favorites.includes(eventId);
+  const btn = document.getElementById('modal-fav-btn');
+  if (!btn) return;
+  btn.classList.toggle('favorited', isFavorited);
+  const svg = btn.querySelector('svg');
+  if (svg) svg.setAttribute('fill', isFavorited ? 'currentColor' : 'none');
+  // Update text node (last child)
+  const textNodes = [...btn.childNodes].filter(n => n.nodeType === 3);
+  if (textNodes.length) textNodes[textNodes.length - 1].textContent = isFavorited ? ' Saved' : ' Save';
+  btn.setAttribute('aria-label', isFavorited ? 'Remove from favorites' : 'Save event');
+}
+
+// Favorites
+function toggleFavorite(eventId) {
+  // Normalize: dataset ids arrive as strings; a string in the array would
+  // never match the numeric check and the heart could only ever add
+  eventId = typeof eventId === 'string' ? parseInt(eventId, 10) : eventId;
+  const wasAdded = !favorites.includes(eventId);
+  if (wasAdded) {
+    favorites.push(eventId);
+  } else {
+    favorites = favorites.filter(id => id !== eventId);
+  }
+
+  localStorage.setItem('soireeFavorites', JSON.stringify(favorites));
+  updateFavoriteBadge();
+
+  // Pulse the heart button that was clicked
+  if (wasAdded) {
+    const btn = document.querySelector(`.favorite-btn[data-id="${eventId}"]`);
+    if (btn) {
+      btn.classList.add('fav-pulse');
+      setTimeout(() => btn.classList.remove('fav-pulse'), 400);
+    }
+  }
+
+  // Re-render current view
+  const activeNav = document.querySelector('.nav-item.active');
+  if (activeNav?.dataset.view === 'favorites') {
+    renderFavorites();
+  } else {
+    renderEvents();
+  }
+
+  // Refresh desktop gallery sidebar favorite states
+  if (window.innerWidth >= 768 && document.getElementById('gallery-featured')) {
+    renderFeaturedLayout();
+  }
+
+  // Mobile stack: repaint so the heart's filled state is visible immediately.
+  // Never mid-swipe — completeSwipe() toggles before its fly-out transition,
+  // and a repaint here would destroy the animating card.
+  if (window.innerWidth < 768 && !isSwipeAnimating && document.getElementById('gallery-stack-cards')) {
+    renderStackCards();
+  }
+}
+
+function updateFavoriteBadge() {
+  const badge = document.querySelector('.favorite-badge');
+  if (badge) {
+    badge.textContent = favorites.length;
+    badge.style.display = favorites.length > 0 ? 'block' : 'none';
+  }
+}
+
+// Stats & Analytics
+async function trackPageView() {
+  if (!USE_API) return;
+
+  try {
+    await fetch(`${API_BASE_URL}/api/stats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
     });
-    /* the seal FAB steps aside while the dispatch fields are focused —
-       it must never sit over typed text with the keyboard up */
-    var dispatch = $('dispatch');
-    dispatch.addEventListener('focusin', function () { $('sealBtn').classList.add('dodge'); });
-    dispatch.addEventListener('focusout', function () { $('sealBtn').classList.remove('dodge'); });
+  } catch (error) {
+    console.error('Error tracking page view:', error);
+  }
+}
+
+async function loadStats() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/stats`);
+    const data = await response.json();
+
+    if (data.success && data.stats) {
+      const formatNumber = (num) => num ? num.toLocaleString('en-US') : '—';
+
+      const statEls = ['stat-events', 'stat-views', 'stat-unique'];
+      const vals = [
+        formatNumber(data.stats.totalEventsScraped || data.stats.totalEvents),
+        formatNumber(data.stats.pageViews),
+        formatNumber(data.stats.uniqueEvents)
+      ];
+      statEls.forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el) {
+          setTimeout(() => {
+            el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(6px)';
+            setTimeout(() => {
+              el.textContent = vals[i];
+              el.style.opacity = '1';
+              el.style.transform = 'translateY(0)';
+            }, 120);
+          }, 200 + i * 150);
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error loading stats:', error);
+    ['stat-events', 'stat-views', 'stat-unique'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '—';
+    });
   }
 
-  /* ---------------- instagram band (render only when posts exist) ---------------- */
-  function initIgBand() {
-    fetch('/api/instagram-feed')
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (data) {
-        if (!data || !Array.isArray(data.posts) || !data.posts.length) return;
-        $('igGrid').innerHTML = data.posts.slice(0, 6).map(function (p) {
-          return '<a href="' + esc(p.permalink) + '" target="_blank" rel="noopener" aria-label="Instagram post">' +
-            '<img src="' + esc(p.media_url) + '" alt="" loading="lazy" onerror="this.parentNode.remove()"></a>';
-        }).join('');
-        $('igband').hidden = false;
-      })
-      .catch(function () { });
+  // Load technical stats (also updates stat-sources)
+  loadTechStats();
+}
+
+async function loadTechStats() {
+  try {
+    // Measure API response time
+    const startTime = performance.now();
+    const response = await fetch(`${API_BASE_URL}/api/events`);
+    const endTime = performance.now();
+    const data = await response.json();
+
+    // Update API speed (element may not exist in current layout)
+    const apiSpeed = Math.round(endTime - startTime);
+    const apiSpeedEl = document.getElementById('api-speed');
+    if (apiSpeedEl) apiSpeedEl.textContent = `~${apiSpeed}ms`;
+
+    // Get last scrape time from most recent event
+    if (data.success && data.events && data.events.length > 0) {
+      const mostRecent = data.events.reduce((latest, event) => {
+        const eventTime = new Date(event.scraped_at || event.created_at);
+        const latestTime = new Date(latest.scraped_at || latest.created_at);
+        return eventTime > latestTime ? event : latest;
+      });
+
+      const lastScrape = new Date(mostRecent.scraped_at || mostRecent.created_at);
+      const now = new Date();
+      const diffHours = Math.floor((now - lastScrape) / (1000 * 60 * 60));
+
+      let timeText;
+      if (diffHours < 1) {
+        const diffMins = Math.floor((now - lastScrape) / (1000 * 60));
+        timeText = `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+      } else if (diffHours < 24) {
+        timeText = `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+      } else {
+        const diffDays = Math.floor(diffHours / 24);
+        timeText = `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+      }
+
+      document.getElementById('last-scrape').textContent = timeText;
+
+      // Count unique sources (approximate based on URL patterns)
+      const sources = new Set();
+      data.events.forEach(event => {
+        if (event.url) {
+          try {
+            const hostname = new URL(event.url).hostname;
+            sources.add(hostname);
+          } catch (e) { }
+        }
+      });
+
+      const sourceCountEl = document.getElementById('source-count');
+      if (sources.size > 0 && sourceCountEl) {
+        sourceCountEl.textContent = `${sources.size} curated sources`;
+      }
+      // Update the about page metrics bar source count
+      const statSourcesEl = document.getElementById('stat-sources');
+      if (sources.size > 0 && statSourcesEl) {
+        statSourcesEl.textContent = `${sources.size}+`;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading tech stats:', error);
+    const lastScrapeEl = document.getElementById('last-scrape');
+    if (lastScrapeEl) lastScrapeEl.textContent = 'Recently';
+    const apiSpeedFallback = document.getElementById('api-speed');
+    if (apiSpeedFallback) apiSpeedFallback.textContent = '~200ms';
+  }
+}
+
+// Utilities
+function getCategoryName(category) {
+  const names = {
+    art: 'Art',
+    perks: 'Perks & Pop-Ups',
+    community: 'Culture & Community'
+  };
+  return names[category] || category;
+}
+
+// Share event
+function shareEvent(eventId) {
+  const event = events.find(e => e.id === eventId);
+  if (!event) return;
+
+  // Use Web Share API if available
+  if (navigator.share) {
+    navigator.share({
+      title: event.name,
+      text: `Check out ${event.name} at ${event.location}`,
+      url: event.url || window.location.href
+    }).catch(() => {
+      // Fallback to copy
+      fallbackShare(event);
+    });
+  } else {
+    fallbackShare(event);
+  }
+}
+
+function fallbackShare(event) {
+  const url = event.url || window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('Link copied to clipboard!');
+  }).catch(() => {
+    showToast('Share: ' + url);
+  });
+}
+
+// Calendar export (ICS)
+function downloadICS(eventId) {
+  const event = events.find(e => e.id === eventId);
+  if (!event) return;
+
+  // Build start/end dates
+  let dtStart, dtEnd;
+  if (event.start_date) {
+    dtStart = event.start_date.replace(/[-:]/g, '').replace(/\.\d+/, '').replace('T', 'T');
+    if (!dtStart.includes('T')) dtStart += 'T190000';
+    if (event.end_date && event.end_date !== event.start_date) {
+      dtEnd = event.end_date.replace(/[-:]/g, '').replace(/\.\d+/, '').replace('T', 'T');
+      if (!dtEnd.includes('T')) dtEnd += 'T230000';
+    } else {
+      // Default 3-hour duration
+      dtEnd = dtStart.replace(/T(\d{2})/, (_, h) => 'T' + String(Math.min(23, parseInt(h) + 3)).padStart(2, '0'));
+    }
+  } else {
+    // No structured date — use tomorrow at 7pm as placeholder
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    const pad = (n) => String(n).padStart(2, '0');
+    dtStart = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T190000`;
+    dtEnd = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T220000`;
   }
 
-  /* ---------------- boot ---------------- */
-  renderAlmanac();
-  wireRegister();
-  wireDispatch();
-  wire();
-  initIgBand();
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Soiree//Event//EN',
+    'BEGIN:VEVENT',
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:${event.name}`,
+    `DESCRIPTION:${(event.description || '').replace(/\n/g, '\\n')}`,
+    `LOCATION:${event.address || event.location || ''}`,
+    event.url ? `URL:${event.url}` : '',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].filter(Boolean).join('\r\n');
 
-  fetch('/api/events')
-    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(function (j) {
-      RAW = j.events || [];
-      var filtered = region === 'both' ? RAW : RAW.filter(function (e) { return regionOf(e) === region; });
-      R = window.TruthPass.verify(filtered, new Date());
-      byId = {};
-      R.events.forEach(function (e) { byId[e.id] = e; });
-      var dirty = false;
-      Object.keys(plan).forEach(function (id) { if (!byId[id]) { delete plan[id]; dirty = true; } });
-      if (dirty) savePlan();
-      refreshSeal();
-      preloadTonightArt().then(function () {
-        render();
-        applyRoute();
-        openDeepLink();
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${event.name.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-')}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Calendar event downloaded');
+}
+
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.classList.add('show'), 100);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+// Rotating title text
+let rotatingInterval = null;
+
+function initRotatingTitle() {
+  startRotating();
+}
+
+function startRotating() {
+  stopRotating();
+  const words = document.querySelectorAll('.title-word');
+  if (words.length === 0) return;
+
+  let current = 0;
+  words.forEach((w, i) => {
+    w.classList.remove('active', 'exit');
+    if (i === 0) w.classList.add('active');
+  });
+
+  rotatingInterval = setInterval(() => {
+    const prev = current;
+    current = (current + 1) % words.length;
+
+    words[prev].classList.add('exit');
+    words[prev].classList.remove('active');
+
+    setTimeout(() => {
+      words[prev].classList.remove('exit');
+    }, 500);
+
+    words[current].classList.add('active');
+  }, 2000);
+}
+
+function stopRotating() {
+  if (rotatingInterval) {
+    clearInterval(rotatingInterval);
+    rotatingInterval = null;
+  }
+}
+
+function setFixedTitle(text) {
+  stopRotating();
+  const panel = document.getElementById('hero-title-panel');
+  const words = document.querySelectorAll('.title-word');
+  // Fade out, swap, fade in
+  if (panel) panel.style.opacity = '0';
+  setTimeout(() => {
+    words.forEach(w => w.classList.remove('active', 'exit'));
+    let found = false;
+    for (const w of words) {
+      if (w.textContent.trim().toLowerCase() === text.toLowerCase()) {
+        w.classList.add('active');
+        found = true;
+        break;
+      }
+    }
+    if (!found) { words[0].textContent = text; words[0].classList.add('active'); }
+    if (panel) panel.style.opacity = '1';
+  }, 200);
+}
+
+// ============================================================================
+// NETWORK GRAPH VISUALIZATION
+// ============================================================================
+
+function lightenHex(hex, amount) {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = Math.min(255, (num >> 16) + amount);
+  const g = Math.min(255, ((num >> 8) & 0xff) + amount);
+  const b = Math.min(255, (num & 0xff) + amount);
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+
+// ── Activity Chart (scrape + instagram timeline) ──────────────────
+async function initActivityChart() {
+  const canvas = document.getElementById('activity-chart');
+  if (!canvas || canvas.hasAttribute('data-init')) return;
+  canvas.setAttribute('data-init', 'true');
+
+  // Fetch timeline data
+  let timeline = [];
+  try {
+    const resp = await fetch(`${API_BASE_URL}/api/stats`);
+    const data = await resp.json();
+    if (data.timeline) timeline = data.timeline;
+  } catch (e) { /* ignore */ }
+
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width || 300;
+  const h = rect.height || 140;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+
+  // Build 30-day date array
+  const days = [];
+  const now = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+
+  // Map timeline data to day buckets
+  const scrapeByDay = {};
+  const igByDay = {};
+  for (const entry of timeline) {
+    const dateStr = typeof entry.date === 'string' ? entry.date.slice(0, 10) : new Date(entry.date).toISOString().slice(0, 10);
+    if (entry.type === 'scrape') scrapeByDay[dateStr] = (scrapeByDay[dateStr] || 0) + Number(entry.count);
+    if (entry.type === 'instagram') igByDay[dateStr] = (igByDay[dateStr] || 0) + Number(entry.count);
+  }
+
+  const scrapeData = days.map(d => scrapeByDay[d] || 0);
+  const igData = days.map(d => igByDay[d] || 0);
+  const maxVal = Math.max(1, ...scrapeData, ...igData);
+
+  // Colors
+  const scrapeColor = '#7C6AE8';
+  const scrapeGlow = 'rgba(124, 106, 232, 0.2)';
+  const igColor = '#FF6B9D';
+  const igGlow = 'rgba(255, 107, 157, 0.25)';
+  const gridColor = 'rgba(255, 255, 255, 0.05)';
+  const labelColor = 'rgba(255, 255, 255, 0.25)';
+
+  // Chart margins
+  const ml = 4, mr = 4, mt = 8, mb = 18;
+  const cw = w - ml - mr;
+  const ch = h - mt - mb;
+  const barW = Math.max(2, (cw / days.length) * 0.35);
+  const gap = 2;
+
+  // Clear
+  ctx.clearRect(0, 0, w, h);
+
+  // Grid lines (3 horizontal)
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i < 4; i++) {
+    const y = mt + (ch / 3) * i;
+    ctx.beginPath();
+    ctx.moveTo(ml, y);
+    ctx.lineTo(w - mr, y);
+    ctx.stroke();
+  }
+
+  // Draw bars
+  for (let i = 0; i < days.length; i++) {
+    const x = ml + (i / (days.length - 1)) * cw;
+    const sv = scrapeData[i];
+    const iv = igData[i];
+
+    // Scrape bar
+    if (sv > 0) {
+      const bh = (sv / maxVal) * ch;
+      const y = mt + ch - bh;
+
+      // Glow
+      ctx.shadowColor = scrapeGlow;
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = scrapeColor;
+      ctx.beginPath();
+      ctx.roundRect(x - barW - gap / 2, y, barW, bh, [2, 2, 0, 0]);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Instagram bar
+    if (iv > 0) {
+      const bh = Math.max(6, (iv / maxVal) * ch);
+      const y = mt + ch - bh;
+
+      ctx.shadowColor = igGlow;
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = igColor;
+      ctx.beginPath();
+      ctx.roundRect(x + gap / 2, y, barW, bh, [2, 2, 0, 0]);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // Date labels (show every ~7 days)
+  ctx.fillStyle = labelColor;
+  ctx.font = '9px Jost, sans-serif';
+  ctx.textAlign = 'center';
+  for (let i = 0; i < days.length; i += 7) {
+    const x = ml + (i / (days.length - 1)) * cw;
+    const d = new Date(days[i] + 'T12:00:00');
+    const label = `${d.getMonth() + 1}/${d.getDate()}`;
+    ctx.fillText(label, x, h - 2);
+  }
+
+  // Empty state
+  if (timeline.length === 0) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.font = 'italic 12px Jost, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Collecting activity data...', w / 2, h / 2);
+  }
+}
+
+async function initNetworkGraph() {
+  const canvas = document.getElementById('network-graph');
+  if (!canvas) return;
+
+  // Read canvas dimensions before the async fetch — getBoundingClientRect forces
+  // a synchronous layout reflow so we get the real width even right after unhide.
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width || 360; // fallback if layout hasn't settled
+  const isMobile = width < 480;
+  const height = isMobile ? Math.round(width * 0.85) : Math.round(width * 0.9);
+
+  // Fetch ALL events from API (not filtered by region)
+  let allEvents = [];
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/events`);
+    const data = await response.json();
+    if (data.success && data.events) {
+      allEvents = data.events;
+    }
+  } catch (error) {
+    console.error('Failed to fetch events for network graph:', error);
+    // continue — dashboard elements still need to initialize
+  }
+
+  // ── Dashboard elements: always initialize (each guards itself) ─────────────
+
+  // Last Scrape timestamp
+  const scrapeEl = document.getElementById('last-scrape');
+  if (scrapeEl && !scrapeEl.hasAttribute('data-init')) {
+    scrapeEl.setAttribute('data-init', 'true');
+    scrapeEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' EST';
+  }
+
+  // Activity Log
+  const techLog = document.getElementById('js-tech-log');
+  if (techLog && !techLog.hasAttribute('data-init')) {
+    techLog.setAttribute('data-init', 'true');
+    const logs = [
+      { msg: 'System initialized', type: 'success' },
+      { msg: 'Connecting to database...', type: 'info' },
+      { msg: 'Fetching event data streams...', type: 'info' },
+      { msg: `Parsing JSON payload (${(allEvents.length * 0.5).toFixed(1)} KB)`, type: 'success' },
+      { msg: 'Analyzing geospatial vectors...', type: 'info' },
+      { msg: 'Node clustering active', type: 'success' },
+      { msg: 'UI Layer mounted', type: 'success' }
+    ];
+    const addLog = (msg, type = 'info') => {
+      const entry = document.createElement('div');
+      entry.className = 'tech-log-entry';
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      entry.innerHTML = `<span class="tech-log-ts" style="color:#aaa;">[${time}]</span><span class="tech-log-msg ${type}" style="color:${type === 'success' ? '#4CAF50' : '#555'}">${msg}</span>`;
+      techLog.prepend(entry);
+      if (techLog.children.length > 20) techLog.lastChild.remove();
+    };
+    logs.forEach(l => addLog(l.msg, l.type));
+    setInterval(() => {
+      const verbs = ['Ping', 'Sync', 'Optimizing', 'Calibrating', 'Verifying'];
+      const nouns = ['Node', 'Packet', 'Latency', 'Cache', 'Buffer'];
+      addLog(`${verbs[Math.floor(Math.random() * verbs.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]} ${Math.floor(Math.random() * 999)}`, 'info');
+    }, 2500);
+  }
+
+  // Traffic Chart
+  const trafficCanvas = document.getElementById('traffic-chart');
+  if (trafficCanvas && !trafficCanvas.hasAttribute('init')) {
+    trafficCanvas.setAttribute('init', 'true');
+    const tCtx = trafficCanvas.getContext('2d');
+    const tDpr = window.devicePixelRatio || 1;
+    let points = new Array(60).fill(60).map((_, i) => 60 + Math.sin(i * 0.5) * 10 + Math.random() * 10);
+
+    function frame() {
+      const r = trafficCanvas.getBoundingClientRect();
+      if (r.width === 0) return requestAnimationFrame(frame);
+      if (trafficCanvas.width !== Math.floor(r.width * tDpr)) {
+        trafficCanvas.width = r.width * tDpr;
+        trafficCanvas.height = r.height * tDpr;
+        tCtx.scale(tDpr, tDpr);
+      }
+      const w = r.width, h = r.height;
+      tCtx.clearRect(0, 0, w, h);
+      tCtx.strokeStyle = '#f9f9f9';
+      tCtx.lineWidth = 1;
+      tCtx.beginPath();
+      for (let x = 0; x < w; x += w / 10) { tCtx.moveTo(x, 0); tCtx.lineTo(x, h); }
+      tCtx.stroke();
+      tCtx.beginPath();
+      points.forEach((p, i) => {
+        const x = (i / (points.length - 1)) * w;
+        const y = h - (p / 100) * h;
+        if (i === 0) tCtx.moveTo(x, y); else tCtx.lineTo(x, y);
+      });
+      tCtx.lineTo(w, h); tCtx.lineTo(0, h); tCtx.closePath();
+      const grad = tCtx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, 'rgba(76,175,80,0.15)');
+      grad.addColorStop(1, 'rgba(76,175,80,0)');
+      tCtx.fillStyle = grad; tCtx.fill();
+      tCtx.beginPath();
+      points.forEach((p, i) => {
+        const x = (i / (points.length - 1)) * w;
+        const y = h - (p / 100) * h;
+        if (i === 0) tCtx.moveTo(x, y); else tCtx.lineTo(x, y);
+      });
+      tCtx.strokeStyle = '#4CAF50'; tCtx.lineWidth = 2; tCtx.lineJoin = 'round'; tCtx.stroke();
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    setInterval(() => {
+      points.shift();
+      const last = points[points.length - 1] || 50;
+      let next = Math.max(20, Math.min(95, last + (Math.random() - 0.5) * 15));
+      points.push(next);
+      const rpsEl = document.getElementById('traffic-rps');
+      if (rpsEl) rpsEl.textContent = Math.floor(next * 2 + 100);
+      const deltaEl = document.querySelector('.traffic-delta');
+      if (deltaEl) {
+        const change = ((next - last) / last) * 100;
+        deltaEl.textContent = (change > 0 ? '▲' : '▼') + Math.abs(change).toFixed(1) + '%';
+        deltaEl.style.color = change > 0 ? '#4CAF50' : '#FF9800';
+      }
+    }, 1000);
+  }
+
+  // ── Topology canvas: only if events available and not already drawn ─────────
+  if (allEvents.length === 0 || canvas.hasAttribute('data-init')) return;
+  canvas.setAttribute('data-init', 'true');
+
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  // Set canvas size — responsive height for mobile
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  ctx.scale(dpr, dpr);
+
+  const cx = width / 2;
+  const cy = height / 2;
+
+  // Color + label maps
+  const NODE_COLORS = {
+    'nyc': '#4A90E2',
+    'hoboken-jc': '#6BCB77',
+    'north-nj': '#9370DB',
+    'central-nj': '#FFB347',
+    'south-nj': '#FF6B6B',
+    'jersey-shore': '#00CED1'
+  };
+  const REGION_LABELS = {
+    'nyc': 'NYC',
+    'hoboken-jc': 'HBK/JC',
+    'north-nj': 'N.NJ',
+    'central-nj': 'C.NJ',
+    'south-nj': 'S.NJ',
+    'jersey-shore': 'SHORE'
+  };
+
+  // Group events by source
+  const sourceMap = new Map();
+  allEvents.forEach(e => {
+    if (!sourceMap.has(e.source)) sourceMap.set(e.source, []);
+    sourceMap.get(e.source).push(e);
+  });
+
+  const sources = Array.from(sourceMap.keys());
+  const orbitRadius = Math.min(width, height) * 0.32;
+
+  function getRegion(events) {
+    const rc = { 'nyc': 0, 'hoboken-jc': 0, 'north-nj': 0, 'central-nj': 0, 'south-nj': 0, 'jersey-shore': 0 };
+    events.forEach(e => {
+      const loc = (e.location || '').toLowerCase();
+      const src = (e.source || '').toLowerCase();
+      if (loc.includes('hoboken') || loc.includes('jersey city')) rc['hoboken-jc']++;
+      else if (loc.includes('shore') || loc.includes('beach') || loc.includes('asbury') || loc.includes('cape may') || loc.includes('wildwood') || loc.includes('ocean')) rc['jersey-shore']++;
+      else if (loc.includes('camden') || loc.includes('cherry hill')) rc['south-nj']++;
+      else if (src.includes('visit nj') || loc.includes('princeton') || loc.includes('trenton') || loc.includes('new brunswick')) rc['central-nj']++;
+      else if (loc.includes('newark') || loc.includes('paterson') || loc.includes('montclair')) rc['north-nj']++;
+      else rc['nyc']++;
+    });
+    let maxRegion = 'nyc', maxCount = -1;
+    for (const [r, c] of Object.entries(rc)) { if (c > maxCount) { maxCount = c; maxRegion = r; } }
+    return maxRegion;
+  }
+
+  // Category definitions (middle ring)
+  const CATEGORY_COLORS = {
+    art: '#9B8FE8',
+    perks: '#50B8D8',
+    community: '#E88060'
+  };
+  const CATEGORY_LABELS = {
+    art: 'ART',
+    perks: 'PERKS',
+    community: 'CULTURE'
+  };
+  const ALL_CATEGORIES = ['art', 'perks', 'community'];
+
+  // Group events by category
+  const categoryMap = new Map();
+  ALL_CATEGORIES.forEach(cat => categoryMap.set(cat, []));
+  allEvents.forEach(e => {
+    if (e.category && categoryMap.has(e.category)) {
+      categoryMap.get(e.category).push(e);
+    }
+  });
+
+  // Track which categories each source feeds
+  const sourceCategories = new Map();
+  allEvents.forEach(e => {
+    if (!sourceCategories.has(e.source)) sourceCategories.set(e.source, new Set());
+    if (e.category) sourceCategories.get(e.source).add(e.category);
+  });
+
+  // All known sources (including ones that may currently return zero events)
+  const ALL_SOURCES = ['TimeOut NY', 'NYC For Free', 'MoMA', 'AMNH', 'Whitney Museum', 'Guggenheim', 'New Museum', 'The Local Girl'];
+  const allSources = [
+    ...sources,
+    ...ALL_SOURCES.filter(s => !sourceMap.has(s))
+  ];
+
+  const nodeScale = isMobile ? 0.7 : 1;
+  const outerRadius = Math.min(width, height) * 0.40;
+  const innerRadius = Math.min(width, height) * 0.22;
+
+  const maxCatEvents = Math.max(...ALL_CATEGORIES.map(c => categoryMap.get(c).length), 1);
+  const maxSrcEvents = sources.length > 0 ? Math.max(...sources.map(s => sourceMap.get(s).length), 1) : 1;
+
+  // Build node array
+  const nodes = [];
+
+  // Node 0: Soirée center
+  nodes.push({
+    x: cx, y: cy,
+    radius: Math.round(15 * nodeScale),
+    color: '#C1694F',
+    vx: 0, vy: 0, fixed: true,
+    label: 'SOIRÉE',
+    type: 'center',
+    eventCount: allEvents.length,
+    pulsePhase: 0,
+    targetRadius: 0
+  });
+
+  // Nodes 1..7: category nodes (middle ring)
+  const catNodeStart = 1;
+  ALL_CATEGORIES.forEach((cat, i) => {
+    const evts = categoryMap.get(cat) || [];
+    const angle = (i / ALL_CATEGORIES.length) * Math.PI * 2 - Math.PI / 2;
+    const r = Math.max(Math.round((5 + (evts.length / maxCatEvents) * 10) * nodeScale), Math.round(4 * nodeScale));
+    nodes.push({
+      x: cx + Math.cos(angle) * innerRadius,
+      y: cy + Math.sin(angle) * innerRadius,
+      radius: r,
+      color: CATEGORY_COLORS[cat],
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      fixed: false,
+      label: CATEGORY_LABELS[cat],
+      type: 'category',
+      category: cat,
+      eventCount: evts.length,
+      pulsePhase: Math.random() * Math.PI * 2,
+      targetRadius: innerRadius
+    });
+  });
+
+  // Nodes N+: source nodes (outer ring)
+  const srcNodeStart = nodes.length;
+  allSources.forEach((source, i) => {
+    const evts = sourceMap.get(source) || [];
+    const isDead = evts.length === 0;
+    const region = isDead ? null : getRegion(evts);
+    const angle = (i / allSources.length) * Math.PI * 2 - Math.PI / 2;
+    const r = isDead ? Math.round(4 * nodeScale) : Math.round((5 + (evts.length / maxSrcEvents) * 10) * nodeScale);
+    nodes.push({
+      x: cx + Math.cos(angle) * outerRadius,
+      y: cy + Math.sin(angle) * outerRadius,
+      radius: r,
+      color: isDead ? '#3a3a3a' : (NODE_COLORS[region] || '#4A90E2'),
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      fixed: false,
+      label: source.split(' ').slice(0, 2).join(' ').toUpperCase(),
+      type: 'source',
+      source,
+      eventCount: evts.length,
+      pulsePhase: Math.random() * Math.PI * 2,
+      dead: isDead,
+      targetRadius: outerRadius
+    });
+  });
+
+  // Two-hop packets: source → category → center
+  const packets = [];
+
+  function spawnSourcePacket() {
+    const liveIdxs = [];
+    for (let i = srcNodeStart; i < nodes.length; i++) {
+      if (!nodes[i].dead) liveIdxs.push(i);
+    }
+    if (!liveIdxs.length) return;
+    const srcIdx = liveIdxs[Math.floor(Math.random() * liveIdxs.length)];
+    const srcCats = sourceCategories.get(nodes[srcIdx].source);
+    if (!srcCats || !srcCats.size) return;
+    const catArr = Array.from(srcCats);
+    const targetCat = catArr[Math.floor(Math.random() * catArr.length)];
+    const catIdx = nodes.findIndex(n => n.type === 'category' && n.category === targetCat);
+    if (catIdx === -1) return;
+    packets.push({
+      fromIdx: srcIdx, toIdx: catIdx,
+      t: 0, speed: 0.005 + Math.random() * 0.004,
+      color: nodes[srcIdx].color,
+      size: 2 + Math.random() * 1.5,
+      phase: 1
+    });
+  }
+
+  function spawnCategoryPacket(catIdx) {
+    packets.push({
+      fromIdx: catIdx, toIdx: 0,
+      t: 0, speed: 0.007 + Math.random() * 0.004,
+      color: nodes[catIdx].color,
+      size: 2.5 + Math.random() * 1.5,
+      phase: 2
+    });
+  }
+
+  for (let i = 0; i < Math.min(allSources.length, 6); i++) spawnSourcePacket();
+
+  let frame_t = 0;
+  let lastPacketSpawn = 0;
+
+  function animate() {
+    frame_t++;
+    ctx.clearRect(0, 0, width, height);
+
+    ctx.fillStyle = '#080d18';
+    ctx.fillRect(0, 0, width, height);
+
+    // Radial grid circles
+    ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+    ctx.lineWidth = 1;
+    for (let r = 55; r < Math.max(width, height) * 1.2; r += 55) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Radial spokes
+    ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(a) * width, cy + Math.sin(a) * width);
+      ctx.stroke();
+    }
+
+    // --- Physics (each node orbits its own target radius) ---
+    nodes.forEach((node, i) => {
+      if (node.fixed) return;
+      const dx = cx - node.x;
+      const dy = cy - node.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+      const force = (dist - node.targetRadius) * 0.008;
+      node.vx += (dx / dist) * force;
+      node.vy += (dy / dist) * force;
+
+      node.vx += (-dy / dist) * 0.009;
+      node.vy += (dx / dist) * 0.009;
+
+      node.vx *= 0.92;
+      node.vy *= 0.92;
+
+      // Repulsion within same ring type only
+      nodes.forEach((other, j) => {
+        if (i === j || other.type !== node.type) return;
+        const dx2 = other.x - node.x;
+        const dy2 = other.y - node.y;
+        const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 0.001;
+        const minDist = node.radius + other.radius + 20;
+        if (dist2 < minDist) {
+          const repel = (minDist - dist2) * 0.045;
+          node.vx -= (dx2 / dist2) * repel;
+          node.vy -= (dy2 / dist2) * repel;
+        }
+      });
+
+      node.x += node.vx;
+      node.y += node.vy;
+
+      const pad = node.radius + 12;
+      if (node.x < pad) node.vx += 0.6;
+      if (node.x > width - pad) node.vx -= 0.6;
+      if (node.y < pad) node.vy += 0.6;
+      if (node.y > height - pad) node.vy -= 0.6;
+    });
+
+    // --- Connections: source → category ---
+    for (let i = srcNodeStart; i < nodes.length; i++) {
+      const srcNode = nodes[i];
+      if (srcNode.dead) continue;
+      const srcCats = sourceCategories.get(srcNode.source) || new Set();
+      for (let j = catNodeStart; j < srcNodeStart; j++) {
+        const catNode = nodes[j];
+        if (srcCats.has(catNode.category)) {
+          const alpha = 0.10 + 0.05 * Math.sin(frame_t * 0.015 + i * 0.7 + j * 0.5);
+          ctx.beginPath();
+          ctx.strokeStyle = srcNode.color + Math.round(alpha * 255).toString(16).padStart(2, '0');
+          ctx.lineWidth = 0.7;
+          ctx.moveTo(srcNode.x, srcNode.y);
+          ctx.lineTo(catNode.x, catNode.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // --- Connections: category → center ---
+    for (let i = catNodeStart; i < srcNodeStart; i++) {
+      const catNode = nodes[i];
+      const alpha = 0.28 + 0.10 * Math.sin(frame_t * 0.018 + i * 1.3);
+      const hexAlpha = Math.round(alpha * 255).toString(16).padStart(2, '0');
+      const grad = ctx.createLinearGradient(nodes[0].x, nodes[0].y, catNode.x, catNode.y);
+      grad.addColorStop(0, `rgba(212,175,55,${alpha})`);
+      grad.addColorStop(1, catNode.color + hexAlpha);
+      ctx.beginPath();
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.2;
+      ctx.moveTo(nodes[0].x, nodes[0].y);
+      ctx.lineTo(catNode.x, catNode.y);
+      ctx.stroke();
+    }
+
+    // --- Data packets ---
+    for (let idx = packets.length - 1; idx >= 0; idx--) {
+      const pkt = packets[idx];
+      pkt.t += pkt.speed;
+      if (pkt.t >= 1) {
+        if (pkt.phase === 1) spawnCategoryPacket(pkt.toIdx);
+        packets.splice(idx, 1);
+        continue;
+      }
+      const from = nodes[pkt.fromIdx];
+      const to = nodes[pkt.toIdx];
+      if (!from || !to) continue;
+      const px = from.x + (to.x - from.x) * pkt.t;
+      const py = from.y + (to.y - from.y) * pkt.t;
+      const halo = ctx.createRadialGradient(px, py, 0, px, py, pkt.size * 3.5);
+      halo.addColorStop(0, pkt.color + 'cc');
+      halo.addColorStop(1, pkt.color + '00');
+      ctx.beginPath();
+      ctx.fillStyle = halo;
+      ctx.arc(px, py, pkt.size * 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.fillStyle = '#ffffff';
+      ctx.arc(px, py, pkt.size * 0.55, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (frame_t - lastPacketSpawn > 40 + Math.random() * 40) {
+      lastPacketSpawn = frame_t;
+      spawnSourcePacket();
+    }
+
+    // --- Draw nodes ---
+    nodes.forEach((node) => {
+      const t = frame_t * 0.028 + node.pulsePhase;
+      const pulse = 1 + 0.18 * Math.sin(t);
+
+      // Outer glow
+      const outerGlowR = node.radius * 2.8 * pulse;
+      const outerGlow = ctx.createRadialGradient(node.x, node.y, node.radius * 0.4, node.x, node.y, outerGlowR);
+      outerGlow.addColorStop(0, node.color + '2a');
+      outerGlow.addColorStop(1, node.color + '00');
+      ctx.beginPath();
+      ctx.fillStyle = outerGlow;
+      ctx.arc(node.x, node.y, outerGlowR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pulsing rings
+      if (node.type === 'center') {
+        const ring1R = node.radius + 7 + 3 * Math.sin(t);
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(193,105,79,${0.35 + 0.18 * Math.sin(t)})`;
+        ctx.lineWidth = 1.5;
+        ctx.arc(node.x, node.y, ring1R, 0, Math.PI * 2);
+        ctx.stroke();
+        const ring2R = node.radius + 14 + 5 * Math.sin(t * 0.65);
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(193,105,79,${0.12 + 0.08 * Math.sin(t * 0.65)})`;
+        ctx.lineWidth = 1;
+        ctx.arc(node.x, node.y, ring2R, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (!node.dead) {
+        const ringR = node.radius + 3 + 1.5 * Math.sin(t);
+        ctx.beginPath();
+        ctx.strokeStyle = node.color + Math.round((0.20 + 0.12 * Math.sin(t)) * 255).toString(16).padStart(2, '0');
+        ctx.lineWidth = 1;
+        ctx.arc(node.x, node.y, ringR, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Node fill
+      const nodeGrad = ctx.createRadialGradient(
+        node.x - node.radius * 0.3, node.y - node.radius * 0.35, 0,
+        node.x, node.y, node.radius
+      );
+      nodeGrad.addColorStop(0, lightenHex(node.color, 50));
+      nodeGrad.addColorStop(1, node.color);
+      ctx.beginPath();
+      ctx.fillStyle = nodeGrad;
+      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.strokeStyle = node.color + 'bb';
+      ctx.lineWidth = 1;
+      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Event count inside node
+      if (!node.dead && node.radius >= 9) {
+        ctx.font = `bold ${Math.round(node.radius * 0.75)}px ui-monospace, monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.fillText(node.eventCount, node.x, node.y);
+        ctx.textBaseline = 'alphabetic';
+      }
+
+      // Label below node
+      const labelSize = isMobile ? 7 : 8;
+      ctx.font = `bold ${labelSize}px ui-monospace, monospace`;
+      ctx.textAlign = 'center';
+      if (node.type === 'center') {
+        ctx.fillStyle = 'rgba(193,105,79,0.90)';
+        ctx.fillText('SOIRÉE', node.x, node.y + node.radius + 11);
+      } else if (node.dead) {
+        ctx.fillStyle = 'rgba(255,255,255,0.22)';
+        ctx.fillText(node.label, node.x, node.y + node.radius + 10);
+      } else if (node.type === 'category') {
+        ctx.fillStyle = node.color + 'cc';
+        ctx.fillText(node.label, node.x, node.y + node.radius + 10);
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.fillText(node.label, node.x, node.y + node.radius + 10);
+      }
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  // Update stats
+  const nodesEl = document.getElementById('network-nodes');
+  const eventsEl = document.getElementById('network-events');
+  if (nodesEl) nodesEl.textContent = sources.length;
+  // EVENTS reports the verified total — the same number the hero curates —
+  // never the raw scrape count (they disagreed: 55 raw vs 43 verified)
+  if (eventsEl) {
+    eventsEl.textContent = eventsLoaded ? events.length : applyTruthPass(allEvents).length;
+  }
+
+  // --- Legend: grouped by region for active nodes, plus offline indicator ---
+  const techLegend = document.getElementById('js-tech-legend');
+  if (techLegend) {
+    techLegend.innerHTML = '';
+    // Show category nodes in legend
+    nodes.filter(n => n.type === 'category').forEach(n => {
+      const item = document.createElement('div');
+      item.className = 'tech-legend-item';
+      item.innerHTML = `<div class="tech-dot" style="background:${n.color};box-shadow:0 0 5px ${n.color}88;"></div><span>${n.label} <span style="color:#999;font-size:10px">${n.eventCount}</span></span>`;
+      techLegend.appendChild(item);
+    });
+    // Offline source count
+    const deadCount = nodes.filter(n => n.type === 'source' && n.dead).length;
+    if (deadCount > 0) {
+      const item = document.createElement('div');
+      item.className = 'tech-legend-item';
+      item.innerHTML = `<div class="tech-dot" style="background:#3a3a3a;"></div><span style="color:rgba(255,255,255,0.3)">OFFLINE <span style="font-size:10px">${deadCount}</span></span>`;
+      techLegend.appendChild(item);
+    }
+  }
+
+  // Regions count
+  const regions = new Set();
+  allEvents.forEach(e => {
+    const loc = e.location.toLowerCase();
+    if (loc.includes('hoboken') || loc.includes('jersey city')) regions.add('Hoboken/JC');
+    else regions.add('NYC');
+  });
+  const regionsEl = document.getElementById('network-regions');
+  if (regionsEl) regionsEl.textContent = regions.size;
+}
+
+/* Free Mode Logic */
+function toggleFreeMode() {
+  const checkbox = document.getElementById('free-mode-toggle');
+  freeMode = checkbox ? checkbox.checked : !freeMode;
+  renderEvents();
+  showToast(freeMode ? 'Showing free events only' : 'Showing all events');
+}
+
+// ── Unified Gallery (Card Stack + Featured) ─────────────────
+function getGalleryEvents() {
+  const pool = events.filter(e => {
+    const matchesRegion = matchesCurrentRegion(e);
+    const matchesCat = galleryFilter === 'all' || e.category === galleryFilter;
+    // Home gallery: for art, show openings only (not full exhibition viewing windows)
+    const matchesType = galleryFilter !== 'art' || !e.event_type || e.event_type === 'opening';
+    return matchesRegion && matchesCat && matchesType;
+  });
+  // Events arrive from the truth pass upcoming-first — deal the deck in
+  // honest order (soonest real date on top) instead of a random shuffle
+  return pool.slice(0, 15);
+}
+
+function renderUnifiedGallery() {
+  galleryEvents = getGalleryEvents();
+  stackIndex = 0;
+  featuredIndex = 0;
+
+  const isMobile = window.innerWidth < 768;
+  if (isMobile) {
+    renderStack();
+  } else {
+    renderFeaturedLayout();
+  }
+
+  // Update tab active states
+  document.querySelectorAll('.gallery-tab').forEach(tab => {
+    const isActive = tab.dataset.filter === galleryFilter;
+    tab.classList.toggle('active', isActive);
+    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+
+  // Reset progress bar
+  updateGalleryProgress();
+}
+
+function updateGalleryProgress() {
+  const progressBar = document.getElementById('gallery-progress-bar');
+  if (!progressBar || galleryEvents.length === 0) {
+    if (progressBar) progressBar.style.width = '0%';
+    return;
+  }
+  const isMobile = window.innerWidth < 768;
+  const current = isMobile ? stackIndex + 1 : featuredIndex + 1;
+  const pct = Math.min((current / galleryEvents.length) * 100, 100);
+  progressBar.style.width = `${pct}%`;
+}
+
+// ── Mobile Card Stack ──
+function renderStack() {
+  const container = document.getElementById('gallery-stack-cards');
+  const counter = document.getElementById('gallery-stack-counter');
+  const emptyEl = document.getElementById('gallery-stack-empty');
+  const actions = document.querySelector('.gallery-stack-actions');
+  if (!container) return;
+
+  if (galleryEvents.length === 0) {
+    container.innerHTML = '';
+    // Collapse the deck's reserved 4/5 aspect so the empty state sits
+    // right under the tabs instead of below ~430px of nothing
+    container.classList.add('stack-cards-collapsed');
+    if (counter) counter.textContent = '';
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    if (actions) actions.style.display = 'none';
+    return;
+  }
+
+  container.classList.remove('stack-cards-collapsed');
+  if (emptyEl) emptyEl.classList.add('hidden');
+  if (actions) actions.style.display = '';
+  updateStackCounter();
+  renderStackCards();
+}
+
+function updateStackCounter() {
+  const counter = document.getElementById('gallery-stack-counter');
+  if (counter && galleryEvents.length > 0) {
+    const current = Math.min(stackIndex + 1, galleryEvents.length);
+    counter.textContent = `${current} of ${galleryEvents.length}`;
+  }
+  updateGalleryProgress();
+}
+
+function renderStackCards() {
+  const container = document.getElementById('gallery-stack-cards');
+  if (!container) return;
+  container.innerHTML = '';
+  isSwipeAnimating = false;
+
+  if (stackIndex >= galleryEvents.length) {
+    showStackComplete();
+    return;
+  }
+
+  const maxVisible = 3;
+  for (let i = 0; i < maxVisible; i++) {
+    const eventIdx = stackIndex + i;
+    if (eventIdx >= galleryEvents.length) break;
+
+    const event = galleryEvents[eventIdx];
+    const wrapper = document.createElement('div');
+    wrapper.className = 'stack-card';
+    wrapper.dataset.depth = i;
+    wrapper.dataset.eventId = event.id;
+    wrapper.innerHTML = `
+      <div class="stack-card-overlay stack-card-overlay--like"></div>
+      <div class="stack-card-overlay stack-card-overlay--skip"></div>
+      ${createEventCard(event, 0)}
+    `;
+    container.appendChild(wrapper);
+
+    if (i === 0) {
+      attachSwipeHandlers(wrapper, event);
+    }
+  }
+}
+
+function showStackComplete() {
+  const container = document.getElementById('gallery-stack-cards');
+  const actions = document.querySelector('.gallery-stack-actions');
+  const counter = document.getElementById('gallery-stack-counter');
+  if (container) {
+    container.innerHTML = `
+      <div class="gallery-stack-done">
+        <div class="gallery-done-check">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <div class="gallery-done-text">You've seen them all!</div>
+        <button class="gallery-done-reset">Start Over</button>
+      </div>
+    `;
+    const resetBtn = container.querySelector('.gallery-done-reset');
+    if (resetBtn) resetBtn.addEventListener('click', resetStack);
+  }
+  if (actions) actions.style.display = 'none';
+  if (counter) counter.textContent = '';
+}
+
+function resetStack() {
+  stackIndex = 0;
+  galleryEvents = getGalleryEvents();
+  renderStack();
+}
+
+// ── Swipe Handler ──
+function attachSwipeHandlers(cardEl, event) {
+  let startX = 0, startY = 0, currentX = 0, currentY = 0;
+  let isDragging = false, directionLocked = null, hasMoved = false;
+  let rafId = null;
+  const likeOverlay = cardEl.querySelector('.stack-card-overlay--like');
+  const skipOverlay = cardEl.querySelector('.stack-card-overlay--skip');
+
+  function onStart(x, y) {
+    if (isSwipeAnimating) return;
+    startX = x; startY = y; currentX = x; currentY = y;
+    isDragging = true; directionLocked = null; hasMoved = false;
+    cardEl.classList.add('dragging');
+  }
+
+  function applyTransform() {
+    const dx = currentX - startX;
+    const rotate = dx * 0.06;
+    cardEl.style.transform = `translateX(${dx}px) rotate(${rotate}deg)`;
+
+    const progress = Math.min(Math.abs(dx) / SWIPE_THRESHOLD, 1);
+    if (dx > 0) {
+      likeOverlay.style.opacity = progress * 0.7;
+      skipOverlay.style.opacity = 0;
+    } else {
+      skipOverlay.style.opacity = progress * 0.7;
+      likeOverlay.style.opacity = 0;
+    }
+    rafId = null;
+  }
+
+  function onMove(x, y) {
+    if (!isDragging) return;
+    const dx = x - startX;
+    const dy = y - startY;
+
+    if (!directionLocked && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+      directionLocked = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical';
+      if (directionLocked === 'vertical') {
+        isDragging = false;
+        cardEl.classList.remove('dragging');
+        return;
+      }
+    }
+
+    if (directionLocked === 'horizontal') {
+      hasMoved = true;
+      currentX = x;
+      currentY = y;
+      if (!rafId) rafId = requestAnimationFrame(applyTransform);
+    }
+  }
+
+  function onEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    cardEl.classList.remove('dragging');
+    const dx = currentX - startX;
+
+    if (Math.abs(dx) > SWIPE_THRESHOLD) {
+      completeSwipe(dx > 0 ? 'right' : 'left', cardEl, event);
+    } else if (!hasMoved) {
+      openModal(event.id);
+      resetCardPosition(cardEl, likeOverlay, skipOverlay);
+    } else {
+      resetCardPosition(cardEl, likeOverlay, skipOverlay);
+    }
+  }
+
+  // Touch events
+  cardEl.addEventListener('touchstart', (e) => {
+    // Match the mouse path's guard: a tap on the heart must only toggle the
+    // favorite — without this, touchend also fired onEnd → openModal, and the
+    // modal swallowed every subsequent tap on the card
+    if (e.target.closest('.favorite-btn')) return;
+    const t = e.touches[0];
+    onStart(t.clientX, t.clientY);
+  }, { passive: true });
+
+  cardEl.addEventListener('touchmove', (e) => {
+    const t = e.touches[0];
+    onMove(t.clientX, t.clientY);
+    if (directionLocked === 'horizontal') e.preventDefault();
+  }, { passive: false });
+
+  cardEl.addEventListener('touchend', onEnd, { passive: true });
+
+  // Mouse events (desktop testing)
+  cardEl.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.favorite-btn')) return;
+    e.preventDefault();
+    onStart(e.clientX, e.clientY);
+    const onMouseMove = (ev) => onMove(ev.clientX, ev.clientY);
+    const onMouseUp = () => {
+      onEnd();
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  });
+
+  // Favorite button inside card
+  cardEl.querySelectorAll('.favorite-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFavorite(parseInt(btn.dataset.id));
+    });
+  });
+}
+
+function resetCardPosition(cardEl, likeOverlay, skipOverlay) {
+  cardEl.style.transform = '';
+  if (likeOverlay) likeOverlay.style.opacity = 0;
+  if (skipOverlay) skipOverlay.style.opacity = 0;
+}
+
+function completeSwipe(direction, cardEl, event) {
+  isSwipeAnimating = true;
+  const flyX = direction === 'right' ? '120%' : '-120%';
+  const flyRotate = direction === 'right' ? 15 : -15;
+  cardEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 1, 1), opacity 0.3s ease';
+  cardEl.style.transform = `translateX(${flyX}) rotate(${flyRotate}deg)`;
+  cardEl.style.opacity = '0';
+
+  if (direction === 'right' && !favorites.includes(event.id)) {
+    toggleFavorite(event.id);
+  }
+
+  // After card flies out, promote remaining cards then re-render
+  cardEl.addEventListener('transitionend', function handler(e) {
+    if (e.propertyName !== 'transform') return;
+    cardEl.removeEventListener('transitionend', handler);
+    stackIndex++;
+    updateStackCounter();
+    renderStackCards();
+  }, { once: false });
+}
+
+// ── Stack Action Buttons ──
+function initStackActions() {
+  const skipBtn = document.getElementById('stack-skip');
+  const favBtn = document.getElementById('stack-fav');
+
+  if (skipBtn) {
+    skipBtn.addEventListener('click', () => {
+      const frontCard = document.querySelector('.stack-card[data-depth="0"]');
+      if (!frontCard || isSwipeAnimating) return;
+      const eventId = parseInt(frontCard.dataset.eventId);
+      const event = galleryEvents.find(e => e.id === eventId);
+      if (event) completeSwipe('left', frontCard, event);
+    });
+  }
+
+  if (favBtn) {
+    favBtn.addEventListener('click', () => {
+      const frontCard = document.querySelector('.stack-card[data-depth="0"]');
+      if (!frontCard || isSwipeAnimating) return;
+      const eventId = parseInt(frontCard.dataset.eventId);
+      const event = galleryEvents.find(e => e.id === eventId);
+      if (event) completeSwipe('right', frontCard, event);
+    });
+  }
+}
+
+// ── Desktop: Featured + Sidebar ──
+function renderFeaturedLayout() {
+  const mainEl = document.getElementById('gallery-featured-main');
+  const sidebarEl = document.getElementById('gallery-featured-sidebar');
+  const emptyEl = document.getElementById('gallery-featured-empty');
+  const wrapEl = document.getElementById('gallery-featured');
+  if (!mainEl || !sidebarEl) return;
+
+  if (galleryEvents.length === 0) {
+    mainEl.innerHTML = '';
+    sidebarEl.innerHTML = '';
+    // Collapse the empty main/sidebar stubs so the message centers alone
+    if (wrapEl) wrapEl.classList.add('gallery-featured--empty');
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    return;
+  }
+  if (wrapEl) wrapEl.classList.remove('gallery-featured--empty');
+  if (emptyEl) emptyEl.classList.add('hidden');
+
+  renderFeaturedCard(featuredIndex);
+
+  sidebarEl.innerHTML = galleryEvents.map((ev, i) => {
+    const isFavorited = favorites.includes(ev.id);
+    const isActive = i === featuredIndex;
+    const displayName = ev.name.replace(/American Museum of Natural History/gi, 'AMNH');
+    const art = eventCardArt(ev);
+    return `
+      <div class="sidebar-card ${isActive ? 'active' : ''}" data-event-id="${ev.id}" data-index="${i}" data-category="${ev.category}">
+        <div class="sidebar-card-image" style="${art.style}">${art.img}</div>
+        <div class="sidebar-card-info">
+          <div class="sidebar-card-name">${displayName}</div>
+          <div class="sidebar-card-meta">${formatBadgeDate(ev)} · ${ev.location}</div>
+        </div>
+        <button class="sidebar-card-fav ${isFavorited ? 'favorited' : ''}" data-id="${ev.id}" aria-label="${isFavorited ? 'Remove from' : 'Add to'} favorites">
+          <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  // Wire sidebar clicks
+  sidebarEl.querySelectorAll('.sidebar-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.sidebar-card-fav')) return;
+      const idx = parseInt(card.dataset.index);
+      featuredIndex = idx;
+      renderFeaturedCard(idx);
+      sidebarEl.querySelectorAll('.sidebar-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      updateGalleryProgress();
+    });
+  });
+
+  // Wire sidebar favorite buttons
+  sidebarEl.querySelectorAll('.sidebar-card-fav').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFavorite(parseInt(btn.dataset.id));
+    });
+  });
+}
+
+function renderFeaturedCard(index) {
+  const mainEl = document.getElementById('gallery-featured-main');
+  if (!mainEl || !galleryEvents[index]) return;
+  const event = galleryEvents[index];
+  mainEl.innerHTML = createEventCard(event, 0);
+
+  const card = mainEl.querySelector('.event-card');
+  if (card) {
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.favorite-btn')) openModal(event.id);
+    });
+  }
+  mainEl.querySelectorAll('.favorite-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFavorite(parseInt(btn.dataset.id));
+    });
+  });
+}
+
+// ── Gallery Tabs ──
+function initGalleryTabs() {
+  document.querySelectorAll('.gallery-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      galleryFilter = tab.dataset.filter;
+      renderUnifiedGallery();
+    });
+  });
+}
+
+// ── Responsive re-render on breakpoint cross ──
+let lastGalleryMode = window.innerWidth < 768 ? 'mobile' : 'desktop';
+window.addEventListener('resize', () => {
+  const newMode = window.innerWidth < 768 ? 'mobile' : 'desktop';
+  if (newMode !== lastGalleryMode) {
+    lastGalleryMode = newMode;
+    renderUnifiedGallery();
+  }
+});
+
+// Keep old name as alias so region-change call still works
+function updateCategoryCounts() { renderUnifiedGallery(); }
+
+// ── Instagram Grid ───────────────────────────────────
+function initInstagramGrid() {
+  const igUrl = 'https://www.instagram.com/yourdailysoiree/';
+
+  // Make entire subscribe section clickable
+  document.querySelectorAll('#subscribe-strip-home, #subscribe-strip-about, #subscribe-strip-events').forEach(section => {
+    section.addEventListener('click', (e) => {
+      if (e.target.closest('a')) return;
+      window.open(igUrl, '_blank', 'noopener');
+    });
+  });
+
+  const grids = document.querySelectorAll('.ig-grid');
+  if (grids.length === 0) return;
+
+  // When the feed has no posts (the endpoint returns {posts:[]} on failure),
+  // hide the whole band rather than rendering an empty vitrine. Inline
+  // display survives the view-switch class toggling on #subscribe-strip-events.
+  const igSections = document.querySelectorAll('#subscribe-strip-home, #subscribe-strip-about, #subscribe-strip-events');
+  const hideBand = () => igSections.forEach(s => { s.style.display = 'none'; });
+
+  fetch('/api/instagram-feed')
+    .then(r => r.json())
+    .then(data => {
+      if (!data.posts || data.posts.length === 0) { hideBand(); return; }
+      grids.forEach(grid => {
+        grid.innerHTML = data.posts.map(p =>
+          `<a href="${p.permalink}" target="_blank" rel="noopener"><img src="${p.media_url}" alt="" loading="lazy"></a>`
+        ).join('');
       });
     })
-    .catch(function (err) {
-      $('ledger').innerHTML =
-        '<div class="note" style="margin-top:44px"><p class="n-k">A word from the concierge</p><p>The ledger could not be fetched just now (' + esc(err.message) + '). Give it a moment, then refresh.</p></div>';
+    .catch(hideBand);
+}
+
+// ── Inline Subscribe Strip ───────────────────────────
+function initSubscribeStrip() {
+  const form = document.getElementById('subscribe-strip-form');
+  const successEl = document.getElementById('subscribe-strip-success');
+  const btn = document.getElementById('subscribe-strip-btn');
+  if (!form) return;
+
+  // Pre-fill region from current selection
+  const regionSelect = document.getElementById('subscribe-strip-region');
+  if (regionSelect && currentRegion) {
+    const opt = regionSelect.querySelector(`option[value="${currentRegion}"]`);
+    if (opt) regionSelect.value = currentRegion;
+  }
+
+  // Chip toggles
+  form.querySelectorAll('.subscribe-strip-chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('active'));
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('subscribe-strip-email').value.trim();
+    if (!email) return;
+
+    const region = regionSelect ? regionSelect.value : currentRegion;
+    const categories = [...form.querySelectorAll('.subscribe-strip-chip.active')].map(c => c.dataset.cat);
+
+    btn.disabled = true;
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, region, categories })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        form.style.display = 'none';
+        successEl.style.display = 'block';
+      } else {
+        alert(data.error || 'Something went wrong. Please try again.');
+        btn.disabled = false;
+      }
+    } catch {
+      alert('Network error. Please try again.');
+      btn.disabled = false;
+    }
+  });
+}
+
+// ── Events List Subscribe Strip ───────────────────────────
+function initSubscribeStripEvents() {
+  const form = document.getElementById('subscribe-strip-form-events');
+  const successEl = document.getElementById('subscribe-strip-success-events');
+  const btn = document.getElementById('subscribe-strip-btn-events');
+  if (!form) return;
+
+  // Pre-fill region from current selection
+  const regionSelect = document.getElementById('subscribe-strip-region-events');
+  if (regionSelect && currentRegion) {
+    const opt = regionSelect.querySelector(`option[value="${currentRegion}"]`);
+    if (opt) regionSelect.value = currentRegion;
+  }
+
+  // Chip toggles
+  form.querySelectorAll('.subscribe-strip-chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('active'));
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('subscribe-strip-email-events').value.trim();
+    if (!email) return;
+
+    const region = regionSelect ? regionSelect.value : currentRegion;
+    const categories = [...form.querySelectorAll('.subscribe-strip-chip.active')].map(c => c.dataset.cat);
+
+    btn.disabled = true;
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, region, categories })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        form.style.display = 'none';
+        successEl.style.display = 'block';
+      } else {
+        alert(data.error || 'Something went wrong. Please try again.');
+        btn.disabled = false;
+      }
+    } catch {
+      alert('Network error. Please try again.');
+      btn.disabled = false;
+    }
+  });
+}
+
+// ── Scroll Reveal ──────────────────────────────────
+function initScrollReveal() {
+  const sections = document.querySelectorAll('.reveal-section');
+  if (!sections.length) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        observer.unobserve(entry.target);
+      }
     });
-})();
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+  sections.forEach(s => observer.observe(s));
+}
+
+// ── Footer Reveal ─────────────────────────────────
+function initFooterReveal() {
+  const motto = document.querySelector('.footer-motto');
+  if (!motto) return;
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    motto.classList.add('visible');
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        motto.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  observer.observe(motto);
+}
+
+// ── Value strip event count ────────────────────────
+// Only ever prints the loaded (verified) count — never the boot fallback data,
+// so "Curating N experiences" always equals what the ledger actually renders.
+let eventsLoaded = false;
+function updateValueStrip() {
+  const el = document.getElementById('value-events');
+  if (el && eventsLoaded && events.length > 0) {
+    el.textContent = events.length;
+    // "100% free" was a hardcoded falsehood for the verified set — derive the
+    // suffix from the honest isFree flags instead ("— 19 free."), or nothing.
+    const suffixEl = document.getElementById('value-free-suffix');
+    if (suffixEl) {
+      const freeCount = events.filter(e => e.isFree === true).length;
+      suffixEl.innerHTML = freeCount > 0
+        ? ` — <span class="value-line-num">${freeCount}</span> free.`
+        : '.';
+    }
+  }
+}
+
+// ── Email Subscription ──────────────────────────────
+function initSubscribeForm() {
+  const form = document.getElementById('subscribe-form');
+  const successEl = document.getElementById('subscribe-success');
+  const againBtn = document.getElementById('subscribe-again');
+  if (!form) return;
+
+  // Chip toggles
+  form.querySelectorAll('.subscribe-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      chip.classList.toggle('active');
+    });
+  });
+
+  // Pre-fill region from current selection
+  const regionSelect = document.getElementById('subscribe-region');
+  if (regionSelect && currentRegion) {
+    const option = regionSelect.querySelector(`option[value="${currentRegion}"]`);
+    if (option) regionSelect.value = currentRegion;
+  }
+
+  // Submit
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('subscribe-btn');
+    const btnText = btn.querySelector('.subscribe-btn-text');
+    const btnLoad = btn.querySelector('.subscribe-btn-loading');
+    const email = document.getElementById('subscribe-email').value.trim();
+    const region = regionSelect ? regionSelect.value : 'nyc';
+    const categories = Array.from(form.querySelectorAll('.subscribe-chip.active'))
+      .map(c => c.dataset.cat);
+
+    if (!email) return;
+
+    btn.disabled = true;
+    btnText.style.display = 'none';
+    btnLoad.style.display = 'inline-flex';
+
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, region, categories })
+      });
+      const data = await resp.json();
+
+      if (data.success) {
+        form.style.display = 'none';
+        successEl.style.display = 'block';
+      } else {
+        alert(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch (err) {
+      console.error('Subscribe error:', err);
+      alert('Network error. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btnText.style.display = 'inline';
+      btnLoad.style.display = 'none';
+    }
+  });
+
+  // "Update preferences" button
+  if (againBtn) {
+    againBtn.addEventListener('click', () => {
+      successEl.style.display = 'none';
+      form.style.display = 'flex';
+    });
+  }
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    init();
+    initRotatingTitle();
+    initSubscribeForm();
+    initSubscribeStrip();
+    initSubscribeStripEvents();
+    initScrollReveal();
+    initFooterReveal();
+    initInstagramGrid();
+    initGalleryTabs();
+    initStackActions();
+    updateValueStrip();
+
+    const freeCheckbox = document.getElementById('free-mode-toggle');
+    if (freeCheckbox) freeCheckbox.addEventListener('change', toggleFreeMode);
+
+    // Tech dashboard - always visible, initialize graph + activity chart
+    const techDashboard = document.getElementById('tech-dashboard');
+    if (techDashboard) {
+      requestAnimationFrame(() => initNetworkGraph());
+      initActivityChart();
+    }
+  });
+} else {
+  init();
+  initRotatingTitle();
+  initSubscribeForm();
+  initSubscribeStrip();
+  initSubscribeStripEvents();
+  initFooterReveal();
+}
+// v1.0.2
+
