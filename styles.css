@@ -85,7 +85,9 @@ body {
   display: flex;
   flex-direction: column;
   padding-top: calc(52px + env(safe-area-inset-top));
-  padding-bottom: 40px;
+  /* No bottom padding: the dusk footer's street level runs flush to the
+     viewport bottom (the old cream footer blended into a 40px strip here) */
+  padding-bottom: 0;
   overflow-y: auto;
   overflow-x: hidden;
   max-width: 100%;
@@ -3597,8 +3599,7 @@ body {
     transform: none !important;
   }
 
-  .event-card,
-  .footer-motto {
+  .event-card {
     opacity: 1 !important;
     transform: none !important;
   }
@@ -5695,109 +5696,341 @@ button:focus-visible,
   transition-delay: 0.3s;
 }
 
-/* Footer */
-.app-footer {
-  padding: 40px 24px 44px;
+/* ============================================================================
+   FOOTER — "The City at Dusk"
+   Hand-drawn burgundy skyline of Hoboken + NYC across the Hudson; gold
+   windows light up staggered on scroll-into-view. All rules are scoped
+   under .dusk-footer to avoid collisions with the rest of the app.
+   ============================================================================ */
+.app-footer.dusk-footer {
+  --sf-wine: #7E2A33;
+  --sf-wine-2: #A64450;
+  --sf-gold: #D4AF37;
+  --sf-gold-text: #B08D2E;
+  --sf-sand: #E8D5B0;
+  --sf-ink: #1C1410;
+  --sf-ink-soft: #5B5148;
+  --sf-warm-white: #FFFCF7;
   margin-top: auto;
-  border-top: none;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  /* the page's daylight cream cools into a low, warm dusk near the horizon */
+  background: linear-gradient(to bottom,
+    var(--cream) 0%,
+    #FAF4E9 34%,
+    #F7EBD8 62%,
+    #F4E4CB 100%);
 }
 
-.footer-rule {
-  display: none;
+/* soft gold breath above where the sun sets */
+.dusk-footer::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(120vw, 1100px);
+  height: 420px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at 50% 100%, rgba(212, 175, 55, .20), rgba(212, 175, 55, 0) 65%);
+  pointer-events: none;
 }
 
-.footer-brand {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+.dusk-footer .dusk-sky {
+  position: relative;
+  padding-top: clamp(3.5rem, 7vw, 6rem);
 }
 
-.footer-motto {
+.dusk-footer .dusk-motto {
+  position: relative;
+  z-index: 1;
+  text-align: center;
   font-family: 'Cormorant Garamond', serif;
-  font-size: 13.5vw;
-  font-weight: 600;
   font-style: italic;
-  color: rgba(28, 20, 16, 0.08);
-  margin: 0;
-  letter-spacing: -1px;
-  line-height: 0.9;
+  font-weight: 500;
+  font-size: clamp(3.4rem, 10.5vw, 9.5rem);
+  line-height: .95;
+  letter-spacing: -.015em;
+  color: var(--sf-ink);
+  margin: 0 0 clamp(-2.2rem, -4.5vw, -4.5rem);
   white-space: nowrap;
   user-select: none;
+}
+
+.dusk-footer .dusk-motto .dot {
+  color: var(--sf-gold-text);
+}
+
+.dusk-footer .dusk-motto-sub {
+  position: relative;
+  z-index: 1;
   text-align: center;
+  margin: 0;
+  font-size: clamp(.62rem, 1vw, .72rem);
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: var(--sf-wine);
+}
+
+/* skyline band */
+.dusk-footer .dusk-skyline-wrap {
+  position: relative;
+  z-index: 2;
+  margin-top: clamp(.4rem, 1.6vw, 1.2rem);
+  line-height: 0;
+}
+
+.dusk-footer .dusk-skyline {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* stroke language */
+.dusk-footer .ln { fill: none; stroke: var(--sf-wine); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.dusk-footer .ln-fine { fill: none; stroke: var(--sf-wine); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.dusk-footer .ln-soft { fill: none; stroke: var(--sf-wine-2); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: .75; }
+.dusk-footer .gold-ln { fill: none; stroke: var(--sf-gold); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.dusk-footer .gold-fill { fill: var(--sf-gold); }
+
+/* the sailboat keeps its warm-white sails on the gradient water */
+.dusk-footer .ln-fine[fill="#FFFCF7"] { fill: var(--sf-warm-white); }
+
+/* windows: always drawn, lit with gold one by one */
+.dusk-footer .win {
+  fill: var(--sf-gold);
+  fill-opacity: 0;
+  stroke: var(--sf-wine);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  transition: fill-opacity 1.6s ease;
+}
+
+.dusk-footer .win.on { fill-opacity: .92; }
+
+@keyframes sf-twinkle {
+  0%, 100% { fill-opacity: .92; }
+  50% { fill-opacity: .38; }
+}
+
+.dusk-footer .win.on.tw { animation: sf-twinkle var(--twd, 5s) ease-in-out var(--twdel, 0s) infinite; }
+
+/* distant George Washington Bridge */
+.dusk-footer .gwb { fill: none; stroke: var(--sf-wine-2); stroke-width: 1.5; stroke-linecap: round; opacity: .4; }
+
+/* setting sun */
+.dusk-footer .sun-halo { opacity: .5; }
+
+@keyframes sf-breathe {
+  from { opacity: .35; }
+  to { opacity: .7; }
+}
+
+.dusk-footer.lit .sun-halo { animation: sf-breathe 5.5s ease-in-out infinite alternate; }
+.dusk-footer .sun-body { fill: #F5DFA2; stroke: var(--sf-gold); stroke-width: 2.6; stroke-linecap: round; }
+.dusk-footer .sun-ray { stroke: var(--sf-gold); stroke-width: 2.4; stroke-linecap: round; opacity: 0; transition: opacity 1.4s ease .4s; }
+.dusk-footer .sun-ray.glow { opacity: .9; }
+.dusk-footer .sun-reflect { stroke: var(--sf-gold); stroke-width: 2.4; stroke-linecap: round; opacity: 0; transition: opacity 1.8s ease .9s; }
+.dusk-footer .sun-reflect.glow { opacity: .65; }
+
+/* spire beacon + lamppost */
+@keyframes sf-beacon {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .25; }
+}
+
+.dusk-footer .beacon { fill: var(--sf-gold); opacity: 0; transition: opacity 1s ease 2.2s; }
+.dusk-footer .beacon.glow { opacity: 1; animation: sf-beacon 4s ease-in-out 3.4s infinite; }
+.dusk-footer .lamp-glow { fill: var(--sf-gold); opacity: 0; transition: opacity 1.2s ease 1.6s; }
+.dusk-footer .lamp-glow.glow { opacity: .9; }
+
+/* ————— street level ————— */
+.dusk-footer .dusk-street {
+  position: relative;
+  z-index: 3;
+  background: var(--sf-warm-white);
+  border-top: 2px solid var(--sf-wine);
+}
+
+.dusk-footer .dusk-street-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(2.2rem, 4vw, 3.4rem) clamp(1.4rem, 4vw, 2.5rem) clamp(1.6rem, 3vw, 2.2rem);
+}
+
+.dusk-footer .dusk-truth {
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+  color: var(--sf-ink);
+  min-height: 1.4em;
+  margin: 0;
   opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  transform: translateY(6px);
+  transition: opacity .9s ease, transform .9s ease;
 }
 
-.footer-motto.visible {
+.dusk-footer .dusk-truth .num {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--sf-wine);
+  padding: 0 .08em;
+}
+
+.dusk-footer .dusk-truth.show {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
 
-.footer-bottom {
+.dusk-footer .dusk-street-cols {
+  margin-top: clamp(2rem, 4vw, 3rem);
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 2.5rem;
 }
 
-.footer-logo {
-  height: 20px;
-  width: auto;
-  filter: none;
-  opacity: 0.7;
+.dusk-footer .dusk-brand-col {
+  max-width: 280px;
 }
 
-.footer-nav {
-  display: flex;
-  align-items: center;
+.dusk-footer .dusk-wordmark {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--sf-ink);
+  letter-spacing: .01em;
+  margin: 0;
 }
 
-.footer-link {
+.dusk-footer .dusk-wordmark .accent {
+  color: var(--sf-wine);
+}
+
+.dusk-footer .dusk-brand-col .dusk-tagline {
+  margin: .65rem 0 0;
+  font-size: .82rem;
+  font-weight: 300;
+  letter-spacing: .04em;
+  color: var(--sf-ink-soft);
+  line-height: 1.55;
+}
+
+.dusk-footer .dusk-link-col h3 {
+  font-family: 'Jost', sans-serif;
+  font-size: .64rem;
+  font-weight: 500;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--sf-wine);
+  margin: 0 0 1rem;
+}
+
+.dusk-footer .dusk-link-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dusk-footer .dusk-link-col li + li {
+  margin-top: .55rem;
+}
+
+.dusk-footer .dusk-link-col a {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-family: 'Jost', sans-serif;
-  font-size: var(--text-xs);
-  font-weight: 500;
-  color: var(--text-tertiary);
+  gap: .5rem;
+  font-size: .86rem;
+  font-weight: 400;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--sf-ink);
   text-decoration: none;
-  border: none;
-  background: none;
-  transition: color var(--duration-normal) var(--ease-spring);
+  padding-bottom: .1rem;
+  cursor: pointer;
 }
 
-.footer-link:hover {
-  color: var(--text-primary);
+.dusk-footer .dusk-link-col a:hover,
+.dusk-footer .dusk-link-col a:focus-visible {
+  color: var(--sf-wine);
+  text-decoration: underline wavy var(--sf-gold-text) 1.5px;
+  text-underline-offset: 5px;
 }
 
-.footer-link svg {
-  opacity: 0.5;
+.dusk-footer .ig-doodle {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  color: var(--sf-wine);
 }
 
-.footer-link:hover svg {
-  opacity: 1;
+.dusk-footer .dusk-baseline {
+  margin-top: clamp(2.2rem, 4vw, 3rem);
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--sf-sand);
+  text-align: center;
 }
 
-@media (min-width: 768px) {
-  .app-footer {
-    padding: 56px 40px 60px;
-    gap: 24px;
+.dusk-footer .dusk-baseline p {
+  margin: 0;
+  font-family: 'Jost', sans-serif;
+  font-size: .68rem;
+  font-weight: 400;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--sf-ink-soft);
+  opacity: .8;
+}
+
+@media (max-width: 700px) {
+  .dusk-footer .dusk-street-cols {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2.2rem;
   }
 
-  .footer-motto {
-    font-size: clamp(80px, 12vw, 200px);
+  .dusk-footer .dusk-brand-col {
+    max-width: none;
   }
 
-  .footer-logo {
-    height: 24px;
+  .dusk-footer .dusk-link-col a {
+    justify-content: center;
   }
 
-  .footer-link {
-    font-size: var(--text-sm);
+  .dusk-footer .dusk-motto {
+    margin-bottom: -.55rem;
+  }
+
+  .dusk-footer .dusk-skyline-wrap {
+    margin-top: -1.6rem;
+  }
+}
+
+/* reduced motion: dusk arrives all at once, calm */
+@media (prefers-reduced-motion: reduce) {
+  .dusk-footer .win {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .dusk-footer .sun-ray,
+  .dusk-footer .sun-reflect,
+  .dusk-footer .beacon,
+  .dusk-footer .lamp-glow {
+    transition: none;
+  }
+
+  .dusk-footer.lit .sun-halo,
+  .dusk-footer .beacon.glow {
+    animation: none;
+  }
+
+  .dusk-footer .dusk-truth {
+    transition: none;
+    transform: none;
   }
 }
 

@@ -1300,6 +1300,10 @@ function toggleDealsCard(timeFilter) {
 
 // Render Events
 function renderEvents() {
+  // Keep the footer's derived truth line in step with whatever the page
+  // renders (runs on load, region change, filter change — cheap, idempotent)
+  updateFooterTruth();
+
   // Show/hide art sub-filter based on current category
   const artSubEl = document.getElementById('art-subfilter');
   if (artSubEl) {
@@ -3903,26 +3907,161 @@ function initScrollReveal() {
   sections.forEach(s => observer.observe(s));
 }
 
-// ── Footer Reveal ─────────────────────────────────
+// ── Footer: "The City at Dusk" ─────────────────────────────────
+// Hand-drawn skyline whose gold windows light up, staggered, the first time
+// the footer scrolls into view. Window placement is randomized per load;
+// a few keep twinkling. Reduced motion: everything lights at once, static.
 function initFooterReveal() {
-  const motto = document.querySelector('.footer-motto');
-  if (!motto) return;
+  const footer = document.querySelector('.dusk-footer');
+  const host = document.getElementById('sf-wins-host');
+  const svg = document.getElementById('sf-city-svg');
+  if (!footer || !host || !svg) return;
 
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    motto.classList.add('visible');
-    return;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SVGNS = 'http://www.w3.org/2000/svg';
+
+  // {x,y: first window top-left, w,h, cols, rows, dx,dy col/row pitch, skip:[indices]}
+  const grids = [
+    // left bank (Hoboken / Jersey City)
+    { x: 79,   y: 192, w: 11, h: 15, cols: 2, rows: 3, dx: 19,   dy: 26 },                  // brownstone 1
+    { x: 140,  y: 172, w: 11, h: 15, cols: 3, rows: 4, dx: 18,   dy: 25, skip: [10] },      // brownstone 2
+    { x: 202,  y: 208, w: 11, h: 15, cols: 2, rows: 2, dx: 19,   dy: 27 },                  // brownstone 3
+    { x: 274,  y: 243, w: 12, h: 14, cols: 1, rows: 1, dx: 0,    dy: 0 },                   // warehouse side
+    { x: 322,  y: 243, w: 12, h: 14, cols: 1, rows: 1, dx: 0,    dy: 0 },
+    // right bank (New York)
+    { x: 939,  y: 116, w: 9,  h: 12, cols: 2, rows: 6, dx: 13,   dy: 26 },                  // slim tower
+    { x: 990,  y: 170, w: 11, h: 13, cols: 4, rows: 4, dx: 18,   dy: 26, skip: [14, 15] },  // water tower building
+    { x: 1087, y: 144, w: 9,  h: 12, cols: 4, rows: 5, dx: 14.5, dy: 25 },                  // empire base
+    { x: 1096, y: 96,  w: 8,  h: 10, cols: 3, rows: 1, dx: 12,   dy: 0 },                   // empire mid
+    { x: 1103, y: 64,  w: 7,  h: 9,  cols: 2, rows: 1, dx: 9,    dy: 0 },                   // empire top
+    { x: 1167, y: 206, w: 11, h: 14, cols: 3, rows: 2, dx: 17,   dy: 27 },                  // cornice row 1
+    { x: 1224, y: 188, w: 11, h: 14, cols: 3, rows: 2, dx: 16,   dy: 27, skip: [4] },       // cornice row 2 (door)
+    { x: 1281, y: 214, w: 11, h: 14, cols: 3, rows: 2, dx: 16,   dy: 26 },                  // cornice row 3
+    { x: 1350, y: 162, w: 11, h: 14, cols: 3, rows: 3, dx: 17,   dy: 27 }                   // café corner
+  ];
+
+  const wins = [];
+  grids.forEach(g => {
+    let i = 0;
+    for (let r = 0; r < g.rows; r++) {
+      for (let c = 0; c < g.cols; c++, i++) {
+        if (g.skip && g.skip.indexOf(i) !== -1) continue;
+        const rect = document.createElementNS(SVGNS, 'rect');
+        // a touch of hand wobble so no two windows sit perfectly
+        const jx = (Math.random() - .5) * 1.6, jy = (Math.random() - .5) * 1.6;
+        rect.setAttribute('x', (g.x + c * g.dx + jx).toFixed(1));
+        rect.setAttribute('y', (g.y + r * g.dy + jy).toFixed(1));
+        rect.setAttribute('width', g.w);
+        rect.setAttribute('height', g.h);
+        rect.setAttribute('rx', 2.5);
+        rect.setAttribute('class', 'win');
+        host.appendChild(rect);
+        wins.push(rect);
+      }
+    }
+  });
+
+  // choose ~72% of windows to light, each on its own moment; a few twinkle
+  const chosen = [];
+  wins.forEach(w => {
+    if (Math.random() < 0.72) {
+      chosen.push(w);
+      w.style.transitionDelay = (Math.random() * 2.8).toFixed(2) + 's';
+      if (!reduced && Math.random() < 0.16) {
+        w.style.setProperty('--twd', (3.5 + Math.random() * 4).toFixed(2) + 's');
+        w.style.setProperty('--twdel', (3 + Math.random() * 5).toFixed(2) + 's');
+        w.dataset.tw = '1';
+      }
+    }
+  });
+
+  // mobile shows the heart of the drawing: the river, the sun, both banks
+  const mq = window.matchMedia('(max-width:700px)');
+  function frame() {
+    svg.setAttribute('viewBox', mq.matches ? '356 0 716 300' : '0 0 1440 300');
+  }
+  if (mq.addEventListener) mq.addEventListener('change', frame); else mq.addListener(frame);
+  frame();
+
+  // dusk falls when the skyline scrolls into view
+  let fell = false;
+  function fallDusk() {
+    if (fell) return;
+    fell = true;
+    footer.classList.add('lit');
+    requestAnimationFrame(() => {
+      chosen.forEach(w => {
+        w.classList.add('on');
+        if (w.dataset.tw) w.classList.add('tw');
+      });
+      footer.querySelectorAll('.sun-ray,.sun-reflect,.beacon,.lamp-glow')
+        .forEach(el => el.classList.add('glow'));
+    });
+  }
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { fallDusk(); io.disconnect(); }
+      });
+    }, { threshold: 0.25 });
+    io.observe(footer.querySelector('.dusk-skyline-wrap'));
+  } else {
+    fallDusk();
+  }
+}
+
+// ── Footer truth line ──────────────────────────────
+// One derived sentence, computed from the SAME verified (truth-passed)
+// `events` array the page renders — never a separate fetch, so the number
+// can't disagree with the counts shown elsewhere. Uses the app's own date
+// logic (matchesTimeFilter's rules) and region scoping.
+function updateFooterTruth() {
+  const el = document.getElementById('sf-truth-line');
+  if (!el) return;
+  if (!eventsLoaded) return; // no data yet → no numeric claim
+
+  const todayStr = getTodayLocal();
+  const endOfWeekStr = getEndOfWeekLocal();
+  let tonightFree = 0;
+  let weekCount = 0;
+
+  events.forEach(ev => {
+    if (!ev.start_date) return;
+    if (!matchesCurrentRegion(ev)) return;
+    const startDateStr = extractDateFromISO(ev.start_date);
+    const endDateStr = ev.end_date ? extractDateFromISO(ev.end_date) : startDateStr;
+    const isTonight = todayStr >= startDateStr && todayStr <= endDateStr;
+    const isThisWeek = startDateStr <= endOfWeekStr && endDateStr >= todayStr;
+    if (isTonight && ev.isFree === true) tonightFree++;
+    if (isThisWeek) weekCount++;
+  });
+
+  let html;
+  if (tonightFree > 0) {
+    html = `<span class="num">${tonightFree}</span> free ` +
+      (tonightFree === 1 ? 'thing is' : 'things are') +
+      ' happening under tonight&rsquo;s sky &mdash; go find one.';
+  } else if (weekCount > 0) {
+    html = `The city rests tonight &mdash; <span class="num">${weekCount}</span> ` +
+      (weekCount === 1 ? 'gathering' : 'gatherings') + ' this week.';
+  } else {
+    // nothing verifiable to count → no numeric claim
+    html = 'the city is catching its breath &mdash; tomorrow&rsquo;s list is already brewing.';
   }
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        motto.classList.add('visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.3 });
+  if (el.innerHTML !== html) el.innerHTML = html;
+  requestAnimationFrame(() => el.classList.add('show'));
+}
 
-  observer.observe(motto);
+// ── Footer navigation (Navigate column → app router) ───────────
+function initFooterNav() {
+  document.querySelectorAll('.dusk-link-col a[data-view]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateToView(link.dataset.view);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
 }
 
 // ── Value strip event count ────────────────────────
@@ -4026,6 +4165,7 @@ if (document.readyState === 'loading') {
     initSubscribeStripEvents();
     initScrollReveal();
     initFooterReveal();
+    initFooterNav();
     initInstagramGrid();
     initGalleryTabs();
     initStackActions();
@@ -4048,6 +4188,7 @@ if (document.readyState === 'loading') {
   initSubscribeStrip();
   initSubscribeStripEvents();
   initFooterReveal();
+  initFooterNav();
 }
 // v1.0.2
 

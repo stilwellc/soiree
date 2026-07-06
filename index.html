@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap"
     rel="stylesheet">
 
   <!-- Styles -->
@@ -649,19 +649,228 @@
       </div>
     </div>
 
-    <!-- Footer (Global) -->
-    <footer class="app-footer">
-      <p class="footer-motto">stay curious.</p>
-      <div class="footer-bottom">
-        <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="footer-logo">
-        <a href="https://www.instagram.com/soiree.nyc/" target="_blank" rel="noopener noreferrer" class="footer-link footer-link-ig">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14" aria-hidden="true">
-            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+    <!-- Footer (Global) — "The City at Dusk" -->
+    <footer class="app-footer dusk-footer">
+      <div class="dusk-sky">
+        <p class="dusk-motto-sub">soir&eacute;e &mdash; free events, found daily</p>
+        <p class="dusk-motto" aria-label="stay curious.">stay curious<span class="dot">.</span></p>
+
+        <div class="dusk-skyline-wrap" aria-hidden="true">
+          <svg id="sf-city-svg" class="dusk-skyline" viewBox="0 0 1440 300" role="img" aria-label="Hand-drawn skyline of Hoboken and New York at dusk, windows lighting up over the Hudson">
+            <defs>
+              <radialGradient id="sf-sun-glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#D4AF37" stop-opacity=".5"/>
+                <stop offset="100%" stop-color="#D4AF37" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <g id="sf-city-at-dusk">
+                <!-- ═══ sky doodles ═══ -->
+                <path class="gold-fill" opacity=".9" d="M256 98 Q257.5 106 264 108 Q257.5 110 256 118 Q254.5 110 248 108 Q254.5 106 256 98 Z"/>
+                <path class="gold-fill" opacity=".7" d="M1246 66 Q1247 72 1252 73.5 Q1247 75 1246 81 Q1245 75 1240 73.5 Q1245 72 1246 66 Z"/>
+                <path class="gold-fill" opacity=".75" d="M545 90 Q546 96.5 551 98 Q546 99.5 545 106 Q544 99.5 539 98 Q544 96.5 545 90 Z"/>
+                <!-- birds over the river -->
+                <path class="ln-fine" d="M612 146 Q617 141 622 146 Q627 141 632 146"/>
+                <path class="ln-fine" d="M652 130 Q656 126 660 130 Q664 126 668 130"/>
+
+                <!-- ═══ LEFT BANK · Hoboken / Jersey City ═══ -->
+                <!-- little street tree -->
+                <path class="ln-fine" d="M52 272 L52.5 258"/>
+                <path class="ln-fine" d="M41 250 Q38.5 237 52 234.5 Q66 236 63.5 250 Q60.5 258.5 52 258.5 Q44 258 41 250 Z"/>
+
+                <!-- brownstone 1 -->
+                <path class="ln" d="M70 272 L71.5 178 M128 272 L127 178"/>
+                <path class="ln" d="M64.5 178 L133.5 177"/>
+                <path class="ln-fine" d="M67 184 L131 183.5"/>
+                <path class="ln-fine" d="M74 178 L74 183.5 M85 178 L85 183.5 M96 178 L96 183.3 M107 178 L107 183.5 M118 178 L118 183.5"/>
+                <!-- door + stoop -->
+                <path class="ln-fine" d="M104 272 L104 250 Q104 244.5 111 244.5 Q118 245 118 250 L118 272"/>
+                <path class="ln-fine" d="M118 264 L124 264 L124 268 L129 268 L129 272"/>
+
+                <!-- brownstone 2 (tall one) -->
+                <path class="ln" d="M132 272 L133 156 M190 272 L189 157"/>
+                <path class="ln" d="M126.5 156.5 L195 155.5"/>
+                <path class="ln-fine" d="M129 162.5 L192.5 162"/>
+                <path class="ln-fine" d="M137 156.5 L137 162 M148 156.5 L148 162 M159 156 L159 162 M170 156 L170 162 M181 156 L181 162"/>
+
+                <!-- brownstone 3 -->
+                <path class="ln" d="M194 272 L195 190 M250 272 L249 190.5"/>
+                <path class="ln" d="M188.5 190.5 L255 189.5"/>
+                <path class="ln-fine" d="M191 196.5 L252.5 196"/>
+                <path class="ln-fine" d="M232 272 L232 252 Q232 246.5 238.7 246.5 Q245.5 247 245.5 252 L245.5 272"/>
+                <path class="ln-fine" d="M188 268 L182 268 L182 272"/>
+
+                <!-- warehouse with arched parapet + café sign -->
+                <path class="ln" d="M264 272 L264 211 Q264.5 206.5 269 206.5 L293 206 Q310 195.5 327 206 L351 206.5 Q355.5 206.5 355.5 211 L355 272"/>
+                <path class="ln-fine" d="M300 248 L300 231 Q309.5 220.5 319 231 L319 248 L300 248 Z"/>
+                <path class="ln-fine" d="M272 222 L292 221.5 L292.5 233 L272.5 233.5 Z"/>
+                <path class="ln-fine" d="M276 227.5 Q279 225.5 282 227.5 Q285 229.5 288 227.5"/>
+
+                <!-- terminal base + clock tower (Hoboken) -->
+                <path class="ln" d="M370 272 L371 220 Q371 216 375 216 L466 215.5 Q470 215.5 470 219.5 L470.5 272"/>
+                <path class="ln-fine" d="M382 272 L382 240 Q382 233 389.5 233 Q397 233.5 397 240 L397 272"/>
+                <path class="ln-fine" d="M443 272 L443 240 Q443 233 450.5 233 Q458 233.5 458 240 L458 272"/>
+                <path class="ln" d="M400 216 L401.5 124 M440 216 L438.5 124"/>
+                <path class="ln" d="M394 124 L446 123"/>
+                <path class="ln" d="M394 123.5 L419.5 97 L446 123"/>
+                <circle class="ln-fine" cx="420" cy="93" r="3"/>
+                <path class="gold-ln" d="M420 89 Q426 84 432 87" stroke-width="1.8"/>
+                <circle class="ln-fine" cx="420" cy="155" r="13.5"/>
+                <path class="ln-fine" d="M420 155 L420 146.5 M420 155 L426 158"/>
+                <path class="ln-fine" d="M413.5 200 L413.5 186 Q420 179 426.5 186 L426.5 200 L413.5 200 Z"/>
+
+                <!-- pier into the water -->
+                <path class="ln-fine" d="M478 268.5 L530 271"/>
+                <path class="ln-fine" d="M490 269 L490 281 M506 269.5 L506 283 M521 270.5 L521 284"/>
+
+                <!-- left bank edge -->
+                <path class="ln" d="M36 272.5 Q200 270.5 380 272 T540 271.5 Q544.5 273.5 545.5 279"/>
+
+                <!-- ═══ THE HUDSON ═══ -->
+                <path class="ln-soft" d="M556 282 Q566 278 576 282 T596 282 T616 282"/>
+                <path class="ln-soft" d="M640 290 Q650 286 660 290 T680 290"/>
+                <path class="ln-soft" d="M766 284 Q776 280 786 284 T806 284"/>
+                <path class="ln-soft" d="M846 291 Q856 287 866 291 T886 291"/>
+                <path class="ln-soft" d="M598 293 Q607 289.5 616 293 T634 293"/>
+
+                <!-- far upriver: the George Washington Bridge, faint -->
+                <g class="gwb">
+                  <path d="M597 268 L597 240 M603 268 L603 240 M597 246 L603 246 M597 258 L603 258 M597 240 L603 240"/>
+                  <path d="M847 268 L847 240 M853 268 L853 240 M847 246 L853 246 M847 258 L853 258 M847 240 L853 240"/>
+                  <path d="M560 262 Q577 247 597 240.5"/>
+                  <path d="M603 240.5 Q725 273 847 240.5"/>
+                  <path d="M853 240.5 Q870 246 888 261"/>
+                  <path d="M650 252 L650 266 M690 256.5 L690 266 M760 256 L760 266 M800 251 L800 266"/>
+                  <path d="M564 266 L886 266"/>
+                </g>
+
+                <!-- the setting sun -->
+                <circle class="sun-halo" cx="720" cy="272" r="58" fill="url(#sf-sun-glow)"/>
+                <path class="sun-body" d="M688 275 A32 32 0 0 1 752 275"/>
+                <path class="sun-ray" d="M720 235 L720 224"/>
+                <path class="sun-ray" d="M747 248 L754.5 241"/>
+                <path class="sun-ray" d="M693 248 L685.5 241"/>
+                <path class="sun-ray" d="M756 262.5 L765.5 259"/>
+                <path class="sun-ray" d="M684 262.5 L674.5 259"/>
+                <path class="sun-reflect" d="M703 284.5 L737 284.5"/>
+                <path class="sun-reflect" d="M710 291 L730 291"/>
+
+                <!-- a little sailboat heading home -->
+                <path class="ln-fine" d="M806 278.5 Q820 286 834 278.5"/>
+                <path class="ln-fine" d="M819.5 278 L819.5 253"/>
+                <path class="ln-fine" fill="#FFFCF7" d="M817.5 256.5 Q818.5 265 817 274.5 Q810.5 273.5 805.5 273 Q810 264 817.5 256.5 Z"/>
+                <path class="ln-fine" fill="#FFFCF7" d="M822 258.5 Q829.5 266 831.5 273.5 Q826.5 274.5 822 274.5 Q821 266 822 258.5 Z"/>
+                <path class="gold-ln" d="M819.5 252.5 Q823 250.5 826 252" stroke-width="1.6"/>
+
+                <!-- right bank edge + lamppost -->
+                <path class="ln" d="M900.5 279 Q901.5 273.5 906 272 Q1050 270 1200 272.5 T1408 271"/>
+                <path class="ln-fine" d="M912 272 L912 237 Q912 228.5 920 228.5"/>
+                <circle class="ln-fine" cx="924" cy="229" r="3.4"/>
+                <circle class="lamp-glow" cx="924" cy="229" r="2"/>
+
+                <!-- ═══ RIGHT BANK · New York ═══ -->
+                <!-- slim tower with antenna -->
+                <path class="ln" d="M930 272 L931.5 106 Q931.5 102 935.5 102 L964.5 101.5 Q968.5 101.5 968.5 105.5 L969.5 272"/>
+                <path class="ln-fine" d="M950 101.5 L950 83"/>
+                <circle class="beacon" cx="950" cy="80" r="2.4"/>
+
+                <!-- mid building with WATER TOWER -->
+                <path class="ln" d="M980 272 L981 158 Q981 154 985 154 L1062 153.5 Q1066 153.5 1066 157.5 L1066.5 272"/>
+                <path class="ln-fine" d="M1000 154 L1001 143.5 M1022 153.8 L1021 143.5"/>
+                <path class="ln-fine" d="M1001 152 L1021 145.5 M1021 152 L1001 145.5"/>
+                <path class="ln-fine" d="M994.5 143.5 L1027.5 143"/>
+                <path class="ln" d="M997.5 143 L999 117 M1024.5 143 L1023 117"/>
+                <path class="ln-fine" d="M999 134.5 Q1011 136.5 1023 134.5 M999.8 125.5 Q1011 127.5 1022.2 125.5"/>
+                <path class="ln" d="M993.5 117 L1011 99.5 L1028.5 117"/>
+                <path class="ln-fine" d="M1011 99.5 L1011 93.5"/>
+                <circle class="ln-fine" cx="1011" cy="91.5" r="1.8"/>
+                <path class="ln-fine" d="M1046 272 L1046 250 Q1046 243.5 1053 243.5 Q1060 244 1060 250 L1060 272"/>
+
+                <!-- empire-ish setback tower -->
+                <path class="ln" d="M1078 272 L1079 132 L1141 131.5 L1142 272"/>
+                <path class="ln" d="M1088 131.5 L1088.5 86 L1131.5 85.5 L1132 131.5"/>
+                <path class="ln" d="M1098 85.5 L1098.5 58 L1121.5 57.5 L1122 85.5"/>
+                <path class="ln-fine" d="M1110 57.5 L1110 32"/>
+                <circle class="beacon" cx="1110" cy="29" r="2.6"/>
+
+                <!-- cornice row + rooftop cat -->
+                <path class="ln" d="M1158 272 L1159 190 M1214 272 L1213 190.5"/>
+                <path class="ln" d="M1152.5 190.5 L1219.5 189.5"/>
+                <path class="ln-fine" d="M1155 196.5 L1217 196"/>
+                <path class="ln-fine" d="M1163 190.5 L1163 196 M1174 190.3 L1174 196 M1185 190 L1185 196 M1196 190 L1196 196 M1207 190 L1207 196"/>
+                <!-- the rooftop cat, watching the sunset -->
+                <g class="ln-fine" style="stroke-width:1.5">
+                  <path d="M1180 189.5 Q1174.5 188.5 1175.5 181.5"/>
+                  <path d="M1180 189.5 Q1180.5 180.5 1186 177.5 Q1184 171.5 1189.5 170.5 Q1195 171 1194 177.2 Q1196.5 181 1196.5 189.5"/>
+                  <path d="M1185.9 172.6 L1185.2 167.8 L1188.6 170.1 M1192.9 172.3 L1194.1 167.7 L1190.7 170.1"/>
+                </g>
+
+                <path class="ln" d="M1216 272 L1217 172 M1270 272 L1269 172.5"/>
+                <path class="ln" d="M1210.5 172.5 L1275.5 171.5"/>
+                <path class="ln-fine" d="M1213 178.5 L1273 178"/>
+                <path class="ln-fine" d="M1234 272 L1234 251 Q1234 245 1241 245 Q1248 245.5 1248 251 L1248 272"/>
+                <path class="ln-fine" d="M1248 264 L1254 264 L1254 268 L1259 268 L1259 272"/>
+
+                <path class="ln" d="M1272 272 L1273 198 M1326 272 L1325 198.5"/>
+                <path class="ln" d="M1266.5 198.5 L1331.5 197.5"/>
+                <path class="ln-fine" d="M1269 204.5 L1329 204"/>
+
+                <!-- corner café building with scalloped awning -->
+                <path class="ln" d="M1340 272 L1341 152 Q1341 147.5 1345.5 147.5 L1398 147 Q1402.5 147 1402.5 151.5 L1403 272"/>
+                <path class="ln-fine" d="M1370 147 L1370 133"/>
+                <circle class="beacon" cx="1370" cy="130" r="2.2"/>
+                <path class="ln-fine" d="M1350 246 L1394 245.5"/>
+                <path class="ln-fine" d="M1350 246 Q1353.5 252.5 1357.3 246.5 Q1361 252.5 1364.7 246.4 Q1368.4 252.5 1372.1 246.3 Q1375.8 252.5 1379.5 246.2 Q1383.2 252.5 1386.9 246.1 Q1390.6 252.5 1394 245.5"/>
+                <path class="ln-fine" d="M1362 272 L1362 258 M1382 272 L1382 258 M1362 258 L1382 257.7"/>
+
+                <!-- windows appended here by JS -->
+                <g id="sf-wins-host"></g>
+            </g>
           </svg>
-          <span>Follow us</span>
-        </a>
+        </div>
+      </div>
+
+      <!-- ————— street level ————— -->
+      <div class="dusk-street">
+        <div class="dusk-street-inner">
+          <p class="dusk-truth" id="sf-truth-line" aria-live="polite"></p>
+
+          <div class="dusk-street-cols">
+            <div class="dusk-brand-col">
+              <p class="dusk-wordmark">soir<span class="accent">&eacute;e</span></p>
+              <p class="dusk-tagline">free events across NYC, Hoboken &amp; Jersey City &mdash; hand-picked while the coffee&rsquo;s still hot.</p>
+            </div>
+
+            <nav class="dusk-link-col" aria-label="Footer navigation">
+              <h3>Navigate</h3>
+              <ul>
+                <li><a href="/all" data-view="all">All events</a></li>
+                <li><a href="/today" data-view="today">Today</a></li>
+                <li><a href="/week" data-view="week">This week</a></li>
+                <li><a href="/about" data-view="about">About</a></li>
+              </ul>
+            </nav>
+
+            <div class="dusk-link-col">
+              <h3>Follow</h3>
+              <ul>
+                <li>
+                  <a href="https://www.instagram.com/yourdailysoiree/" target="_blank" rel="noopener noreferrer">
+                    <svg class="ig-doodle" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4.6 7.2 Q4.4 3.9 7.6 3.7 L16.6 3.5 Q19.9 3.5 20.1 6.9 L20.3 16.4 Q20.4 19.9 16.9 20.1 L7.7 20.3 Q4.3 20.3 4.3 16.8 Z"/>
+                      <path d="M8.3 12.2 Q8.2 8.6 11.9 8.4 Q15.7 8.3 15.8 11.9 Q15.9 15.6 12.2 15.7 Q8.5 15.8 8.3 12.2 Z"/>
+                      <circle cx="17" cy="6.9" r="1" fill="currentColor" stroke="none"/>
+                    </svg>
+                    Instagram
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="dusk-baseline">
+            <p>&copy; 2026 soir&eacute;e &middot; made between two banks of the Hudson</p>
+          </div>
+        </div>
       </div>
     </footer>
   </main>
