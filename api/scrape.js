@@ -4,6 +4,7 @@ const cheerio = require('cheerio');
 const { parseDateText } = require('../lib/dateParser.js');
 const { createNormalizedEvent, generateHighlights } = require('../lib/normalize.js');
 const { scrapeWithPuppeteer, CONFIGS } = require('../scripts/scrape-puppeteer.js');
+const { enrichEvents } = require('../lib/enrich.js');
 
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
@@ -1998,6 +1999,16 @@ module.exports = async function handler(req, res) {
       [events.length]
     ).catch(() => {}); // don't fail scrape if log table doesn't exist yet
 
+    // Detail-page enrichment: fill missing times/prices/descriptions from
+    // the facts each source actually publishes one page deeper. Never
+    // fails the scrape — enrichment is a bonus, not a dependency.
+    let enrichment = { attempted: 0, enriched: 0, fieldsWritten: 0 };
+    try {
+      enrichment = await enrichEvents(pool);
+    } catch (err) {
+      console.error('Enrichment error (non-fatal):', err.message);
+    }
+
     const result = await pool.query('SELECT COUNT(*) as count FROM events');
 
     return res.status(200).json({
@@ -2008,6 +2019,7 @@ module.exports = async function handler(req, res) {
       inserted: inserted,
       updated: updated,
       markedPast: markedPast,
+      enrichment: enrichment,
       totalEvents: parseInt(result.rows[0].count),
       galleryCounts: events._galleryCounts || {},
       timestamp: new Date().toISOString()
