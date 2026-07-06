@@ -6008,6 +6008,7 @@ button:focus-visible,
   }
   .dusk-footer .dusk-navline {
     gap: .3rem .9rem;
+    margin-top: 1.2rem;
   }
   .dusk-footer .dusk-link-col a {
     min-height: 44px;
@@ -6018,7 +6019,7 @@ button:focus-visible,
     bottom: 40%;
   }
   .dusk-footer .dusk-skyline-wrap {
-    margin-top: 1.4rem;
+    margin-top: .15rem;
   }
   .dusk-footer .dusk-baseline {
     flex-direction: column;
