@@ -5775,18 +5775,21 @@ button:focus-visible,
 }
 
 .dusk-footer .dusk-motto {
-  position: relative;
+  position: absolute;
   z-index: 2;
+  left: 50%;
+  bottom: 36%;
+  transform: translateX(-50%);
   text-align: center;
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
   font-weight: 500;
-  font-size: clamp(3.2rem, 8.2vw, 7.5rem);
-  line-height: .95;
-  letter-spacing: -.015em;
+  font-size: clamp(1.7rem, 2.55vw, 2.45rem);
+  line-height: 1;
+  letter-spacing: -.01em;
   color: #3E1B20;
   mix-blend-mode: multiply;
-  margin: clamp(1.6rem, 3vw, 2.8rem) 0 0;
+  margin: 0;
   white-space: nowrap;
   user-select: none;
 }
@@ -5803,7 +5806,7 @@ button:focus-visible,
 .dusk-footer .dusk-skyline-wrap {
   position: relative;
   z-index: 1;
-  margin-top: clamp(-5.4rem, -8vw, -9rem);
+  margin-top: clamp(1.4rem, 2.4vw, 2.2rem);
   line-height: 0;
   pointer-events: none;
 }
@@ -6012,11 +6015,11 @@ button:focus-visible,
     align-items: center;
   }
   .dusk-footer .dusk-motto {
-    font-size: clamp(2.5rem, 12vw, 3.1rem);
-    margin-top: 1.5rem;
+    font-size: clamp(1.15rem, 5.4vw, 1.5rem);
+    bottom: 40%;
   }
   .dusk-footer .dusk-skyline-wrap {
-    margin-top: -2.3rem;
+    margin-top: 1.4rem;
   }
   .dusk-footer .dusk-baseline {
     flex-direction: column;
