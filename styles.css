@@ -5737,27 +5737,41 @@ button:focus-visible,
 
 .dusk-footer .dusk-sky {
   position: relative;
-  padding-top: clamp(2.4rem, 4.5vw, 3.75rem);
+  padding-top: clamp(2.6rem, 4.5vw, 4rem);
 }
 
-.dusk-footer .dusk-sky-grid {
+.dusk-footer .dusk-head {
   position: relative;
   z-index: 3;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: clamp(1.5rem, 4vw, 5rem);
-  align-items: start;
-  max-width: 1160px;
+  max-width: 760px;
   margin: 0 auto;
   padding: 0 clamp(1.4rem, 4vw, 2.5rem);
+  text-align: center;
 }
 
-.dusk-footer .dusk-sky-right {
+.dusk-footer .dusk-ornament {
   display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  gap: clamp(1.8rem, 3.5vw, 3.5rem);
-  padding-top: .8rem;
+  align-items: center;
+  justify-content: center;
+  gap: .9rem;
+  color: var(--sf-gold);
+  margin-bottom: clamp(1.3rem, 2.4vw, 1.9rem);
+}
+
+.dusk-footer .orn-line {
+  width: clamp(42px, 5vw, 64px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sf-gold));
+}
+
+.dusk-footer .orn-line:last-child {
+  background: linear-gradient(90deg, var(--sf-gold), transparent);
+}
+
+.dusk-footer .orn-spark {
+  width: 13px;
+  height: 13px;
+  flex: none;
 }
 
 .dusk-footer .dusk-motto {
@@ -5864,14 +5878,15 @@ button:focus-visible,
 
 
 .dusk-footer .dusk-truth {
-  text-align: left;
+  text-align: center;
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
   font-weight: 500;
-  font-size: clamp(1.02rem, 1.4vw, 1.2rem);
+  font-size: clamp(1.35rem, 2.1vw, 1.8rem);
+  line-height: 1.35;
   color: var(--sf-ink);
   min-height: 1.4em;
-  margin: 1.1rem 0 0;
+  margin: 0;
   opacity: 0;
   transform: translateY(6px);
   transition: opacity .9s ease, transform .9s ease;
@@ -5893,29 +5908,31 @@ button:focus-visible,
 
 
 
-.dusk-footer .dusk-sky-left { max-width: 360px; }
-
-.dusk-footer .dusk-wordmark {
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 600;
-  font-size: 1.8rem;
-  line-height: 1;
-  color: var(--sf-ink);
-  letter-spacing: .01em;
-  margin: 0;
-}
-
-.dusk-footer .dusk-wordmark .accent {
-  color: var(--sf-wine);
-}
-
 .dusk-footer .dusk-tagline {
-  margin: .5rem 0 0;
-  font-size: .74rem;
-  font-weight: 300;
-  letter-spacing: .04em;
+  margin: .85rem 0 0;
+  font-family: 'Jost', sans-serif;
+  font-size: .72rem;
+  font-weight: 400;
+  letter-spacing: .18em;
+  text-transform: uppercase;
   color: var(--sf-ink-soft);
-  line-height: 1.55;
+  line-height: 1.7;
+}
+
+.dusk-footer .dusk-navline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: .35rem clamp(.8rem, 1.6vw, 1.3rem);
+  margin-top: clamp(1.6rem, 2.8vw, 2.3rem);
+}
+
+.dusk-footer .dusk-navline .sep {
+  color: var(--sf-wine);
+  opacity: .55;
+  font-size: .9rem;
+  user-select: none;
 }
 
 .dusk-footer .dusk-link-col h3 {
@@ -5987,23 +6004,25 @@ button:focus-visible,
 }
 
 @media (max-width: 700px) {
-  .dusk-footer .dusk-sky-grid {
-    grid-template-columns: 1fr;
-    gap: 1.7rem;
+  .dusk-footer .dusk-head {
+    padding: 0 1.3rem;
   }
-  .dusk-footer .dusk-sky-left { max-width: 100%; }
-  .dusk-footer .dusk-sky-right {
-    justify-content: flex-start;
-    gap: 2.6rem;
-    padding-top: 0;
+  .dusk-footer .dusk-truth {
+    font-size: 1.2rem;
   }
-  .dusk-footer .dusk-motto {
-    font-size: clamp(2.5rem, 12vw, 3.1rem);
-    margin-top: 1.6rem;
+  .dusk-footer .dusk-tagline {
+    letter-spacing: .12em;
+  }
+  .dusk-footer .dusk-navline {
+    gap: .3rem .9rem;
   }
   .dusk-footer .dusk-link-col a {
     min-height: 44px;
     align-items: center;
+  }
+  .dusk-footer .dusk-motto {
+    font-size: clamp(2.5rem, 12vw, 3.1rem);
+    margin-top: 1.5rem;
   }
   .dusk-footer .dusk-skyline-wrap {
     margin-top: -1.4rem;
