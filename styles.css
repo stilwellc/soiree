@@ -5908,17 +5908,6 @@ button:focus-visible,
 
 
 
-.dusk-footer .dusk-tagline {
-  margin: .85rem 0 0;
-  font-family: 'Jost', sans-serif;
-  font-size: .72rem;
-  font-weight: 400;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  color: var(--sf-ink-soft);
-  line-height: 1.7;
-}
-
 .dusk-footer .dusk-navline {
   display: flex;
   align-items: center;
@@ -6009,9 +5998,6 @@ button:focus-visible,
   }
   .dusk-footer .dusk-truth {
     font-size: 1.2rem;
-  }
-  .dusk-footer .dusk-tagline {
-    letter-spacing: .12em;
   }
   .dusk-footer .dusk-navline {
     gap: .3rem .9rem;
