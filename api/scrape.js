@@ -2075,7 +2075,14 @@ module.exports = async function handler(req, res) {
 
     // Record per-source health so a silently-degrading source surfaces on the
     // About page. Never fails the scrape.
-    await recordSourceHealth(pool, events).catch(e => console.error('source-health record:', e.message));
+    let healthWrite = null;
+    try {
+      const n = await recordSourceHealth(pool, events);
+      healthWrite = { wrote: n, sample: (events[0] && events[0].source) || null };
+    } catch (e) {
+      healthWrite = { error: e.message };
+      console.error('source-health record:', e.message);
+    }
 
     // Detail-page enrichment: fill missing times/prices/descriptions from
     // the facts each source actually publishes one page deeper. Never
@@ -2098,6 +2105,7 @@ module.exports = async function handler(req, res) {
       updated: updated,
       markedPast: markedPast,
       enrichment: enrichment,
+      healthWrite: healthWrite,
       totalEvents: parseInt(result.rows[0].count),
       galleryCounts: events._galleryCounts || {},
       timestamp: new Date().toISOString()
