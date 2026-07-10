@@ -5,6 +5,8 @@ const { parseDateText } = require('../lib/dateParser.js');
 const { createNormalizedEvent, generateHighlights } = require('../lib/normalize.js');
 const { scrapeWithPuppeteer, CONFIGS } = require('../scripts/scrape-puppeteer.js');
 const { enrichEvents } = require('../lib/enrich.js');
+const { createMethods } = require('../lib/methods.js');
+const { VENUES } = require('../lib/venues.js');
 
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
@@ -1038,71 +1040,7 @@ async function scrapeTheLocalGirl() {
   }
 }
 
-// Scrape Thrillist for perks and culinary events (happy hours, deals, new openings)
-async function scrapeThrillist() {
-  try {
-    console.log('Fetching events from Thrillist...');
-    const events = [];
-
-    // Try NYC food/drink guides
-    const urls = [
-      'https://www.thrillist.com/eat/new-york',
-      'https://www.thrillist.com/drink/new-york'
-    ];
-
-    for (const url of urls) {
-      try {
-        const response = await axios.get(url, {
-          timeout: 8000,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-          }
-        });
-
-        const $ = cheerio.load(response.data);
-
-        // Look for happy hour / deal articles
-        $('a[href*="happy-hour"], a[href*="deals"], a[href*="specials"], a[href*="cheap"]').slice(0, 3).each((_, el) => {
-          const $a = $(el);
-          const title = $a.text().trim() || $a.find('h2, h3, h4').first().text().trim();
-          const href = $a.attr('href');
-
-          if (!title || !href || title.length < 10) return;
-
-          const fullUrl = href.startsWith('http') ? href : `https://www.thrillist.com${href}`;
-          const category = url.includes('/drink/') ? 'perks' : 'culinary';
-
-          events.push(createNormalizedEvent({
-            name: title,
-            category,
-            date: 'Ongoing',
-            time: 'See details',
-            start_date: new Date(),
-            end_date: null,
-            location: 'New York',
-            address: 'Various locations',
-            price: 'Varies',
-            spots: 50,
-            image: getEventImage(title, category),
-            description: `${category === 'perks' ? 'Drink deals and happy hours' : 'Food specials'} around NYC`,
-            highlights: generateHighlights(title, `${category === 'perks' ? 'Drink deals and happy hours' : 'Food specials'} around NYC`, category, 'New York', 'Thrillist'),
-            url: fullUrl,
-            source: 'Thrillist'
-          }));
-        });
-      } catch (err) {
-        console.log(`Thrillist ${url} failed:`, err.message);
-      }
-    }
-
-    console.log(`Scraped ${events.length} events from Thrillist`);
-    return events.slice(0, 8); // Limit to 8 total
-
-  } catch (error) {
-    console.error('Thrillist scraping failed:', error.message);
-    return [];
-  }
-}
+// (Thrillist retired — 404 permanent listicle with no Event schema.)
 
 // Main orchestrator - scrapes all sources and merges results
 // ─── Chelsea / NYC Gallery Scrapers ─────────────────────────────────────────
@@ -1701,15 +1639,75 @@ async function scrapeGalleries() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// REGISTRY DISPATCHER — method extractors bound to the shared primitives above.
+// Adding a venue is a one-line row in lib/venues.js; adding a method is one
+// entry in lib/methods.js. The registry feeds the SAME pipeline as the bespoke
+// scrapers (dedupe → enrich → truthpass → upsert), so DB behavior is untouched.
+const { METHODS } = createMethods({
+  createNormalizedEvent,
+  categorizeEvent,
+  parseDateText,
+  galleryDateRange,
+  galleryEvents,
+  getEventImage,
+  generateHighlights,
+  GALLERY_HEADERS,
+  scrapeWithPuppeteer,
+  CONFIGS,
+});
+
+// Run every registry row tagged to `group` in parallel; merge the results.
+async function scrapeRegistryGroup(group) {
+  const rows = VENUES.filter(v => (v.group || '').toLowerCase() === group);
+  if (rows.length === 0) return [];
+  console.log(`Registry group '${group}': ${rows.length} venue(s)`);
+  const results = await Promise.allSettled(rows.map(v => {
+    const fn = METHODS[v.method];
+    if (!fn) { console.error(`  ! ${v.name}: unknown method '${v.method}'`); return Promise.resolve([]); }
+    return fn(v);
+  }));
+  const merged = [];
+  for (let i = 0; i < rows.length; i++) {
+    const evs = results[i].status === 'fulfilled' ? (results[i].value || []) : [];
+    if (results[i].status === 'rejected') console.error(`  ! ${rows[i].name} rejected:`, results[i].reason?.message);
+    console.log(`  - ${rows[i].name} [${rows[i].method}]: ${evs.length} events`);
+    merged.push(...evs);
+  }
+  console.log(`Registry group '${group}' total: ${merged.length} events`);
+  return merged;
+}
 
 // Scrape by group: 'main' = listing sites + enrichment, 'galleries' = all 30 galleries
 // Splitting into groups keeps each invocation under Vercel's 60s timeout.
 async function scrapeByGroup(group) {
   try {
+    // Pure-registry groups: no bespoke scrapers, run entirely off VENUES.
+    const REGISTRY_ONLY_GROUPS = ['museums', 'film', 'literary', 'perfparks', 'nj', 'puppeteer'];
+    if (REGISTRY_ONLY_GROUPS.includes(group)) {
+      console.log(`Starting registry-only group: ${group}`);
+      const events = await scrapeRegistryGroup(group);
+      const filtered = events.filter(e => {
+        const d = (e.date || '').toLowerCase();
+        if (d.match(/^on view/i)) return false;
+        return true;
+      });
+      for (const event of filtered) {
+        event.description = cleanDescription(event.description);
+      }
+      // Detail-page enrichment where cheap (axios groups only; puppeteer stays lean).
+      if (group !== 'puppeteer' && filtered.length > 0) {
+        try { await enrichWithDetailPages(filtered, 8); } catch (e) { console.error('enrich (non-fatal):', e.message); }
+      }
+      console.log(`Registry group '${group}': ${filtered.length} events after filtering`);
+      return filtered;
+    }
+
     if (group === 'galleries') {
       console.log('Starting gallery scraping...');
       const galleriesResult = await scrapeGalleries();
-      const events = galleriesResult.events;
+      // Registry rows tagged to 'galleries' merge in alongside the bespoke set.
+      const registryEvents = await scrapeRegistryGroup('galleries');
+      const events = [...galleriesResult.events, ...registryEvents];
       const counts = galleriesResult.counts;
 
       // Filter permanent exhibitions
@@ -1740,7 +1738,7 @@ async function scrapeByGroup(group) {
       amnhEvents,
       newMuseumEvents,
       localGirlEvents,
-      thrillistEvents
+      registryMainEvents
     ] = await Promise.all([
       scrapeTimeOut(),
       scrapeNYCForFree(),
@@ -1750,7 +1748,7 @@ async function scrapeByGroup(group) {
       scrapeAMNH(),
       scrapeNewMuseum(),
       scrapeTheLocalGirl(),
-      scrapeThrillist()
+      scrapeRegistryGroup('main')   // any registry rows tagged group:'main'
     ]);
 
     const merged = [
@@ -1761,8 +1759,8 @@ async function scrapeByGroup(group) {
       ...guggenheimEvents,
       ...amnhEvents,
       ...newMuseumEvents,
-      ...thrillistEvents,
-      ...localGirlEvents
+      ...localGirlEvents,
+      ...registryMainEvents
     ];
 
     // Filter out permanent/long-running exhibitions
@@ -1784,6 +1782,7 @@ async function scrapeByGroup(group) {
     console.log(`  - AMNH: ${amnhEvents.length}`);
     console.log(`  - New Museum: ${newMuseumEvents.length}`);
     console.log(`  - The Local Girl: ${localGirlEvents.length}`);
+    console.log(`  - Registry (main): ${registryMainEvents.length}`);
 
     if (allEvents.length === 0) {
       console.log('No events found from any source, using fallback events');
@@ -1894,9 +1893,12 @@ module.exports = async function handler(req, res) {
       CREATE UNIQUE INDEX IF NOT EXISTS events_url_unique ON events(url)
     `);
 
-    // Get events — split by group to stay under Vercel 60s timeout
-    // ?group=main (default) = listing sites + museums + enrichment
-    // ?group=galleries = all 30 gallery scrapers
+    // Get events — split by group to stay under Vercel 60s timeout.
+    // Bespoke + registry groups:
+    //   ?group=main       = listing sites + museums + enrichment + registry(main)
+    //   ?group=galleries  = all bespoke gallery scrapers + registry(galleries)
+    // Pure-registry groups (run entirely off lib/venues.js):
+    //   ?group=museums | film | literary | perfparks | nj | puppeteer
     const group = (req.query.group || 'main').toLowerCase();
     console.log(`Scraping group: ${group}`);
     const events = await scrapeByGroup(group);
@@ -2033,3 +2035,8 @@ module.exports = async function handler(req, res) {
     });
   }
 };
+
+// Testing hooks (do not affect the Vercel handler default export).
+module.exports.METHODS = METHODS;
+module.exports.scrapeRegistryGroup = scrapeRegistryGroup;
+module.exports.VENUES = VENUES;
