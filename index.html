@@ -427,6 +427,12 @@
             </div>
           </div>
 
+          <!-- Source-health alert: shown only when a source is degraded/down -->
+          <div class="source-alert hidden" id="source-alert" role="status" aria-live="polite">
+            <span class="source-alert-icon" aria-hidden="true">▲</span>
+            <span class="source-alert-text" id="source-alert-text"></span>
+          </div>
+
           <div class="tech-dashboard-grid" id="tech-dashboard">
             <div class="tech-card graph-module">
               <div class="module-header">
@@ -478,6 +484,16 @@
                   <span class="activity-legend-item"><span class="legend-dot" style="background:#7C6AE8;"></span>Scrapes</span>
                   <span class="activity-legend-item"><span class="legend-dot" style="background:#FF6B9D;"></span>Instagram</span>
                 </div>
+              </div>
+            </div>
+
+            <div class="tech-card source-health-module" id="source-health-card">
+              <div class="module-header">
+                <span>SOURCE HEALTH</span>
+                <span class="module-id" id="source-health-id">SRC-00</span>
+              </div>
+              <div class="source-health-list" id="source-health-list">
+                <div class="source-health-loading">Reading source telemetry…</div>
               </div>
             </div>
           </div>

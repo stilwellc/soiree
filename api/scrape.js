@@ -5,6 +5,7 @@ const { parseDateText } = require('../lib/dateParser.js');
 const { createNormalizedEvent, generateHighlights } = require('../lib/normalize.js');
 const { scrapeWithPuppeteer, CONFIGS } = require('../scripts/scrape-puppeteer.js');
 const { enrichEvents } = require('../lib/enrich.js');
+const { recordSourceHealth } = require('../lib/source-health.js');
 const { createMethods } = require('../lib/methods.js');
 const { VENUES } = require('../lib/venues.js');
 
@@ -2071,6 +2072,10 @@ module.exports = async function handler(req, res) {
       `INSERT INTO activity_log (type, event_count) VALUES ('scrape', $1)`,
       [events.length]
     ).catch(() => {}); // don't fail scrape if log table doesn't exist yet
+
+    // Record per-source health so a silently-degrading source surfaces on the
+    // About page. Never fails the scrape.
+    await recordSourceHealth(pool, events).catch(e => console.error('source-health record:', e.message));
 
     // Detail-page enrichment: fill missing times/prices/descriptions from
     // the facts each source actually publishes one page deeper. Never

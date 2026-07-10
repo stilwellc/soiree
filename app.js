@@ -1055,6 +1055,7 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       socialView.classList.add('hidden');
       pinsView.classList.add('hidden');
       loadStats();
+      loadSourceHealth();
     } else if (view === 'social') {
       discoverView.classList.add('hidden');
       favoritesView.classList.add('hidden');
@@ -2356,6 +2357,61 @@ async function loadStats() {
 
   // Load technical stats (also updates stat-sources)
   loadTechStats();
+}
+
+// Source-health telemetry: paints the SOURCE HEALTH module and, when any
+// source is reporting below its expected level, an alert banner.
+async function loadSourceHealth() {
+  const listEl = document.getElementById('source-health-list');
+  const alertEl = document.getElementById('source-alert');
+  const alertText = document.getElementById('source-alert-text');
+  const idEl = document.getElementById('source-health-id');
+  if (!listEl) return;
+  try {
+    const resp = await fetch(`${API_BASE_URL}/api/source-health`);
+    const data = await resp.json();
+    const sources = (data && data.sources) || [];
+    const summary = (data && data.summary) || { total: 0, low: 0, down: 0 };
+
+    if (!sources.length) {
+      listEl.innerHTML = '<div class="source-health-loading">No source telemetry yet — check back after the next sync.</div>';
+      if (alertEl) alertEl.classList.add('hidden');
+      return;
+    }
+
+    const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    listEl.innerHTML = sources.map(s => {
+      const exp = (s.status === 'low' || s.status === 'down') && s.expected > 0
+        ? ` <span class="sh-exp">/ ~${s.expected}</span>` : '';
+      return `<div class="sh-row ${esc(s.status)}">
+        <span class="sh-dot" aria-hidden="true"></span>
+        <span class="sh-name" title="${esc(s.source)}">${esc(s.source)}</span>
+        <span class="sh-count">${s.current}${exp}</span>
+      </div>`;
+    }).join('');
+    if (idEl) idEl.textContent = 'SRC-' + String(summary.total).padStart(2, '0');
+
+    // Alert banner: down sources are the priority; then low sources.
+    if (alertEl && alertText) {
+      const down = sources.filter(s => s.status === 'down');
+      const low = sources.filter(s => s.status === 'low');
+      if (down.length || low.length) {
+        alertEl.classList.toggle('is-down', down.length > 0);
+        const names = [...down, ...low].slice(0, 4)
+          .map(s => `${esc(s.source)} (${s.current})`).join(', ');
+        const more = (down.length + low.length) > 4 ? `, +${down.length + low.length - 4} more` : '';
+        const n = down.length + low.length;
+        alertText.innerHTML = `<b>${n} source${n !== 1 ? 's' : ''}</b> reporting below expected — ${names}${more}.`;
+        alertEl.classList.remove('hidden');
+      } else {
+        alertEl.classList.add('hidden');
+      }
+    }
+  } catch (err) {
+    console.error('source-health load failed:', err);
+    listEl.innerHTML = '<div class="source-health-loading">Telemetry unavailable.</div>';
+    if (alertEl) alertEl.classList.add('hidden');
+  }
 }
 
 async function loadTechStats() {
