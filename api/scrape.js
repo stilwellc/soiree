@@ -1746,6 +1746,8 @@ async function scrapeRegistryGroup(group) {
     merged.push(...evs);
   }
   console.log(`Registry group '${group}' total: ${merged.length} events`);
+  // Every venue that ran this group — so one producing 0 is flagged, not hidden.
+  merged._attempted = rows.map(r => r.name);
   return merged;
 }
 
@@ -1795,6 +1797,8 @@ async function scrapeByGroup(group) {
       }
 
       filtered._galleryCounts = counts;
+      // Gallery counts already include the zeros for broken galleries.
+      filtered._attempted = Object.keys(counts);
       console.log(`Gallery total: ${filtered.length} events`, counts);
       return filtered;
     }
@@ -1870,6 +1874,13 @@ async function scrapeByGroup(group) {
       event.description = cleanDescription(event.description);
     }
 
+    // Known bespoke main sources + any registry rows tagged 'main', so a source
+    // that ran but produced nothing this cycle is flagged down, not hidden.
+    allEvents._attempted = [
+      'NYC For Free', 'AMNH', 'TimeOut NY', 'MoMA', 'Whitney Museum',
+      'The Local Girl', 'New Museum', 'Guggenheim',
+      ...VENUES.filter(v => (v.group || '').toLowerCase() === 'main').map(v => v.name),
+    ];
     return allEvents;
   } catch (error) {
     console.error(`Scraping group '${group}' failed:`, error.message);
@@ -2075,7 +2086,7 @@ module.exports = async function handler(req, res) {
 
     // Record per-source health so a silently-degrading source surfaces on the
     // About page. Never fails the scrape.
-    await recordSourceHealth(pool, events).catch(e => console.error('source-health record:', e.message));
+    await recordSourceHealth(pool, events, events._attempted || []).catch(e => console.error('source-health record:', e.message));
 
     // Detail-page enrichment: fill missing times/prices/descriptions from
     // the facts each source actually publishes one page deeper. Never
