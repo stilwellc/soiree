@@ -1805,37 +1805,28 @@ async function scrapeByGroup(group) {
 
     // Default: 'main' group — listing sites + museums + enrichment
     console.log('Starting main source scraping...');
+    // Whitney, New Museum, Guggenheim, and The Local Girl are now REGISTRY
+    // venues (museums / nj / puppeteer groups) — each source has a single
+    // owner so source-health can't be clobbered by a duplicate scrape.
     const [
       timeoutEvents,
       nycFreeEvents,
-      whitneyEvents,
       momaEvents,
-      guggenheimEvents,
       amnhEvents,
-      newMuseumEvents,
-      localGirlEvents,
       registryMainEvents
     ] = await Promise.all([
       scrapeTimeOut(),
       scrapeNYCForFree(),
-      scrapeWhitney(),
       scrapeMoMA(),
-      scrapeGuggenheim(),
       scrapeAMNH(),
-      scrapeNewMuseum(),
-      scrapeTheLocalGirl(),
       scrapeRegistryGroup('main')   // any registry rows tagged group:'main'
     ]);
 
     const merged = [
       ...timeoutEvents,
       ...nycFreeEvents,
-      ...whitneyEvents,
       ...momaEvents,
-      ...guggenheimEvents,
       ...amnhEvents,
-      ...newMuseumEvents,
-      ...localGirlEvents,
       ...registryMainEvents
     ];
 
@@ -1852,12 +1843,8 @@ async function scrapeByGroup(group) {
     console.log(`Main sources: ${merged.length} scraped, ${allEvents.length} after filtering`);
     console.log(`  - TimeOut NY: ${timeoutEvents.length}`);
     console.log(`  - NYC For Free: ${nycFreeEvents.length}`);
-    console.log(`  - Whitney Museum: ${whitneyEvents.length}`);
     console.log(`  - MoMA: ${momaEvents.length}`);
-    console.log(`  - Guggenheim: ${guggenheimEvents.length}`);
     console.log(`  - AMNH: ${amnhEvents.length}`);
-    console.log(`  - New Museum: ${newMuseumEvents.length}`);
-    console.log(`  - The Local Girl: ${localGirlEvents.length}`);
     console.log(`  - Registry (main): ${registryMainEvents.length}`);
 
     if (allEvents.length === 0) {
@@ -1877,8 +1864,7 @@ async function scrapeByGroup(group) {
     // Known bespoke main sources + any registry rows tagged 'main', so a source
     // that ran but produced nothing this cycle is flagged down, not hidden.
     allEvents._attempted = [
-      'NYC For Free', 'AMNH', 'TimeOut NY', 'MoMA', 'Whitney Museum',
-      'The Local Girl', 'New Museum', 'Guggenheim',
+      'NYC For Free', 'AMNH', 'TimeOut NY', 'MoMA',
       ...VENUES.filter(v => (v.group || '').toLowerCase() === 'main').map(v => v.name),
     ];
     return allEvents;
