@@ -3,6 +3,14 @@ const API_BASE_URL = window.location.origin;
 const USE_API = true; // Set to false to use fallback data
 
 // ============================================================================
+// SECURITY — HTML escaping for scraped/user data
+// ============================================================================
+// Every scraped field (from 65 sources) that lands in an innerHTML template
+// MUST be wrapped in esc(). Prevents stored XSS via event name/location/
+// address/source/highlights/description/deals.
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// ============================================================================
 // DATE UTILITIES - Consistent timezone handling
 // ============================================================================
 // IMPORTANT: Always use these helpers to avoid UTC/local timezone bugs
@@ -443,6 +451,17 @@ function applyTruthPass(rawEvents) {
   }
 }
 
+// Cache of the first raw /api/events response payload. loadTechStats() and
+// the network graph reuse this instead of firing their own duplicate fetch
+// (~230KB each) on the About view.
+let cachedEventsResponse = null;
+async function getEventsResponse() {
+  if (cachedEventsResponse) return cachedEventsResponse;
+  const response = await fetch(`${API_BASE_URL}/api/events`);
+  cachedEventsResponse = await response.json();
+  return cachedEventsResponse;
+}
+
 // Fetch Events from API
 async function fetchEvents() {
   if (!USE_API) {
@@ -450,8 +469,7 @@ async function fetchEvents() {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/events`);
-    const data = await response.json();
+    const data = await getEventsResponse();
 
     if (data.success && data.events && data.events.length > 0) {
       // Ensure all events have required fields
@@ -1056,6 +1074,13 @@ function handleNavClick(item, { pushHistory = true } = {}) {
       pinsView.classList.add('hidden');
       loadStats();
       loadSourceHealth();
+      // Tech dashboard init is gated here so it only runs when About is
+      // actually opened. Each initializer self-guards against re-running.
+      const techDashboard = document.getElementById('tech-dashboard');
+      if (techDashboard) {
+        requestAnimationFrame(() => initNetworkGraph());
+        initActivityChart();
+      }
     } else if (view === 'social') {
       discoverView.classList.add('hidden');
       favoritesView.classList.add('hidden');
@@ -1636,8 +1661,8 @@ function renderSocialCategory(containerId, categoryEvents) {
 
     return `<div class="social-event-row">
       <span class="social-event-num">${String(i + 1).padStart(2, '0')}</span>
-      <span class="social-event-name">${event.name}</span>
-      ${shortDate ? `<span class="social-event-meta">${shortDate}</span>` : ''}
+      <span class="social-event-name">${esc(event.name)}</span>
+      ${shortDate ? `<span class="social-event-meta">${esc(shortDate)}</span>` : ''}
     </div>`;
   }).join('');
 }
@@ -1822,7 +1847,10 @@ function sanitizeDescription(text) {
     desc = bp > 200 ? desc.substring(0, bp + 1) : cut.trim();
   }
 
-  return desc;
+  // The regex tag-stripper above is bypassable by an unclosed tag, and the
+  // result is written to innerHTML. HTML-escape the final string so nothing
+  // that survives stripping can be interpreted as markup.
+  return esc(desc);
 }
 
 function formatEventDate(event) {
@@ -1949,7 +1977,7 @@ function eventCardArt(event) {
     style = `background: ${CATEGORY_GRADIENTS[event.category] || CATEGORY_GRADIENTS.community}`;
   }
   const img = event.image
-    ? `<img class="event-art-photo" src="${event.image}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`
+    ? `<img class="event-art-photo" src="${esc(event.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`
     : '';
   return { style, img };
 }
@@ -1960,19 +1988,19 @@ function createEventCard(event, index) {
   const isFree = event.isFree === true;
   const badgeDate = formatBadgeDate(event);
   const timeText = event.time && event.time !== 'See details' ? event.time : '';
-  const displayName = event.name.replace(/American Museum of Natural History/gi, 'AMNH');
-  const categoryName = getCategoryName(event.category);
+  const displayName = esc(event.name.replace(/American Museum of Natural History/gi, 'AMNH'));
+  const categoryName = esc(getCategoryName(event.category));
   const art = eventCardArt(event);
 
   return `
-    <div class="event-card" data-id="${event.id}" data-category="${event.category}" data-start-date="${event.start_date || ''}" data-end-date="${event.end_date || ''}" role="article" tabindex="0">
+    <div class="event-card" data-id="${event.id}" data-category="${esc(event.category)}" data-start-date="${esc(event.start_date || '')}" data-end-date="${esc(event.end_date || '')}" role="article" tabindex="0">
       <div class="event-card-accent"></div>
       <div class="event-card-image" style="${art.style}">${art.img}</div>
       <div class="event-card-inner">
         <div class="event-card-top">
           <div class="event-card-meta">
             <span class="event-card-category">${categoryName}</span>
-            <span class="event-card-date">${badgeDate}${timeText ? ' · ' + timeText : ''}</span>
+            <span class="event-card-date">${esc(badgeDate)}${timeText ? ' · ' + esc(timeText) : ''}</span>
           </div>
           <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" data-id="${event.id}" aria-label="${isFavorited ? 'Remove from' : 'Add to'} favorites">
             <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
@@ -1989,7 +2017,7 @@ function createEventCard(event, index) {
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
               <circle cx="12" cy="10" r="3"/>
             </svg>
-            <span>${event.location}</span>
+            <span>${esc(event.location)}</span>
           </div>
           <div class="event-footer-badges">
             ${event.soldOut === true ? '<span class="event-footer-soldout">Sold Out</span>' : ''}
@@ -2013,7 +2041,8 @@ function openModal(eventId) {
   const isFavorited = favorites.includes(event.id);
   const isFree = event.isFree === true;
   const dateDisplay = formatEventDate(event);
-  const categoryName = getCategoryName(event.category);
+  const categoryName = esc(getCategoryName(event.category));
+  // sanitizeDescription() already HTML-escapes its output
   const descriptionText = sanitizeDescription(event.description);
 
   // Build info pills
@@ -2027,8 +2056,8 @@ function openModal(eventId) {
       </svg>
       <div class="modal-pill-content">
         <span class="modal-pill-label">When</span>
-        <span class="modal-pill-value">${formatBadgeDate(event)}</span>
-        ${event.time && event.time !== 'See details' ? `<span class="modal-pill-sub">${event.time}</span>` : ''}
+        <span class="modal-pill-value">${esc(formatBadgeDate(event))}</span>
+        ${event.time && event.time !== 'See details' ? `<span class="modal-pill-sub">${esc(event.time)}</span>` : ''}
       </div>
     </div>`;
 
@@ -2040,8 +2069,8 @@ function openModal(eventId) {
       </svg>
       <div class="modal-pill-content">
         <span class="modal-pill-label">Where</span>
-        <span class="modal-pill-value">${event.location}</span>
-        ${event.address ? `<span class="modal-pill-sub">${event.address}</span>` : ''}
+        <span class="modal-pill-value">${esc(event.location)}</span>
+        ${event.address ? `<span class="modal-pill-sub">${esc(event.address)}</span>` : ''}
       </div>
     </div>`;
 
@@ -2060,7 +2089,7 @@ function openModal(eventId) {
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
-            <span class="modal-highlight-text">${h}</span>
+            <span class="modal-highlight-text">${esc(h)}</span>
           </div>
         `).join('')}
       </div>
@@ -2073,16 +2102,18 @@ function openModal(eventId) {
       <div class="modal-deals-grid">
         ${event.deals.map(deal => `
           <div class="modal-deal-item">
-            <div class="modal-deal-day">${deal.day}</div>
-            <div class="modal-deal-text">${deal.offer}</div>
+            <div class="modal-deal-day">${esc(deal.day)}</div>
+            <div class="modal-deal-text">${esc(deal.offer)}</div>
           </div>
         `).join('')}
       </div>
     </div>` : '';
 
-  // CTA button
-  const ctaHTML = event.url
-    ? `<a href="${event.url}" target="_blank" rel="noopener noreferrer" class="modal-cta-btn">
+  // CTA button — only emit the anchor for http(s) URLs; escape the href so a
+  // scraped url can't break out of the attribute or inject javascript:/data:.
+  const safeUrl = /^https?:\/\//i.test(event.url || '') ? esc(event.url) : '';
+  const ctaHTML = safeUrl
+    ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="modal-cta-btn">
         View Full Details
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>
@@ -2100,15 +2131,15 @@ function openModal(eventId) {
 
     <!-- Hero — compact header with category swatch -->
     <div class="modal-hero">
-      <div class="modal-hero-swatch" data-category="${event.category}">
+      <div class="modal-hero-swatch" data-category="${esc(event.category)}">
         ${event.category === 'art' ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`
         : event.category === 'perks' ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg>`
         : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`}
       </div>
       <div class="modal-hero-title-block">
         <span class="modal-hero-category">${categoryName}</span>
-        <h2 class="modal-hero-title" id="modal-dynamic-title">${event.name}</h2>
-        ${event.source ? `<div class="modal-source-badge"><span class="modal-source-dot"></span>${event.source}</div>` : ''}
+        <h2 class="modal-hero-title" id="modal-dynamic-title">${esc(event.name)}</h2>
+        ${event.source ? `<div class="modal-source-badge"><span class="modal-source-dot"></span>${esc(event.source)}</div>` : ''}
       </div>
     </div>
 
@@ -2379,8 +2410,18 @@ async function loadSourceHealth() {
       return;
     }
 
-    const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    listEl.innerHTML = sources.map(s => {
+    // Sort rows by severity (down > low > learning > ok) so the most urgent
+    // sources surface at the top regardless of API ordering.
+    const severityRank = { down: 0, low: 1, learning: 2, ok: 3 };
+    const ordered = [...sources].sort(
+      (a, b) => (severityRank[a.status] ?? 9) - (severityRank[b.status] ?? 9)
+    );
+
+    // Drive the About "arch status" badge from live health: any down → red
+    // "Degraded", any low → amber "Partial", else green "Operational".
+    updateArchStatus(ordered);
+
+    listEl.innerHTML = ordered.map(s => {
       const exp = (s.status === 'low' || s.status === 'down') && s.expected > 0
         ? ` <span class="sh-exp">/ ~${s.expected}</span>` : '';
       return `<div class="sh-row ${esc(s.status)}">
@@ -2414,18 +2455,50 @@ async function loadSourceHealth() {
   }
 }
 
+// Paint the About "System Architecture" status badge from live source health.
+// any down → red "Degraded"; else any low → amber "Partial"; else green
+// "Operational". Reflects reality instead of the hardcoded "Operational".
+function updateArchStatus(sources) {
+  const badge = document.querySelector('.about-arch-status');
+  if (!badge) return;
+  const dot = badge.querySelector('.about-arch-dot');
+  const hasDown = sources.some(s => s.status === 'down');
+  const hasLow = sources.some(s => s.status === 'low');
+
+  let label, cls;
+  if (hasDown) { label = 'Degraded'; cls = 'is-down'; }
+  else if (hasLow) { label = 'Partial'; cls = 'is-low'; }
+  else { label = 'Operational'; cls = 'is-ok'; }
+
+  badge.classList.remove('is-down', 'is-low', 'is-ok');
+  badge.classList.add(cls);
+
+  // Rebuild text while preserving the dot element.
+  badge.textContent = '';
+  if (dot) badge.appendChild(dot);
+  else {
+    const d = document.createElement('span');
+    d.className = 'about-arch-dot';
+    badge.appendChild(d);
+  }
+  badge.appendChild(document.createTextNode(label));
+}
+
 async function loadTechStats() {
   try {
-    // Measure API response time
-    const startTime = performance.now();
-    const response = await fetch(`${API_BASE_URL}/api/events`);
-    const endTime = performance.now();
-    const data = await response.json();
-
-    // Update API speed (element may not exist in current layout)
-    const apiSpeed = Math.round(endTime - startTime);
-    const apiSpeedEl = document.getElementById('api-speed');
-    if (apiSpeedEl) apiSpeedEl.textContent = `~${apiSpeed}ms`;
+    // Reuse the cached /api/events payload instead of re-fetching. Only when
+    // the cache is cold do we hit the network (and can time it).
+    let data;
+    if (cachedEventsResponse) {
+      data = cachedEventsResponse;
+    } else {
+      const startTime = performance.now();
+      data = await getEventsResponse();
+      const endTime = performance.now();
+      const apiSpeed = Math.round(endTime - startTime);
+      const apiSpeedEl = document.getElementById('api-speed');
+      if (apiSpeedEl) apiSpeedEl.textContent = `~${apiSpeed}ms`;
+    }
 
     // Get last scrape time from most recent event
     if (data.success && data.events && data.events.length > 0) {
@@ -2661,6 +2734,11 @@ function lightenHex(hex, amount) {
 }
 
 
+// Honour the OS "reduce motion" setting: when set, canvas visualizations
+// paint one static frame and skip the requestAnimationFrame loop.
+const prefersReducedMotion = () =>
+  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 // ── Activity Chart (scrape + instagram timeline) ──────────────────
 async function initActivityChart() {
   const canvas = document.getElementById('activity-chart');
@@ -2802,11 +2880,11 @@ async function initNetworkGraph() {
   const isMobile = width < 480;
   const height = isMobile ? Math.round(width * 0.85) : Math.round(width * 0.9);
 
-  // Fetch ALL events from API (not filtered by region)
+  // Reuse the cached /api/events payload (not filtered by region) rather than
+  // firing a third duplicate fetch.
   let allEvents = [];
   try {
-    const response = await fetch(`${API_BASE_URL}/api/events`);
-    const data = await response.json();
+    const data = await getEventsResponse();
     if (data.success && data.events) {
       allEvents = data.events;
     }
@@ -2894,11 +2972,13 @@ async function initNetworkGraph() {
         if (i === 0) tCtx.moveTo(x, y); else tCtx.lineTo(x, y);
       });
       tCtx.strokeStyle = '#4CAF50'; tCtx.lineWidth = 2; tCtx.lineJoin = 'round'; tCtx.stroke();
-      requestAnimationFrame(frame);
+      // Reduced-motion: paint one frame, don't loop.
+      if (!prefersReducedMotion()) requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
 
-    setInterval(() => {
+    // Live ticker mutates the chart data — skip when motion is reduced.
+    if (!prefersReducedMotion()) setInterval(() => {
       points.shift();
       const last = points[points.length - 1] || 50;
       let next = Math.max(20, Math.min(95, last + (Math.random() - 0.5) * 15));
@@ -3339,7 +3419,8 @@ async function initNetworkGraph() {
       }
     });
 
-    requestAnimationFrame(animate);
+    // Reduced-motion: render one static frame, skip the rAF loop.
+    if (!prefersReducedMotion()) requestAnimationFrame(animate);
   }
 
   animate();
@@ -3731,14 +3812,14 @@ function renderFeaturedLayout() {
   sidebarEl.innerHTML = galleryEvents.map((ev, i) => {
     const isFavorited = favorites.includes(ev.id);
     const isActive = i === featuredIndex;
-    const displayName = ev.name.replace(/American Museum of Natural History/gi, 'AMNH');
+    const displayName = esc(ev.name.replace(/American Museum of Natural History/gi, 'AMNH'));
     const art = eventCardArt(ev);
     return `
-      <div class="sidebar-card ${isActive ? 'active' : ''}" data-event-id="${ev.id}" data-index="${i}" data-category="${ev.category}">
+      <div class="sidebar-card ${isActive ? 'active' : ''}" data-event-id="${ev.id}" data-index="${i}" data-category="${esc(ev.category)}">
         <div class="sidebar-card-image" style="${art.style}">${art.img}</div>
         <div class="sidebar-card-info">
           <div class="sidebar-card-name">${displayName}</div>
-          <div class="sidebar-card-meta">${formatBadgeDate(ev)} · ${ev.location}</div>
+          <div class="sidebar-card-meta">${esc(formatBadgeDate(ev))} · ${esc(ev.location)}</div>
         </div>
         <button class="sidebar-card-fav ${isFavorited ? 'favorited' : ''}" data-id="${ev.id}" aria-label="${isFavorited ? 'Remove from' : 'Add to'} favorites">
           <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
@@ -3841,7 +3922,7 @@ function initInstagramGrid() {
       if (!data.posts || data.posts.length === 0) { hideBand(); return; }
       grids.forEach(grid => {
         grid.innerHTML = data.posts.map(p =>
-          `<a href="${p.permalink}" target="_blank" rel="noopener"><img src="${p.media_url}" alt="" loading="lazy"></a>`
+          `<a href="${esc(p.permalink)}" target="_blank" rel="noopener"><img src="${esc(p.media_url)}" alt="" loading="lazy"></a>`
         ).join('');
       });
     })
@@ -4230,12 +4311,10 @@ if (document.readyState === 'loading') {
     const freeCheckbox = document.getElementById('free-mode-toggle');
     if (freeCheckbox) freeCheckbox.addEventListener('change', toggleFreeMode);
 
-    // Tech dashboard - always visible, initialize graph + activity chart
-    const techDashboard = document.getElementById('tech-dashboard');
-    if (techDashboard) {
-      requestAnimationFrame(() => initNetworkGraph());
-      initActivityChart();
-    }
+    // Tech dashboard (network graph + activity chart) lives inside the About
+    // view. It is initialized lazily when About opens (see handleNavClick's
+    // view === 'about' branch) so non-About loads don't fire a duplicate
+    // /api/events + /api/stats fetch. Each init self-guards against re-running.
   });
 } else {
   init();

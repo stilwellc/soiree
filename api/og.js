@@ -5,6 +5,8 @@
 'use strict';
 
 const { Pool } = require('pg');
+const { readFile } = require('fs/promises');
+const { join } = require('path');
 const { renderOgCard } = require('../lib/og-card');
 const { cleanForMeta, prettyDate, truncate } = require('../lib/seo');
 
@@ -72,9 +74,30 @@ module.exports = async function handler(req, res) {
       : 'public, max-age=86400, s-maxage=86400');
     return res.status(200).send(png);
   } catch (error) {
-    console.error('og: render failed, serving fallback SVG', error);
-    res.setHeader('Content-Type', 'image/svg+xml');
-    res.setHeader('Cache-Control', 'public, max-age=300');
-    return res.status(200).send(FALLBACK_SVG);
+    console.error('og: render failed, serving PNG fallback', error);
+
+    // Prefer a static PNG if one is shipped; else re-render the default card
+    // as PNG (reuse the module's own default path). Only if BOTH fail do we
+    // fall back to the self-contained brand SVG so the tag never 404s.
+    try {
+      const png = await readFile(join(process.cwd(), 'assets', 'og-default.png'));
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400');
+      return res.status(200).send(png);
+    } catch (staticErr) {
+      // no static asset — fall through to satori default render
+    }
+
+    try {
+      const png = await renderOgCard(DEFAULT_CARD);
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      return res.status(200).send(png);
+    } catch (renderErr) {
+      console.error('og: default PNG render also failed, serving SVG', renderErr);
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      return res.status(200).send(FALLBACK_SVG);
+    }
   }
 };

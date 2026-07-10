@@ -63,7 +63,14 @@ function buildJsonLd(ev, canonical, ogImage) {
     eventStatus: 'https://schema.org/EventScheduled',
   };
 
-  if (startYmd) ld.startDate = time ? `${startYmd}T${time}` : startYmd;
+  if (startYmd) {
+    // Timed events carry an Eastern-time offset so rich results show the
+    // correct local time. Approximate US DST by month: Mar–Nov -> EDT
+    // (-04:00), else EST (-05:00). (startYmd is YYYY-MM-DD.)
+    const mo = parseInt(startYmd.slice(5, 7), 10);
+    const etOffset = mo >= 3 && mo <= 11 ? '-04:00' : '-05:00';
+    ld.startDate = time ? `${startYmd}T${time}${etOffset}` : startYmd;
+  }
   if (endYmd && endYmd !== startYmd) ld.endDate = endYmd;
 
   const address = cleanForMeta(String(ev.address || '').replace(/\(map\)/gi, ' '));

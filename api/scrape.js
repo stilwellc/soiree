@@ -157,6 +157,13 @@ function categorizeEvent(title, description, location) {
     return 'art';
   }
 
+  // --- Music guard (route concerts/jazz/DJ sets to music before perks/community) ---
+  // Runs early so a "Summer Jazz Series" or "DJ set" isn't swallowed by a later
+  // bucket. Kept tight to unambiguous musical signals.
+  if (text.match(/\b(concert|jazz|orchestra|philharmonic|symphony|dj set)\b/) || text.match(/\bband\b/)) {
+    return 'music';
+  }
+
   // --- Perks & Pop-Ups (freebies, brand activations, pop-ups, sample sales) ---
   if (text.match(/free\s+(sample|gift|coffee|latte|drink|treat|tote|shirt|t-shirt|merch|product|item|goodie|makeup|lipstick|skincare|fragrance|ice cream|donut|doughnut|pizza|slice|cookie|cupcake|smoothie|juice|chai|matcha|espresso|bagel|croissant|muffin|chocolate|beer|wine|cocktail|seltzer|swag)/i) ||
     text.match(/\b(complimentary|giveaway|swag|goodie bag|gift bag|gift with purchase|free gifts?|free tasting)\b/i) ||
@@ -166,7 +173,7 @@ function categorizeEvent(title, description, location) {
   }
 
   // --- Perks: brand pop-ups, beauty/wellness activations, sample sales, shopping ---
-  if (text.match(/pop-up|popup|sample sale|launch celebration|grand opening|experience|charm bar/i) ||
+  if (text.match(/pop-up|popup|sample sale|launch celebration|grand opening|charm bar/i) ||
     text.match(/\b(beauty|skincare|spa|k-beauty|cosmetic|makeup|fragrance|self-care)\b/) ||
     text.match(/\b(fashion|runway|designer|couture|clothing|apparel|boutique|wardrobe|lookbook|catwalk|textile)\b/)) {
     return 'perks';
@@ -222,6 +229,37 @@ function getEventImage(title, category) {
   const index = Math.abs(hash % images.length);
 
   return images[index];
+}
+
+// Normalize oversized CDN image URLs so no card pulls a multi-MB original.
+// Squarespace/Whitney/Unsplash all honor a width param; append a conservative
+// one when it isn't already present. Leaves unknown hosts + data URIs untouched.
+function normalizeImageUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  if (!/^https?:\/\//i.test(url)) return url;
+  try {
+    const u = new URL(url);
+    const host = u.hostname;
+    // Squarespace asset CDN: ?format=1000w yields a sized derivative.
+    if (/squarespace(-cdn)?\.com$/i.test(host) || host === 'images.squarespace-cdn.com') {
+      if (!u.searchParams.has('format')) u.searchParams.set('format', '1000w');
+      return u.toString();
+    }
+    // Whitney media CDN (whitneymedia.org) serves multi-MB originals; it honors
+    // an ImageMagick-style width query (?width=1000). Add one if absent.
+    if (/whitneymedia\.org$/i.test(host)) {
+      if (!u.searchParams.has('width') && !u.searchParams.has('w')) u.searchParams.set('width', '1000');
+      return u.toString();
+    }
+    // Unsplash images honor ?w=; cap it if the source omitted a width.
+    if (/images\.unsplash\.com$/i.test(host)) {
+      if (!u.searchParams.has('w')) u.searchParams.set('w', '1200');
+      return u.toString();
+    }
+    return url;
+  } catch {
+    return url;
+  }
 }
 
 // Fetch detail page data (description and dates) from an individual event URL
@@ -496,6 +534,17 @@ async function scrapeNYCForFreeJson() {
     .replace(/\s+/g, ' ').trim();
   const NFF_HEADERS = { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36' };
 
+  // Taste denylist: NYC For Free mixes legit culture with brand pop-ups, product
+  // tours, sample sales, giveaways and "Brand x Brand" CPG/alcohol activations.
+  // Conservative name-only regex — drops the obvious non-tasteful perks while
+  // leaving cultural events (festivals, concerts, exhibitions) intact.
+  const NFF_DENYLIST = /\b(pop-?up|giveaway|sweepstakes|sample sale|activation|fan (?:fest|village|hub|zone)|ice cream truck|food truck|tanker tour|bandwagon tour|bus tour)\b/i;
+  // "Brand x Brand" co-branded CPG/beauty/alcohol activations (e.g. "Kiehl's x Go
+  // Greek", "196 Vodka Seltzer x The Little One"). Only trip on an explicit " x "
+  // collab marker so multi-word cultural titles aren't caught.
+  const NFF_XCOLLAB = /\s+x\s+/i;
+  let nffDropped = 0;
+
   // Pull the upcoming array, following pagination a couple of pages for completeness.
   let raw = [];
   let url = 'https://www.nycforfree.co/events?format=json';
@@ -521,8 +570,16 @@ async function scrapeNYCForFreeJson() {
 
     const name = (it.title || '').trim();
     if (name.length < 4) continue;
-    const startIso = new Date(it.startDate).toISOString();
-    const endIso = new Date(endMs).toISOString();
+    // Drop obvious non-tasteful brand perks (pop-ups, giveaways, product tours,
+    // trucks, sample sales, "Brand x Brand" CPG/alcohol collabs).
+    if (NFF_DENYLIST.test(name) || NFF_XCOLLAB.test(name)) { nffDropped++; continue; }
+    // start/end_date must reflect the ET *calendar day* (evening events tip a raw
+    // UTC .toISOString() to the next day, off-by-one on our top source). Derive the
+    // ET YYYY-MM-DD via en-CA (ISO-shaped) and store that as the date part.
+    const startEtDay = new Date(it.startDate).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    const endEtDay = new Date(endMs).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    const startIso = startEtDay;
+    const endIso = endEtDay;
 
     // ET display time; midnight → all-day → let enrichment/detail fill it.
     let time = 'See details';
@@ -541,7 +598,7 @@ async function scrapeNYCForFreeJson() {
     const description = stripHtml(it.excerpt) || stripHtml(it.body).slice(0, 400) || name;
     const catTag = (it.categories && it.categories[0]) || (it.tags && it.tags[0]) || '';
     const category = categorizeEvent(name + ' ' + catTag, description, location);
-    const image = it.assetUrl || getEventImage(name, category);
+    const image = normalizeImageUrl(it.assetUrl) || getEventImage(name, category);
     const eventUrl = it.fullUrl ? `https://www.nycforfree.co${it.fullUrl}` : null;
 
     const event = createNormalizedEvent({
@@ -555,6 +612,7 @@ async function scrapeNYCForFreeJson() {
     });
     if (event) events.push(event);
   }
+  if (nffDropped) console.log(`NYC For Free: dropped ${nffDropped} non-tasteful perks (denylist)`);
   return events;
 }
 
@@ -872,242 +930,6 @@ async function scrapeAMNH() {
     return events;
   } catch (error) {
     console.error('AMNH scraping failed:', error.message);
-    return [];
-  }
-}
-
-// Scrape events from Whitney Museum
-async function scrapeWhitney() {
-  try {
-    console.log('Fetching events from Whitney Museum...');
-    const response = await axios.get('https://whitney.org/events', {
-      timeout: 10000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    });
-
-    const $ = cheerio.load(response.data);
-    const events = [];
-
-    const seen = new Set();
-
-    // Strategy 1: links containing /exhibitions/ or /events/ or /programs/
-    $('a[href*="/exhibitions/"], a[href*="/events/"], a[href*="/programs/"]').each((i, elem) => {
-      if (events.length >= 15) return false;
-      const $a = $(elem);
-      const href = $a.attr('href');
-      if (!href || seen.has(href)) return;
-      seen.add(href);
-
-      let name = $a.find('h1,h2,h3,h4').first().text().trim();
-      if (!name) name = $a.find('[class*="title"]').first().text().trim();
-      if (!name) name = ($a.attr('aria-label') || $a.text()).trim().replace(/\s+/g, ' ').slice(0, 100);
-      if (!name || name.length < 5) return;
-
-      const description = $a.find('p, [class*="desc"]').first().text().trim() || name;
-      const dateText = $a.find('time, [class*="date"]').first().text().trim();
-      let date = 'Upcoming', time = 'See details';
-      if (dateText) {
-        const dm = dateText.match(/([A-Za-z]+ \d{1,2}(?:,?\s*\d{4})?)/);
-        if (dm) date = dm[1];
-        const tm = dateText.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
-        if (tm) time = tm[1];
-      }
-
-      const location = 'Whitney Museum';
-      const address = '99 Gansevoort St, New York, NY 10014';
-      const category = categorizeEvent(name, description, location);
-      const eventUrl = href.startsWith('http') ? href : `https://whitney.org${href}`;
-      const { start_date, end_date } = parseDateText(date, time);
-
-      const event = createNormalizedEvent({
-        name, category, date, time, start_date, end_date,
-        location, address,
-        price: 'free',
-        spots: Math.floor(Math.random() * 150) + 50,
-        image: getEventImage(name, category),
-        description,
-        highlights: generateHighlights(name, description, category, location, 'Whitney Museum'),
-        url: eventUrl,
-        source: 'Whitney Museum'
-      });
-      if (event) events.push(event);
-    });
-
-    // Strategy 2: article/li containers with an anchor and heading
-    if (events.length === 0) {
-      $('article, li, .card, [class*="listing"]').each((i, elem) => {
-        if (events.length >= 15) return false;
-        const $elem = $(elem);
-        const name = $elem.find('h2,h3,h4').first().text().trim();
-        if (!name || name.length < 5) return;
-        const href = $elem.find('a').first().attr('href');
-        if (!href || seen.has(href)) return;
-        seen.add(href);
-        const description = $elem.find('p').first().text().trim() || name;
-        const location = 'Whitney Museum';
-        const address = '99 Gansevoort St, New York, NY 10014';
-        const category = categorizeEvent(name, description, location);
-        const eventUrl = href.startsWith('http') ? href : `https://whitney.org${href}`;
-        const { start_date, end_date } = parseDateText('Upcoming', 'See details');
-        const event = createNormalizedEvent({
-          name, category, date: 'Upcoming', time: 'See details',
-          start_date, end_date, location, address,
-          price: 'free', spots: Math.floor(Math.random() * 100) + 30,
-          image: getEventImage(name, category), description,
-          highlights: generateHighlights(name, description, category, location, 'Whitney Museum'),
-          url: eventUrl, source: 'Whitney Museum'
-        });
-        if (event) events.push(event);
-      });
-    }
-
-    console.log(`Scraped ${events.length} events from Whitney`);
-    return events;
-  } catch (error) {
-    console.error('Whitney Museum scraping failed:', error.message);
-    return [];
-  }
-}
-
-// Scrape events and exhibitions from Guggenheim via Puppeteer (JS-rendered calendar)
-async function scrapeGuggenheim() {
-  try {
-    console.log('Fetching events from Guggenheim (Puppeteer)...');
-    const events = await scrapeWithPuppeteer(CONFIGS.guggenheim);
-    // Only keep events that have a parseable date
-    const dated = events.filter(e => e.start_date !== null);
-    console.log(`Scraped ${dated.length} dated events from Guggenheim (${events.length} total)`);
-    return dated;
-  } catch (error) {
-    console.error('Guggenheim scraping failed:', error.message);
-    return [];
-  }
-}
-
-// Scrape events from New Museum via Puppeteer (Next.js site, client-side rendered)
-async function scrapeNewMuseum() {
-  try {
-    console.log('Fetching events from New Museum (Puppeteer)...');
-    const events = await scrapeWithPuppeteer(CONFIGS.newMuseum);
-    // Only keep events that have a parseable date
-    const dated = events.filter(e => e.start_date !== null);
-    console.log(`Scraped ${dated.length} dated events from New Museum (${events.length} total)`);
-    return dated;
-  } catch (error) {
-    console.error('New Museum scraping failed:', error.message);
-    return [];
-  }
-}
-
-// Scrape events from The Local Girl (Hoboken/JC)
-// The listing page groups events under date header list items. We read them
-// in order, tracking the current date from each header's data-date attribute,
-// which avoids fetching individual detail pages (unreliable from CI/server IPs).
-async function scrapeTheLocalGirl() {
-  try {
-    console.log('Fetching events from The Local Girl...');
-    const response = await axios.get('https://thelocalgirl.com/calendar/hoboken/', {
-      timeout: 10000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9'
-      }
-    });
-
-    const $ = cheerio.load(response.data);
-    const events = [];
-    let currentDateStr = 'Upcoming';
-
-    $('ol.eventsList__list').children().each((i, elem) => {
-      const cls = $(elem).attr('class') || '';
-
-      if (cls.includes('eventsList__list__dateHeader')) {
-        // Extract ISO date from toggle button's data-date (e.g. "2026-02-12, 23:00 UTC")
-        const dataDate = $(elem).find('button[data-date]').attr('data-date') || '';
-        const isoMatch = dataDate.match(/(\d{4}-\d{2}-\d{2})/);
-        if (isoMatch) {
-          const d = new Date(isoMatch[1] + 'T12:00:00Z');
-          currentDateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        }
-        return;
-      }
-
-      if (!cls.includes('eventsList__list__item')) return;
-      if (events.length >= 30) return false;
-
-      const $elem = $(elem);
-      const $link = $elem.find('h2 a').first();
-      const name = $link.text().trim();
-      const href = $link.attr('href');
-      if (!name || !href) return;
-
-      // Extract categories
-      const categories = [];
-      $elem.find('.eventsList__list__item__categories a').each((_, catLink) => {
-        const catText = $(catLink).text().trim();
-        if (catText && catText !== 'The Hoboken Girl Calendar' && !categories.includes(catText)) {
-          categories.push(catText);
-        }
-      });
-
-      // Extract location from address element
-      let location = 'Hoboken/Jersey City';
-      let address = location;
-      const locationText = $elem.find('.eventlocation').text().trim();
-      if (locationText) {
-        address = locationText;
-        if (locationText.includes('Jersey City')) location = 'Jersey City';
-        else if (locationText.includes('Hoboken')) location = 'Hoboken';
-      }
-
-      // Extract image (prefer data-src for lazy-loaded images)
-      const image = $elem.find('.eventsList__list__item__image').attr('data-src')
-        || $elem.find('.eventsList__list__item__image').attr('src')
-        || getEventImage(name, 'community');
-
-      const category = categorizeEvent(name, categories.join(' '), location);
-      const { start_date, end_date } = parseDateText(currentDateStr, 'See details');
-
-      const event = createNormalizedEvent({
-        name,
-        category,
-        date: currentDateStr,
-        time: 'See details',
-        start_date,
-        end_date,
-        location,
-        address,
-        price: 'See details',
-        spots: Math.floor(Math.random() * 100) + 20,
-        image,
-        description: `Event in ${location}: ${name}`,
-        highlights: generateHighlights(name, `Event in ${location}: ${name}. ${categories.join(', ')}`, category, location, 'The Local Girl'),
-        url: href,
-        source: 'The Local Girl'
-      });
-
-      if (event) events.push(event);
-    });
-
-    // Sample evenly across categories (max 5 per category for balance)
-    const byCat = {};
-    for (const e of events) {
-      if (!byCat[e.category]) byCat[e.category] = [];
-      byCat[e.category].push(e);
-    }
-    const sampled = [];
-    for (const cat in byCat) {
-      sampled.push(...byCat[cat].slice(0, 5));
-    }
-
-    console.log(`Scraped ${events.length} events from The Local Girl, sampled ${sampled.length} (max 5 per category)`);
-    return sampled;
-
-  } catch (error) {
-    console.error('The Local Girl scraping failed:', error.message);
     return [];
   }
 }
@@ -1723,6 +1545,7 @@ const { METHODS } = createMethods({
   galleryEvents,
   getEventImage,
   generateHighlights,
+  normalizeImageUrl,
   GALLERY_HEADERS,
   scrapeWithPuppeteer,
   CONFIGS,
@@ -1765,6 +1588,10 @@ async function scrapeByGroup(group) {
         if (d.match(/^on view/i)) return false;
         return true;
       });
+      // .filter() returns a fresh array — re-attach the attempted-source list so
+      // source-health can zero-fill every registry venue that ran but produced
+      // nothing (all ~48 registry venues), instead of silently dropping them.
+      filtered._attempted = events._attempted || [];
       for (const event of filtered) {
         event.description = cleanDescription(event.description);
       }

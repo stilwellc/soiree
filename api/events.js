@@ -5,6 +5,72 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// Run the schema DDL (CREATE TABLE + ALTERs) at most once per process instead of
+// on every read. `schemaReady` holds the in-flight/resolved promise so concurrent
+// requests share a single initialization.
+let schemaReady = null;
+
+function ensureSchema() {
+  if (!schemaReady) {
+    schemaReady = (async () => {
+      // Initialize table
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS events (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          category VARCHAR(50) NOT NULL,
+          date VARCHAR(100) NOT NULL,
+          time VARCHAR(100) NOT NULL,
+          location VARCHAR(255) NOT NULL,
+          address VARCHAR(500),
+          price VARCHAR(50) DEFAULT 'free',
+          spots INTEGER DEFAULT 0,
+          image TEXT,
+          description TEXT,
+          highlights JSONB,
+          url VARCHAR(500),
+          start_date DATE,
+          end_date DATE,
+          scraped_at TIMESTAMP DEFAULT NOW(),
+          created_at TIMESTAMP DEFAULT NOW(),
+          source VARCHAR(100)
+        )
+      `);
+
+      // Add url column if it doesn't exist (for existing tables)
+      await pool.query(`
+        ALTER TABLE events
+        ADD COLUMN IF NOT EXISTS url VARCHAR(500)
+      `);
+
+      // Add date columns if they don't exist (for existing tables)
+      await pool.query(`
+        ALTER TABLE events
+        ADD COLUMN IF NOT EXISTS start_date DATE,
+        ADD COLUMN IF NOT EXISTS end_date DATE,
+        ADD COLUMN IF NOT EXISTS source VARCHAR(100)
+      `);
+
+      // Add event_type column for art exhibition openings vs viewing windows
+      await pool.query(`
+        ALTER TABLE events
+        ADD COLUMN IF NOT EXISTS event_type VARCHAR(50)
+      `);
+
+      // Add deals column for daily food/drink specials
+      await pool.query(`
+        ALTER TABLE events
+        ADD COLUMN IF NOT EXISTS deals JSONB
+      `);
+    })().catch((err) => {
+      // Reset so a later request can retry if initialization failed.
+      schemaReady = null;
+      throw err;
+    });
+  }
+  return schemaReady;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -19,55 +85,8 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Initialize table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS events (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        category VARCHAR(50) NOT NULL,
-        date VARCHAR(100) NOT NULL,
-        time VARCHAR(100) NOT NULL,
-        location VARCHAR(255) NOT NULL,
-        address VARCHAR(500),
-        price VARCHAR(50) DEFAULT 'free',
-        spots INTEGER DEFAULT 0,
-        image TEXT,
-        description TEXT,
-        highlights JSONB,
-        url VARCHAR(500),
-        start_date DATE,
-        end_date DATE,
-        scraped_at TIMESTAMP DEFAULT NOW(),
-        created_at TIMESTAMP DEFAULT NOW(),
-        source VARCHAR(100)
-      )
-    `);
-
-    // Add url column if it doesn't exist (for existing tables)
-    await pool.query(`
-      ALTER TABLE events
-      ADD COLUMN IF NOT EXISTS url VARCHAR(500)
-    `);
-
-    // Add date columns if they don't exist (for existing tables)
-    await pool.query(`
-      ALTER TABLE events
-      ADD COLUMN IF NOT EXISTS start_date DATE,
-      ADD COLUMN IF NOT EXISTS end_date DATE,
-      ADD COLUMN IF NOT EXISTS source VARCHAR(100)
-    `);
-
-    // Add event_type column for art exhibition openings vs viewing windows
-    await pool.query(`
-      ALTER TABLE events
-      ADD COLUMN IF NOT EXISTS event_type VARCHAR(50)
-    `);
-
-    // Add deals column for daily food/drink specials
-    await pool.query(`
-      ALTER TABLE events
-      ADD COLUMN IF NOT EXISTS deals JSONB
-    `);
+    // Ensure schema exists (runs once per process, not on every read)
+    await ensureSchema();
 
     // Get category filter
     const { category } = req.query;
@@ -79,9 +98,9 @@ module.exports = async function handler(req, res) {
     let result;
     if (category && category !== 'all') {
       result = await pool.query(
-        `SELECT * FROM events 
-         WHERE category = $1 AND start_date IS NOT NULL AND start_date >= (CURRENT_DATE - INTERVAL '1 day') 
-         ORDER BY 
+        `SELECT * FROM events
+         WHERE category = $1 AND start_date IS NOT NULL AND COALESCE(end_date, start_date) >= (CURRENT_DATE - INTERVAL '1 day')
+         ORDER BY
            CASE WHEN start_date = '2026-02-15' THEN 1 ELSE 0 END,
            start_date ASC, 
            created_at DESC`,
@@ -89,9 +108,9 @@ module.exports = async function handler(req, res) {
       );
     } else {
       result = await pool.query(
-        `SELECT * FROM events 
-         WHERE start_date IS NOT NULL AND start_date >= (CURRENT_DATE - INTERVAL '1 day') 
-         ORDER BY 
+        `SELECT * FROM events
+         WHERE start_date IS NOT NULL AND COALESCE(end_date, start_date) >= (CURRENT_DATE - INTERVAL '1 day')
+         ORDER BY
            CASE WHEN start_date = '2026-02-15' THEN 1 ELSE 0 END,
            start_date ASC, 
            created_at DESC`
@@ -104,10 +123,11 @@ module.exports = async function handler(req, res) {
       events: result.rows
     });
   } catch (error) {
+    // Log the real error server-side only; never leak SQL/schema detail to clients.
     console.error('API Error:', error);
     return res.status(500).json({
       success: false,
-      error: error.message,
+      error: 'Failed to load events',
       events: []
     });
   }

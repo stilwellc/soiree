@@ -14,16 +14,18 @@
   <meta property="og:description"
     content="Discover exclusive pop-up events in NYC. Art, music, culinary experiences & more.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="https://soiree-one.vercel.app/api/og">
+  <meta property="og:image" content="https://soiree.today/api/og">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:type" content="image/svg+xml">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:url" content="https://soiree.today/">
+  <link rel="canonical" href="https://soiree.today/">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Soirée - Curated Pop-Up Events">
   <meta name="twitter:description" content="Discover exclusive pop-up events in NYC">
-  <meta name="twitter:image" content="https://soiree-one.vercel.app/api/og">
+  <meta name="twitter:image" content="https://soiree.today/api/og">
 
   <title>Soirée - Curated Pop-Up Events in NYC</title>
 
@@ -886,12 +888,38 @@
 
 
 
-  <!-- html2canvas for social card downloads -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- html2canvas is 194KB and only needed for social-card export.
+       Lazy-load it on first use: window.html2canvas(...) injects the real
+       library on first call, then delegates. app.js calls the global as-is. -->
+  <script>
+    (function () {
+      var SRC = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      var loading = null;
+      function load() {
+        if (loading) return loading;
+        loading = new Promise(function (resolve, reject) {
+          var s = document.createElement('script');
+          s.src = SRC;
+          s.async = true;
+          s.onload = function () { resolve(window.html2canvas); };
+          s.onerror = function () { loading = null; reject(new Error('html2canvas failed to load')); };
+          document.head.appendChild(s);
+        });
+        return loading;
+      }
+      // Placeholder global: first invocation loads the real lib, which
+      // overwrites window.html2canvas, then we delegate the call to it.
+      window.html2canvas = function () {
+        var args = arguments;
+        return load().then(function (real) { return real.apply(null, args); });
+      };
+    })();
+  </script>
 
-  <!-- Truth pass (data verification) then App Script -->
-  <script src="js/truthpass.js"></script>
-  <script src="app.js"></script>
+  <!-- Truth pass (data verification) then App Script — deferred so parsing
+       isn't blocked; defer preserves order (truthpass runs before app). -->
+  <script defer src="js/truthpass.js"></script>
+  <script defer src="app.js"></script>
 </body>
 
 </html>

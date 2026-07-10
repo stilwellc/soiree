@@ -13,7 +13,7 @@ const vm = require('vm');
 
 /* ---------- load the classic script ---------- */
 const MODULE_PATH = path.join(__dirname, '..', 'js', 'truthpass.js');
-const sandbox = { window: {} };
+const sandbox = { window: {}, Date: Date };
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync(MODULE_PATH, 'utf8'), sandbox, { filename: MODULE_PATH });
 const TruthPass = sandbox.window.TruthPass;
@@ -206,7 +206,7 @@ eq(byId[10] && byId[10].credit, 'Adam D. Weinberg', '"Curated by…" split into 
 
 console.log('-- neighborhood derivation --');
 eq(byId[4] && byId[4].neighborhood, 'Hoboken', '07030 → Hoboken');
-eq(byId[15 in byId ? 15 : 16].neighborhood, 'Downtown JC', '07302 → Downtown JC');
+eq((byId[15] || byId[16] || {}).neighborhood, 'Downtown JC', '07302 → Downtown JC');
 eq(byId[11] && byId[11].neighborhood, 'Chelsea', '10011 → Chelsea');
 eq(byId[7] && byId[7].neighborhood, 'Upper West Side', 'Central Park West → Upper West Side');
 eq(byId[25] && byId[25].neighborhood, 'Meatpacking District', 'Whitney venue address → Meatpacking District');
