@@ -485,10 +485,92 @@ async function scrapeTimeOut() {
   }
 }
 
+// Scrape events from nycforfree.co — our core source.
+// Reads the Squarespace collection JSON (?format=json) which returns the FULL
+// upcoming set (~88 items) with real timestamps, images and urls — far more than
+// the HTML listing exposed. Falls back to HTML scraping if the JSON is unavailable.
+async function scrapeNYCForFreeJson() {
+  const stripHtml = (s) => (s || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&#8217;|&rsquo;/g, '’').replace(/&#8211;|&ndash;/g, '–')
+    .replace(/\s+/g, ' ').trim();
+  const NFF_HEADERS = { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36' };
+
+  // Pull the upcoming array, following pagination a couple of pages for completeness.
+  let raw = [];
+  let url = 'https://www.nycforfree.co/events?format=json';
+  for (let page = 0; page < 3 && url; page++) {
+    const res = await axios.get(url, { timeout: 12000, headers: NFF_HEADERS });
+    const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+    const batch = data.upcoming || data.items || [];
+    raw.push(...batch);
+    const next = data.pagination && data.pagination.nextPageUrl;
+    url = next ? `https://www.nycforfree.co${next}&format=json` : null;
+    if (!batch.length) break;
+  }
+
+  // De-dupe by id and keep only events that haven't ended.
+  const seen = new Set();
+  const cutoff = Date.now() - 12 * 3600 * 1000; // keep through end of today
+  const events = [];
+  for (const it of raw) {
+    if (!it || !it.startDate || seen.has(it.id)) continue;
+    seen.add(it.id);
+    const endMs = it.endDate || it.startDate;
+    if (endMs < cutoff) continue;
+
+    const name = (it.title || '').trim();
+    if (name.length < 4) continue;
+    const startIso = new Date(it.startDate).toISOString();
+    const endIso = new Date(endMs).toISOString();
+
+    // ET display time; midnight → all-day → let enrichment/detail fill it.
+    let time = 'See details';
+    try {
+      const t = new Date(it.startDate).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' });
+      if (!/12:00 AM/.test(t)) time = t;
+    } catch {}
+    const dateStr = new Date(it.startDate).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'long', day: 'numeric', year: 'numeric' });
+
+    const loc = it.location || {};
+    const addressParts = [loc.addressLine1, loc.addressLine2, loc.addressCountry].filter(Boolean);
+    const address = addressParts.join(', ') || (loc.addressTitle || '').trim() || 'NYC';
+    const location = (loc.addressTitle || '').trim()
+      || (loc.addressLine2 || '').split(',').slice(0, 1).join('') || 'New York City';
+
+    const description = stripHtml(it.excerpt) || stripHtml(it.body).slice(0, 400) || name;
+    const catTag = (it.categories && it.categories[0]) || (it.tags && it.tags[0]) || '';
+    const category = categorizeEvent(name + ' ' + catTag, description, location);
+    const image = it.assetUrl || getEventImage(name, category);
+    const eventUrl = it.fullUrl ? `https://www.nycforfree.co${it.fullUrl}` : null;
+
+    const event = createNormalizedEvent({
+      name, category, date: dateStr, time,
+      start_date: startIso, end_date: endIso,
+      location, address, price: 'free',
+      spots: Math.floor(Math.random() * 200) + 50,
+      image, description,
+      highlights: generateHighlights(name, description, category, location, 'NYC For Free'),
+      url: eventUrl, source: 'NYC For Free'
+    });
+    if (event) events.push(event);
+  }
+  return events;
+}
+
 // Scrape events from nycforfree.co
 async function scrapeNYCForFree() {
   try {
-    console.log('Fetching events from nycforfree.co...');
+    // Prefer the structured JSON collection (full upcoming set); fall back to HTML.
+    const jsonEvents = await scrapeNYCForFreeJson().catch(err => {
+      console.error('NYC For Free JSON failed, falling back to HTML:', err.message);
+      return [];
+    });
+    if (jsonEvents.length >= 10) {
+      console.log(`Scraped ${jsonEvents.length} events from nycforfree.co (JSON, full upcoming set)`);
+      return jsonEvents;
+    }
+
+    console.log('Fetching events from nycforfree.co (HTML fallback)...');
     const response = await axios.get('https://www.nycforfree.co/events', {
       timeout: 10000,
       headers: {
@@ -590,19 +672,8 @@ async function scrapeNYCForFree() {
       if (event) events.push(event);
     });
 
-    // Sample evenly across categories (max 12 per category for balance)
-    const byCat = {};
-    for (const e of events) {
-      if (!byCat[e.category]) byCat[e.category] = [];
-      byCat[e.category].push(e);
-    }
-    const sampled = [];
-    for (const cat in byCat) {
-      sampled.push(...byCat[cat].slice(0, 12));
-    }
-
-    console.log(`Scraped ${events.length} events from nycforfree.co, sampled ${sampled.length} (max 12 per category)`);
-    return sampled;
+    console.log(`Scraped ${events.length} events from nycforfree.co (HTML fallback)`);
+    return events;
   } catch (error) {
     console.error('NYC For Free scraping failed:', error.message);
     return [];
@@ -2039,4 +2110,5 @@ module.exports = async function handler(req, res) {
 // Testing hooks (do not affect the Vercel handler default export).
 module.exports.METHODS = METHODS;
 module.exports.scrapeRegistryGroup = scrapeRegistryGroup;
+module.exports.scrapeNYCForFree = scrapeNYCForFree;
 module.exports.VENUES = VENUES;
