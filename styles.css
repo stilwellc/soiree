@@ -6965,12 +6965,13 @@ body::after {
 .hero-scribble {
   position: absolute;
   font-family: var(--hand);
-  color: var(--wine-2);
+  color: #fff;
   font-size: 30px;
   transform: rotate(-8deg);
   right: 16px;
   bottom: -8px;
   z-index: 4;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, .3);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -6992,7 +6993,7 @@ body::after {
   display: flex;
   white-space: nowrap;
   width: max-content;
-  animation: salonScroll 46s linear infinite;
+  animation: salonScroll 72s linear infinite;
 }
 .salon-ticker:hover .salon-ticker-track { animation-play-state: paused; }
 .salon-ticker-track span {
@@ -7260,7 +7261,7 @@ body::after {
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
     mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
   }
-  .salon-ticker-track { animation-duration: 40s; }
+  .salon-ticker-track { animation-duration: 62s; }
   .salon-ticker-track span {
     font-size: 21px;
     padding: 0 24px;
@@ -7368,9 +7369,9 @@ body::after {
     right: 34px; bottom: 16px;
     transform: rotate(-7deg);
     font-size: 29px;
-    color: var(--gold);
+    color: #fff;
     z-index: 4;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, .28);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, .3);
   }
 }
 /* Gentle plate drift on mobile — a subtle counterpart to the doodle sway,
@@ -7632,6 +7633,7 @@ body::after {
 .scene-stats b { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 600; color: var(--sand-soft, #F1E4CC); letter-spacing: 0; }
 .scene-art { position: relative; align-self: stretch; min-height: 240px; background: #959c60; overflow: hidden; }
 .scene-art img { position: absolute; width: 84%; left: 8%; top: 50%; transform: translateY(-50%); filter: drop-shadow(0 18px 36px rgba(0,0,0,.35)); }
+.scene-scribble { position: absolute; right: 20px; bottom: 12px; z-index: 2; font-family: var(--hand); color: #fff; font-size: 30px; transform: rotate(-8deg); text-shadow: 0 1px 8px rgba(0,0,0,.35); pointer-events: none; }
 @media (max-width: 767px) {
   #events-list > .scene-strip { grid-template-columns: 1fr; }
   .scene-art { min-height: 200px; order: -1; }

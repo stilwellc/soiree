@@ -1420,7 +1420,7 @@ function sceneStripHTML(evs, freeCount) {
           <span><b>${Object.keys(catCount).length}</b> kinds of night</span>
         </div>
       </div>
-      <div class="scene-art" style="background:${doodleBg}" aria-hidden="true"><img src="assets/images/${doodle}" alt=""></div>
+      <div class="scene-art" style="background:${doodleBg}" aria-hidden="true"><img src="assets/images/${doodle}" alt=""><div class="scene-scribble">stay curious</div></div>
     </section>`;
 }
 
