@@ -1517,7 +1517,7 @@ function renderEvents() {
       const en = e.end_date ? extractDateFromISO(e.end_date) : s;
       let key, label, dateLabel, order;
       if (en > s && s <= today) {           // ongoing / multi-day exhibition
-        key = '~onview'; label = 'On view all week'; dateLabel = ''; order = '~';
+        key = '~onview'; label = 'On view all week'; dateLabel = ''; order = '9999-99-99';
       } else {
         key = s; label = dayLabelFor(s); order = s;
         dateLabel = s ? new Date(s + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
@@ -1525,7 +1525,7 @@ function renderEvents() {
       (groups[key] = groups[key] || { label, dateLabel, order, events: [] }).events.push(e);
     }
     let idx = 0;
-    const html = Object.values(groups).sort((a, b) => a.order.localeCompare(b.order)).map(g => {
+    const html = Object.values(groups).sort((a, b) => a.order < b.order ? -1 : a.order > b.order ? 1 : 0).map(g => {
       const divider = `<div class="day-divider">
           <span class="day-name">${esc(g.label)}</span>
           ${g.dateLabel ? `<span class="day-date">${esc(g.dateLabel)}</span>` : ''}
@@ -1536,10 +1536,19 @@ function renderEvents() {
     }).join('');
     eventsList.innerHTML = curatedIntro + dealsCard + html;
   } else {
-    // TODAY / ALL — paginated list (today already sorted soonest-first).
-    const totalPages = Math.ceil(filteredEvents.length / EVENTS_PER_PAGE);
+    // TODAY / ALL — paginated list. For Today, surface events that actually
+    // START today above ongoing multi-day runs (a months-long exhibition that's
+    // merely still on view shouldn't sit atop tonight's one-off shows). Stable
+    // sort keeps the truthpass soonest-first order within each group.
+    let ordered = filteredEvents;
+    if (currentTimeFilter === 'today') {
+      const t = getTodayLocal();
+      const rank = e => (extractDateFromISO(e.start_date || '') === t ? 0 : 1);
+      ordered = [...filteredEvents].sort((a, b) => rank(a) - rank(b));
+    }
+    const totalPages = Math.ceil(ordered.length / EVENTS_PER_PAGE);
     const startIndex = (currentPage - 1) * EVENTS_PER_PAGE;
-    const paginatedEvents = filteredEvents.slice(startIndex, startIndex + EVENTS_PER_PAGE);
+    const paginatedEvents = ordered.slice(startIndex, startIndex + EVENTS_PER_PAGE);
 
     let paginationHTML = '';
     if (totalPages > 1) {
