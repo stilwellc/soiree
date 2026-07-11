@@ -2043,6 +2043,7 @@ function formatBadgeDate(event) {
   if (event.start_date) {
     try {
       const startDateStr = extractDateFromISO(event.start_date);
+      const endDateStr = event.end_date ? extractDateFromISO(event.end_date) : startDateStr;
       const todayStr = getTodayLocal();
       const tomorrowStr = getTomorrowLocal();
 
@@ -2053,6 +2054,19 @@ function formatBadgeDate(event) {
       const yearsDiff = startYear - todayYear;
       if (yearsDiff < -1 || yearsDiff > 2) {
         return event.date || 'See Details';
+      }
+
+      const fmt = (dStr) => {
+        const [y, m, d] = dStr.split('-').map(Number);
+        return new Date(Date.UTC(y, m - 1, d))
+          .toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+      };
+
+      // Ongoing multi-day run that opened before today but is still live — the
+      // start date ("May 8" on a card in the Today tab) reads as wrong. Show how
+      // long it runs instead, so the date matches the tab it's shown under.
+      if (endDateStr > startDateStr && startDateStr < todayStr && endDateStr >= todayStr) {
+        return endDateStr === todayStr ? 'Ends today' : `Thru ${fmt(endDateStr)}`;
       }
 
       // Check if it's today
@@ -2066,9 +2080,7 @@ function formatBadgeDate(event) {
       }
 
       // Otherwise show formatted date
-      const startDate = new Date(Date.UTC(startYear, startMonth - 1, startDay));
-      const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
-      return startDate.toLocaleDateString('en-US', options);
+      return fmt(startDateStr);
     } catch (e) {
       // If date parsing fails, fall back to text
       return event.date || 'See Details';
@@ -2130,7 +2142,10 @@ function createEventCard(event, index) {
   const isFavorited = favorites.includes(event.id);
   const isFree = event.isFree === true;
   const badgeDate = formatBadgeDate(event);
-  const timeText = event.time && event.time !== 'See details' ? event.time : '';
+  // Ongoing runs ("Thru Jul 19" / "Ends today") shouldn't carry a single clock
+  // time — it reads as a start time the event doesn't actually have.
+  const isRun = /^Thru |^Ends today$/.test(badgeDate);
+  const timeText = (!isRun && event.time && event.time !== 'See details') ? event.time : '';
   const displayName = esc(event.name.replace(/American Museum of Natural History/gi, 'AMNH'));
   const categoryName = esc(getCategoryName(event.category));
   const art = eventCardArt(event);
