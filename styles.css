@@ -5947,11 +5947,12 @@ button:focus-visible,
   font-size: clamp(3rem, 5.4vw, 5.1rem);
   line-height: 1;
   letter-spacing: -.01em;
-  background: linear-gradient(to top, rgba(199, 154, 26, .92), rgba(212, 175, 55, .34));
+  background: linear-gradient(to top, rgba(212, 175, 55, .30), rgba(212, 175, 55, .12));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 16px rgba(212, 175, 55, .38));
+  filter: none;
+  opacity: .8;
   margin: 0;
   white-space: nowrap;
   user-select: none;
@@ -6074,6 +6075,28 @@ button:focus-visible,
 
 
 
+
+.dusk-footer .dusk-ig {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  margin-top: clamp(.2rem, 1.5vw, .8rem);
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+  color: var(--sf-ink);
+  text-decoration: none;
+  transition: color .3s ease;
+}
+.dusk-footer .dusk-ig .ig-doodle {
+  width: clamp(20px, 2.4vw, 24px);
+  height: clamp(20px, 2.4vw, 24px);
+  color: var(--sf-wine);
+  transition: transform .3s ease;
+}
+.dusk-footer .dusk-ig:hover { color: var(--sf-wine); }
+.dusk-footer .dusk-ig:hover .ig-doodle { transform: rotate(-6deg) scale(1.08); }
 
 .dusk-footer .dusk-navline {
   display: flex;
@@ -7386,10 +7409,10 @@ body::after {
   .hero-plate { animation: none !important; }
 }
 @media (max-width: 480px) {
-  .view-home .hero-salon-grid { padding: 13px 18px 5px; gap: 18px; }
+  .view-home .hero-salon-grid { padding: 11px 18px 4px; gap: 14px; }
   .view-home .hero-title { font-size: clamp(44px, 15.5vw, 62px); }
-  .hero-salon-lede { font-size: 16px; line-height: 1.42; margin: 6px 0 14px; }
-  .hero-art { height: clamp(276px, 75vw, 330px); }
+  .hero-salon-lede { font-size: 16px; line-height: 1.42; margin: 6px 0 12px; }
+  .hero-art { height: clamp(262px, 71vw, 320px); }
   .hero-tag-v { font-size: 18px; }
   .hero-scribble { font-size: 26px; right: 28px; bottom: 14px; }
 }
