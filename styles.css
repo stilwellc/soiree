@@ -7049,8 +7049,8 @@ body::after {
 .salon-sec-title {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 500;
-  font-size: clamp(30px, 4.4vw, 52px);
-  line-height: 1;
+  font-size: clamp(21px, 2.5vw, 31px);
+  line-height: 1.1;
   letter-spacing: -.01em;
   color: var(--ink, #1C1410);
   margin: 0;
