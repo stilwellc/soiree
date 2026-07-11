@@ -4401,19 +4401,27 @@ function initFooterNav() {
 // so "Curating N experiences" always equals what the ledger actually renders.
 let eventsLoaded = false;
 function updateValueStrip() {
+  if (!(eventsLoaded && events.length > 0)) return;
+  const freeCount = events.filter(e => e.isFree === true).length;
+
   const el = document.getElementById('value-events');
-  if (el && eventsLoaded && events.length > 0) {
+  if (el) {
     el.textContent = events.length;
     // "100% free" was a hardcoded falsehood for the verified set — derive the
     // suffix from the honest isFree flags instead ("— 19 free."), or nothing.
     const suffixEl = document.getElementById('value-free-suffix');
     if (suffixEl) {
-      const freeCount = events.filter(e => e.isFree === true).length;
       suffixEl.innerHTML = freeCount > 0
         ? ` — <span class="value-line-num">${freeCount}</span> free.`
         : '.';
     }
   }
+
+  // Unified-gallery section head mirrors the same honest counts.
+  const secEvents = document.getElementById('salon-sec-events');
+  if (secEvents) secEvents.textContent = events.length;
+  const secFree = document.getElementById('salon-sec-free');
+  if (secFree) secFree.innerHTML = freeCount > 0 ? ` — <em>${freeCount}</em> free` : '';
 }
 
 // ── Salon hero: ticker, guest count, floating "happening soon" tag ──

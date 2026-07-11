@@ -7170,8 +7170,8 @@ body::after {
 .salon-strip-heading { font-family: 'Cormorant Garamond', serif; font-weight: 500; color: var(--sand-soft); font-size: clamp(30px, 3.6vw, 48px); line-height: 1.02; margin: 0 0 18px; }
 .salon-strip-heading em { font-style: italic; color: var(--dusk); }
 .salon-strip-text { font-family: 'Cormorant Garamond', serif; font-size: 19px; line-height: 1.55; color: #d9c6ad; max-width: 420px; margin: 0 0 26px; }
-.salon-strip-btn { display: inline-flex; font-family: var(--sans, 'Jost', sans-serif); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink, #1C1410); background: var(--gold); padding: 15px 28px; border-radius: 100px; text-decoration: none; transition: transform .25s ease, background .25s ease; box-shadow: var(--salon-shadow); }
-.salon-strip-btn:hover { transform: translateY(-2px); background: var(--sand-soft); }
+.salon-strip-btn { display: inline-flex; font-family: var(--sans, 'Jost', sans-serif); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink, #1C1410); background: var(--dusk); padding: 15px 28px; border-radius: 100px; text-decoration: none; transition: transform .25s ease, background .25s ease; box-shadow: var(--salon-shadow); }
+.salon-strip-btn:hover { transform: translateY(-2px); background: #d3a67f; }
 .salon-strip-art { position: relative; align-self: stretch; min-height: 380px; background: #959c60; overflow: hidden; }
 .salon-strip-art img { position: absolute; width: 82%; left: 9%; top: 50%; transform: translateY(-50%); filter: drop-shadow(0 20px 40px rgba(0, 0, 0, .4)); }
 @media (max-width: 900px) {
