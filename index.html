@@ -33,11 +33,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600&family=Caveat:wght@500;600;700&display=swap"
     rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="styles.css?v=20260711c">
+  <link rel="stylesheet" href="styles.css?v=20260711salon">
 
   <!-- Favicon -->
   <link rel="icon" href="assets/images/soiree-logo-small.jpg">
@@ -86,18 +86,39 @@
         <div class="hero-bg" aria-hidden="true"></div>
         <div class="hero-grain" aria-hidden="true"></div>
         <div class="hero-content">
-          <!-- Title panel — default state -->
-          <div class="hero-title-panel" id="hero-title-panel">
-            <div class="hero-rule" aria-hidden="true"></div>
-            <h1 class="hero-title">
-              <span class="title-rotating">
-                <span class="title-word active">Tonight's</span>
-                <span class="title-word">Today's</span>
-                <span class="title-word">This Week's</span>
-                <span class="title-word">Tomorrow's</span>
-              </span><br>
-              <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="hero-title-logo">
-            </h1>
+          <!-- Salon split-grid: editorial copy + tilted doodle plate -->
+          <div class="hero-salon-grid">
+            <div class="hero-copy">
+              <!-- Title panel — default state (rotating daypart + logo lockup) -->
+              <div class="hero-title-panel" id="hero-title-panel">
+                <div class="hero-rule" aria-hidden="true"></div>
+                <p class="hero-eyebrow" id="hero-eyebrow">A curated evening of culture · Mostly free</p>
+                <h1 class="hero-title">
+                  <span class="title-rotating">
+                    <span class="title-word active">Tonight's</span>
+                    <span class="title-word">Today's</span>
+                    <span class="title-word">This Week's</span>
+                    <span class="title-word">Tomorrow's</span>
+                  </span><br>
+                  <img src="assets/images/soiree-logo-transparent.png" alt="Soirée" class="hero-title-logo">
+                </h1>
+                <p class="hero-salon-lede">Every exhibition, concert, market &amp; gathering across the
+                  city — gathered like an <b>invitation</b>, graded in golden light, mostly free.</p>
+                <div class="hero-salon-actions">
+                  <a href="#unified-gallery" class="hero-browse-btn" id="hero-browse-btn">Browse tonight <span class="arw" aria-hidden="true">↗</span></a>
+                  <span class="hero-guest-count"><b id="hero-count">—</b> on the guest list</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-art" aria-hidden="true">
+              <div class="hero-plate">
+                <img class="hero-doodle" src="assets/images/art-doodles.png" alt="">
+              </div>
+              <div class="hero-tag hero-tag-1"><div class="hero-tag-k">Happening soon</div><div class="hero-tag-v" id="hero-tag-week">—</div></div>
+              <div class="hero-tag hero-tag-2"><div class="hero-tag-k">Always</div><div class="hero-tag-v">Free to wander</div></div>
+              <div class="hero-scribble">stay curious ✎</div>
+            </div>
           </div>
 
           <!-- Region picker panel — full-screen immersive overlay -->
@@ -195,6 +216,11 @@
         </div>
       </header>
 
+      <!-- Marquee ticker — live event names scrolling by -->
+      <div class="salon-ticker" id="salon-ticker" aria-hidden="true">
+        <div class="salon-ticker-track" id="salon-ticker-track"></div>
+      </div>
+
       <!-- Value Line -->
       <p class="value-line" aria-label="Platform highlights">
         Curating <span class="value-line-num" id="value-events">120</span> experiences for you<span
@@ -247,6 +273,12 @@
 
       <!-- Unified Gallery (home view) -->
       <div id="unified-gallery" class="unified-gallery" aria-label="Browse events">
+
+        <!-- Editorial section head -->
+        <div class="salon-sec-head">
+          <h2 class="salon-sec-title"><span class="salon-sec-num">01</span>Browse the <em>rooms</em></h2>
+          <p class="salon-sec-side">Wander by mood — art, perks &amp; community, updated as the city posts.</p>
+        </div>
 
         <!-- Category tabs -->
         <div class="gallery-tabs" role="tablist" aria-label="Event categories">
@@ -306,6 +338,22 @@
         </div>
 
       </div>
+
+      <!-- Salon strip — the house philosophy illustration break -->
+      <section class="salon-strip reveal-section" aria-label="The Salon">
+        <div class="salon-strip-inner">
+          <div class="salon-strip-copy">
+            <p class="salon-strip-eyebrow">The house philosophy</p>
+            <h2 class="salon-strip-heading">Dress up for <em>an ordinary Tuesday.</em></h2>
+            <p class="salon-strip-text">Soirée is a love letter to going out — the small gatherings, the open
+              galleries, the free concerts under the bridge. We hand-gather them so the evening finds you.</p>
+            <a href="#unified-gallery" class="salon-strip-btn">See what's on ↗</a>
+          </div>
+          <div class="salon-strip-art" aria-hidden="true">
+            <img src="assets/images/community-doodles.png" alt="">
+          </div>
+        </div>
+      </section>
 
       <!-- Instagram CTA — Full-bleed editorial -->
       <section class="subscribe-section reveal-section" id="subscribe-strip-home">
@@ -918,8 +966,8 @@
 
   <!-- Truth pass (data verification) then App Script — deferred so parsing
        isn't blocked; defer preserves order (truthpass runs before app). -->
-  <script defer src="js/truthpass.js?v=20260711c"></script>
-  <script defer src="app.js?v=20260711c"></script>
+  <script defer src="js/truthpass.js?v=20260711salon"></script>
+  <script defer src="app.js?v=20260711salon"></script>
 </body>
 
 </html>

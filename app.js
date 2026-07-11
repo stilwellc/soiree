@@ -560,6 +560,7 @@ function handleRegionChange(newRegion) {
     updateRegionUI();
     renderEvents();
     updateCategoryCounts();
+    updateSalonHero();
   }
 
   closeRegionDropdown();
@@ -792,6 +793,7 @@ async function init() {
   updateFavoriteBadge();
   updateCategoryCounts();
   updateValueStrip();
+  updateSalonHero();
 
   // Navigate to URL path on initial load (e.g. direct link to /today)
   const initialView = PATH_VIEWS[location.pathname] || 'discover';
@@ -2126,8 +2128,20 @@ function openModal(eventId) {
         </svg>
       </button>`;
 
+  // Invitation-drawer photo hero: real event photograph with a warm treatment,
+  // peeling away to the category doodle art on 404 (Salon fallback behavior).
+  const modalArt = eventCardArt(event);
+  const modalPhotoHero = `
+    <div class="modal-photo-hero" style="${modalArt.style}">
+      ${modalArt.img}
+      <div class="modal-photo-grad" aria-hidden="true"></div>
+      <span class="modal-photo-cat">${categoryName}</span>
+    </div>`;
+
   const modalContent = `
     <div class="modal-handle"></div>
+
+    ${modalPhotoHero}
 
     <!-- Hero — compact header with category swatch -->
     <div class="modal-hero">
@@ -4221,6 +4235,56 @@ function updateValueStrip() {
   }
 }
 
+// ── Salon hero: ticker, guest count, floating "happening soon" tag ──
+function initSalonHero() {
+  // Smooth-scroll the "Browse tonight" button to the gallery
+  const browse = document.getElementById('hero-browse-btn');
+  if (browse) {
+    browse.addEventListener('click', (e) => {
+      const target = document.getElementById('unified-gallery');
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+}
+
+function updateSalonHero() {
+  if (!eventsLoaded) return;
+  const inRegion = events.filter(e => matchesCurrentRegion(e));
+  const pool = inRegion.length ? inRegion : events;
+
+  // Guest count
+  const countEl = document.getElementById('hero-count');
+  if (countEl) countEl.textContent = pool.length;
+
+  // "Happening soon" — events starting within the next ~8 days
+  const tagWeek = document.getElementById('hero-tag-week');
+  if (tagWeek) {
+    const now = Date.now();
+    const soon = pool.filter(e => {
+      const d = new Date(e.start_date);
+      return !isNaN(d) && (d - now) > -86400000 && (d - now) < 86400000 * 8;
+    }).length;
+    tagWeek.textContent = `${soon || pool.length} events`;
+  }
+
+  // Marquee ticker — a curated ribbon of live event names
+  const track = document.getElementById('salon-ticker-track');
+  if (track) {
+    const names = pool.slice(0, 16)
+      .map(e => (e.name || '').replace(/American Museum of Natural History/gi, 'AMNH'))
+      .filter(Boolean)
+      .map(n => (n.length > 46 ? n.slice(0, 44) + '…' : n));
+    if (names.length) {
+      const html = names.map(n => `<span>${esc(n)}</span>`).join('');
+      // duplicate the run so the -50% keyframe loops seamlessly
+      track.innerHTML = html + html;
+    }
+  }
+}
+
 // ── Email Subscription ──────────────────────────────
 function initSubscribeForm() {
   const form = document.getElementById('subscribe-form');
@@ -4307,6 +4371,7 @@ function bootstrap() {
   initInstagramGrid();
   initGalleryTabs();
   initStackActions();
+  initSalonHero();
   updateValueStrip();
 
   const freeCheckbox = document.getElementById('free-mode-toggle');

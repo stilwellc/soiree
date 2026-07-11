@@ -6719,3 +6719,504 @@ button:focus-visible,
   border-radius: 50%;
   background: #A0686B;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE SALON — full visual redesign layer (2026-07 reskin)
+   Warm golden-hour cream gallery. This section restyles every surface to the
+   approved "Salon" art direction. It overrides the earlier flatter styling
+   while preserving all class hooks the app JS depends on.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --hand: 'Caveat', cursive;
+  --sand-soft: #F1E4CC;
+  --wine-2: #A64450;
+  --gold-2: #B08D2E;
+  /* Layered warm shadows — the soft, considered elevation of the Salon */
+  --salon-shadow: 0 2px 4px rgba(74, 40, 30, .05), 0 14px 40px -14px rgba(74, 40, 30, .18);
+  --salon-shadow-lift: 0 8px 18px rgba(74, 40, 30, .10), 0 40px 80px -30px rgba(74, 40, 30, .30);
+}
+
+/* Paper grain — a faint multiply-blend fractal noise across the whole page */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: .05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+::selection { background: var(--wine); color: var(--sand-soft); }
+
+/* ── NAV — warm blur bar, serif-adjacent wordmark, wine underline ── */
+.nav-bar {
+  background: linear-gradient(180deg, rgba(250, 248, 243, .94), rgba(250, 248, 243, .74)) !important;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border-bottom: 1px solid transparent !important;
+  box-shadow: 0 8px 30px -22px rgba(74, 40, 30, .4);
+}
+.nav-item .nav-label {
+  font-family: var(--sans, 'Jost', sans-serif);
+  letter-spacing: .06em;
+}
+.nav-item.active .nav-label { color: var(--wine); }
+
+/* ═══ HERO — Salon split grid ═══ */
+.hero.hero-landing {
+  min-height: auto;
+}
+.view-home .hero-salon-grid {
+  display: grid;
+  grid-template-columns: 1.05fr .95fr;
+  gap: 56px;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 40px 8px;
+  width: 100%;
+}
+/* On list views (all/today/week) the doodle plate + editorial copy collapse
+   to a clean compact header — only the rotating title lockup shows. */
+#discover-view:not(.view-home) .hero-salon-grid {
+  display: block;
+  padding: 0;
+}
+#discover-view:not(.view-home) .hero-art,
+#discover-view:not(.view-home) .hero-eyebrow,
+#discover-view:not(.view-home) .hero-salon-lede,
+#discover-view:not(.view-home) .hero-salon-actions,
+#discover-view:not(.view-home) .salon-ticker {
+  display: none !important;
+}
+
+.hero-copy { max-width: 600px; text-align: left; }
+.hero-title-panel { text-align: left; align-items: flex-start; }
+
+.hero-eyebrow {
+  font-family: var(--sans, 'Jost', sans-serif);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--wine);
+  margin-bottom: 18px;
+}
+
+/* Oversized Cormorant headline: "Tonight's / Soirée" lockup */
+.view-home .hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  line-height: .96;
+  letter-spacing: -.01em;
+  font-size: clamp(52px, 7vw, 104px);
+  text-align: left;
+  margin: 0 0 .12em;
+  color: var(--ink, #1C1410);
+}
+.view-home .title-rotating,
+.view-home .title-word {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  color: var(--wine);
+}
+.view-home .hero-title-logo {
+  height: clamp(46px, 6.6vw, 96px);
+  width: auto;
+  margin-top: -.02em;
+  vertical-align: baseline;
+}
+
+.hero-salon-lede {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(18px, 2vw, 24px);
+  line-height: 1.5;
+  color: #4a3b30;
+  max-width: 480px;
+  margin: 8px 0 30px;
+}
+.hero-salon-lede b { color: var(--wine); font-weight: 600; font-style: italic; }
+
+.hero-salon-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.hero-browse-btn {
+  font-family: var(--sans, 'Jost', sans-serif);
+  font-size: 13px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--sand-soft);
+  background: var(--ink, #1C1410);
+  padding: 15px 28px;
+  border-radius: 100px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform .25s var(--ease-spring), box-shadow .25s ease, background .25s ease;
+  box-shadow: var(--salon-shadow);
+  text-decoration: none;
+}
+.hero-browse-btn:hover { transform: translateY(-2px); background: var(--wine); box-shadow: var(--salon-shadow-lift); }
+.hero-browse-btn .arw { transition: transform .25s ease; }
+.hero-browse-btn:hover .arw { transform: translate(3px, -2px); }
+.hero-guest-count {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: #6a5849;
+}
+.hero-guest-count b { font-style: normal; font-weight: 600; color: var(--wine); font-size: 21px; }
+
+/* Hero art — the tilted burgundy doodle plate + floating invitation tags */
+.hero-art {
+  position: relative;
+  height: 520px;
+  opacity: 0;
+  animation: salonRise 1.1s .35s forwards;
+}
+@keyframes salonRise { to { opacity: 1; transform: none; } }
+.hero-plate {
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background: var(--wine);
+  overflow: hidden;
+  box-shadow: var(--salon-shadow-lift);
+  transform: rotate(-2.4deg);
+}
+.hero-plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 30% 10%, rgba(212, 175, 55, .24), transparent 60%);
+  mix-blend-mode: screen;
+}
+.hero-doodle {
+  position: absolute;
+  width: 118%;
+  left: -9%;
+  top: -6%;
+  height: auto;
+  opacity: .98;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, .25));
+  animation: salonSway 9s ease-in-out infinite;
+}
+@keyframes salonSway { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-12px) rotate(.6deg); } }
+.hero-tag {
+  position: absolute;
+  z-index: 3;
+  background: var(--surface, #FFFCF7);
+  border-radius: 14px;
+  padding: 13px 18px 14px;
+  box-shadow: var(--salon-shadow-lift);
+  border: 1px solid rgba(255, 255, 255, .6);
+}
+.hero-tag-k { font-size: 10px; letter-spacing: .26em; text-transform: uppercase; color: var(--dusk); font-weight: 500; font-family: var(--sans, 'Jost', sans-serif); }
+.hero-tag-v { font-family: 'Cormorant Garamond', serif; font-size: 21px; font-weight: 600; line-height: 1.05; margin-top: 3px; }
+.hero-tag-1 { top: 20px; right: -14px; transform: rotate(3deg); animation: salonFloat 6s ease-in-out infinite; }
+.hero-tag-2 { bottom: 40px; left: -22px; transform: rotate(-3deg); animation: salonFloat 7s ease-in-out .8s infinite; }
+.hero-tag-2 .hero-tag-v { color: var(--wine); }
+@keyframes salonFloat { 0%, 100% { transform: translateY(0) rotate(var(--tr, 0)); } 50% { transform: translateY(-9px) rotate(var(--tr, 0)); } }
+.hero-tag-1 { --tr: 3deg; } .hero-tag-2 { --tr: -3deg; }
+.hero-scribble {
+  position: absolute;
+  font-family: var(--hand);
+  color: var(--wine-2);
+  font-size: 30px;
+  transform: rotate(-8deg);
+  right: 16px;
+  bottom: -8px;
+  z-index: 4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-doodle, .hero-tag-1, .hero-tag-2, .hero-art { animation: none !important; opacity: 1 !important; }
+}
+
+/* ═══ MARQUEE TICKER ═══ */
+.salon-ticker {
+  margin: 44px auto 0;
+  max-width: 1200px;
+  border-top: 1px solid var(--border-medium);
+  border-bottom: 1px solid var(--border-medium);
+  overflow: hidden;
+  padding: 15px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.salon-ticker-track {
+  display: flex;
+  white-space: nowrap;
+  width: max-content;
+  animation: salonScroll 46s linear infinite;
+}
+.salon-ticker:hover .salon-ticker-track { animation-play-state: paused; }
+.salon-ticker-track span {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 23px;
+  color: #6a5849;
+  padding: 0 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 30px;
+}
+.salon-ticker-track span::after { content: "✦"; color: var(--gold-2); font-style: normal; font-size: 13px; }
+@keyframes salonScroll { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .salon-ticker-track { animation: none; } }
+
+/* ═══ EDITORIAL SECTION HEADS ═══ */
+.salon-sec-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 30px;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 8px auto 26px;
+  padding: 0 32px;
+}
+.salon-sec-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: clamp(30px, 4.4vw, 52px);
+  line-height: 1;
+  letter-spacing: -.01em;
+  color: var(--ink, #1C1410);
+  margin: 0;
+}
+.salon-sec-title em { font-style: italic; color: var(--wine); }
+.salon-sec-num { font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--gold-2); font-size: .5em; margin-right: 14px; vertical-align: baseline; }
+.salon-sec-side { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 18px; color: #6a5849; max-width: 320px; text-align: right; margin: 0; }
+@media (max-width: 720px) {
+  .salon-sec-head { padding: 0 22px; margin-bottom: 18px; }
+  .salon-sec-side { display: none; }
+}
+
+/* ═══ VALUE LINE — serif italic instead of flat uppercase ═══ */
+.value-line {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-style: italic;
+  font-size: clamp(18px, 2vw, 24px) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: #6a5849 !important;
+  padding: 28px 24px 10px !important;
+}
+.value-line-num { font-style: normal; font-weight: 600; color: var(--wine); }
+
+/* ═══ CATEGORY TABS — Salon pills ═══ */
+.gallery-tab {
+  border-radius: 100px !important;
+  font-family: var(--sans, 'Jost', sans-serif) !important;
+  letter-spacing: .05em !important;
+  background: var(--surface, #FFFCF7) !important;
+}
+.gallery-tab.active {
+  background: var(--ink, #1C1410) !important;
+  color: var(--sand-soft) !important;
+  box-shadow: var(--salon-shadow) !important;
+}
+.gallery-tab:hover:not(.active) {
+  border-color: var(--wine) !important;
+  transform: translateY(-2px);
+  box-shadow: var(--salon-shadow) !important;
+}
+
+/* ═══ EVENT CARDS — warm editorial ═══ */
+.event-card {
+  border-radius: 18px !important;
+  border: 1px solid rgba(255, 255, 255, .7) !important;
+  background: var(--surface, #FFFCF7) !important;
+  box-shadow: var(--salon-shadow) !important;
+  transition: transform .35s var(--ease-spring), box-shadow .35s ease !important;
+}
+.event-card:hover {
+  transform: translateY(-6px) rotate(-.35deg) !important;
+  box-shadow: var(--salon-shadow-lift) !important;
+  border-color: rgba(255, 255, 255, .9) !important;
+}
+.event-name {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-weight: 600 !important;
+  letter-spacing: -.005em;
+}
+.event-card-category {
+  font-family: var(--sans, 'Jost', sans-serif) !important;
+  letter-spacing: .16em !important;
+  text-transform: uppercase;
+  color: var(--dusk) !important;
+}
+.event-card-date {
+  font-family: var(--sans, 'Jost', sans-serif) !important;
+  color: var(--dusk) !important;
+  letter-spacing: .04em;
+}
+.event-footer-free {
+  background: var(--gold) !important;
+  color: var(--ink, #1C1410) !important;
+  font-family: 'Cormorant Garamond', serif !important;
+  font-style: italic;
+  font-weight: 600 !important;
+}
+.event-card-image::after {
+  /* faint golden-hour warm-up over every photo */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(212, 175, 55, .05), rgba(126, 42, 51, .06));
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+.event-card-image { position: relative; }
+.event-art-photo { filter: saturate(1.03) contrast(1.02); }
+
+/* Featured main card — big editorial hero photo with serif title */
+@media (min-width: 768px) {
+  .gallery-featured-main .event-name { font-family: 'Cormorant Garamond', serif !important; font-size: 30px !important; }
+  .gallery-featured-main .event-card { border-radius: 22px !important; box-shadow: var(--salon-shadow-lift) !important; }
+  .gallery-featured-main .event-card:hover { transform: translateY(-4px) !important; box-shadow: var(--salon-shadow-lift) !important; }
+  .sidebar-card-name { font-family: 'Cormorant Garamond', serif !important; font-weight: 600 !important; font-size: 16px !important; }
+  .sidebar-card.active { border-color: var(--wine) !important; box-shadow: 0 0 0 1px var(--wine), var(--salon-shadow) !important; }
+}
+
+/* ═══ SALON STRIP — the house philosophy break ═══ */
+.salon-strip {
+  max-width: 1200px;
+  margin: 90px auto 20px;
+  padding: 0 32px;
+}
+.salon-strip-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  border-radius: 26px;
+  overflow: hidden;
+  background: var(--ink, #1C1410);
+  box-shadow: var(--salon-shadow-lift);
+}
+.salon-strip-copy { padding: 62px 52px; }
+.salon-strip-eyebrow { font-family: var(--sans, 'Jost', sans-serif); font-weight: 500; font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; }
+.salon-strip-heading { font-family: 'Cormorant Garamond', serif; font-weight: 500; color: var(--sand-soft); font-size: clamp(30px, 3.6vw, 48px); line-height: 1.02; margin: 0 0 18px; }
+.salon-strip-heading em { font-style: italic; color: var(--dusk); }
+.salon-strip-text { font-family: 'Cormorant Garamond', serif; font-size: 19px; line-height: 1.55; color: #d9c6ad; max-width: 420px; margin: 0 0 26px; }
+.salon-strip-btn { display: inline-flex; font-family: var(--sans, 'Jost', sans-serif); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink, #1C1410); background: var(--gold); padding: 15px 28px; border-radius: 100px; text-decoration: none; transition: transform .25s ease, background .25s ease; box-shadow: var(--salon-shadow); }
+.salon-strip-btn:hover { transform: translateY(-2px); background: var(--sand-soft); }
+.salon-strip-art { position: relative; align-self: stretch; min-height: 380px; background: linear-gradient(160deg, #8a3540, var(--wine)); overflow: hidden; }
+.salon-strip-art img { position: absolute; width: 82%; left: 9%; top: 50%; transform: translateY(-50%); filter: drop-shadow(0 20px 40px rgba(0, 0, 0, .4)); }
+@media (max-width: 900px) {
+  .salon-strip-inner { grid-template-columns: 1fr; }
+  .salon-strip-copy { padding: 44px 32px; }
+  .salon-strip-art { min-height: 260px; }
+}
+
+/* ═══ DETAIL MODAL — the invitation drawer (desktop) ═══ */
+.modal-photo-hero {
+  position: relative;
+  height: 300px;
+  flex: none;
+  overflow: hidden;
+  background: var(--wine);
+  border-radius: 0;
+}
+.modal-photo-hero .event-art-photo,
+.modal-photo-hero img.event-art-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.04);
+}
+.modal-photo-grad {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(20, 12, 8, .72), transparent 55%);
+}
+.modal-photo-cat {
+  position: absolute;
+  left: 22px;
+  bottom: 18px;
+  z-index: 4;
+  font-family: var(--sans, 'Jost', sans-serif);
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ink, #1C1410);
+  background: var(--gold);
+  padding: 7px 15px;
+  border-radius: 100px;
+  font-weight: 500;
+}
+/* Compact swatch header no longer needed once we have a photo hero */
+.modal-hero-swatch { display: none !important; }
+.modal-hero { padding-top: 22px !important; }
+.modal-hero-title { font-family: 'Cormorant Garamond', serif !important; font-weight: 600 !important; letter-spacing: -.01em; }
+.modal-hero-category { color: var(--wine) !important; font-family: 'Cormorant Garamond', serif !important; font-style: italic; text-transform: none !important; letter-spacing: 0 !important; font-size: 17px !important; }
+.modal-info-pill { border-radius: 14px !important; }
+.modal-pill-value { font-family: 'Cormorant Garamond', serif !important; font-weight: 600 !important; }
+.modal-description { font-family: 'Cormorant Garamond', serif !important; font-size: 18px !important; line-height: 1.6 !important; color: #3f322a !important; }
+.modal-section-label { color: var(--dusk) !important; letter-spacing: .2em !important; }
+.modal-cta-btn { background: var(--ink, #1C1410) !important; color: var(--sand-soft) !important; border-radius: 100px !important; letter-spacing: .12em; }
+.modal-cta-btn:hover { background: var(--wine) !important; }
+
+/* Desktop: slide the sheet in from the right as an invitation drawer */
+@media (min-width: 600px) {
+  .modal-overlay { align-items: stretch !important; justify-content: flex-end !important; padding: 0 !important; }
+  .modal {
+    border-radius: 0 !important;
+    max-width: 560px !important;
+    width: min(560px, 100%) !important;
+    max-height: 100dvh !important;
+    height: 100dvh !important;
+    transform: translateX(102%) !important;
+    opacity: 1 !important;
+    transition: transform .5s cubic-bezier(.4, 0, .1, 1) !important;
+    box-shadow: -30px 0 80px -30px rgba(28, 20, 16, .5) !important;
+  }
+  .modal-overlay.active .modal { transform: none !important; }
+  .modal-photo-hero { height: 340px; }
+}
+
+/* ═══ FAVORITES / list headers — serif polish ═══ */
+.header .title, .greeting {
+  font-family: 'Cormorant Garamond', serif;
+}
+.header .title { font-weight: 500; }
+
+/* ═══ ABOUT — warm editorial polish over the dashboard ═══ */
+.about-heading { font-family: 'Cormorant Garamond', serif; }
+.about-heading em { color: var(--wine); }
+.about-stat-val { font-family: 'Cormorant Garamond', serif !important; color: var(--wine) !important; }
+.about-overline { color: var(--dusk) !important; letter-spacing: .28em !important; }
+
+/* ═══ SUBSCRIBE / IG strip — serif heading ═══ */
+.subscribe-section-heading { font-family: 'Cormorant Garamond', serif !important; font-weight: 500 !important; }
+.subscribe-section-heading em { font-style: italic; color: var(--wine) !important; }
+
+/* ═══ RESPONSIVE — mobile hero ═══ */
+@media (max-width: 900px) {
+  .view-home .hero-salon-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 24px 22px 4px;
+    text-align: left;
+  }
+  .hero-art { height: 340px; max-width: 420px; margin: 8px auto 0; }
+  .salon-ticker { margin-top: 30px; }
+}
+@media (max-width: 600px) {
+  .hero-tag-1 { right: 2px; }
+  .hero-tag-2 { left: 2px; }
+  .salon-ticker-track span { font-size: 20px; }
+}
