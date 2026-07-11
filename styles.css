@@ -6888,18 +6888,19 @@ body::after {
   font-size: 13px;
   letter-spacing: .16em;
   text-transform: uppercase;
-  color: var(--sand-soft);
-  background: var(--ink, #1C1410);
-  padding: 15px 28px;
+  color: var(--wine);
+  background: transparent;
+  padding: 13px 26px;
   border-radius: 100px;
+  border: 1.5px solid rgba(126, 42, 51, .38);
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  transition: transform .25s var(--ease-spring), box-shadow .25s ease, background .25s ease;
-  box-shadow: var(--salon-shadow);
+  transition: gap .25s var(--ease-spring), background .3s ease, color .3s ease, border-color .3s ease;
+  box-shadow: none;
   text-decoration: none;
 }
-.hero-browse-btn:hover { transform: translateY(-2px); background: var(--wine); box-shadow: var(--salon-shadow-lift); }
+.hero-browse-btn:hover { background: var(--wine); color: var(--sand-soft); border-color: var(--wine); gap: 13px; transform: none; box-shadow: none; }
 .hero-browse-btn .arw { transition: transform .25s ease; }
 .hero-browse-btn:hover .arw { transform: translate(3px, -2px); }
 .hero-guest-count {
@@ -7303,16 +7304,13 @@ body::after {
     margin: 8px 0 24px;
     max-width: 40ch;
   }
-  .hero-salon-actions { gap: 16px; width: 100%; }
+  .hero-salon-actions { gap: 16px; }
   .hero-browse-btn {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     justify-content: center;
-    min-height: 52px;
-    padding: 16px 24px;
-    font-size: 13.5px;
+    padding: 13px 24px;
+    font-size: 12.5px;
   }
-  .hero-guest-count { font-size: 16px; flex: 0 0 auto; }
-  .hero-guest-count b { font-size: 19px; }
 
   /* The plate stays a large, tilted, layered card — the invitation tags and the
      scribble float ON it (absolutely positioned), exactly like desktop. We give

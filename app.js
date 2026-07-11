@@ -4436,19 +4436,17 @@ function updateSalonHero() {
   const inRegion = events.filter(e => matchesCurrentRegion(e));
   const pool = inRegion.length ? inRegion : events;
 
-  // Guest count
-  const countEl = document.getElementById('hero-count');
-  if (countEl) countEl.textContent = pool.length;
-
-  // "Happening soon" — events starting within the next ~8 days
+  // "Happening today" — events live today (region-scoped), dynamic.
   const tagWeek = document.getElementById('hero-tag-week');
   if (tagWeek) {
-    const now = Date.now();
-    const soon = pool.filter(e => {
-      const d = new Date(e.start_date);
-      return !isNaN(d) && (d - now) > -86400000 && (d - now) < 86400000 * 8;
+    const todayStr = getTodayLocal();
+    const todayCount = pool.filter(e => {
+      if (!e.start_date) return false;
+      const s = extractDateFromISO(e.start_date);
+      const en = e.end_date ? extractDateFromISO(e.end_date) : s;
+      return todayStr >= s && todayStr <= en;
     }).length;
-    tagWeek.textContent = `${soon || pool.length} events`;
+    tagWeek.textContent = `${todayCount} ${todayCount === 1 ? 'event' : 'events'}`;
   }
 
   // Marquee ticker — a curated ribbon of live event names
