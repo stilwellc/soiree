@@ -1327,6 +1327,49 @@ function toggleDealsCard(timeFilter) {
 }
 
 // Render Events
+// ── Curated framing: the copy rewrites itself per view AND per category so
+// filtering genuinely changes the experience, not just the list. ────────────
+const CURATED_COPY = {
+  today: {
+    all:       { eyebrow: 'Tonight', head: 'The evening, <em>curated.</em>', sub: n => `${n.n} ways to spend tonight — ${n.free} free.` },
+    art:       { eyebrow: 'Tonight · Art', head: 'Openings &amp; <em>after hours.</em>', sub: n => `${n.n} shows to see before the lights go down.` },
+    perks:     { eyebrow: 'Tonight · Perks', head: 'Pop-ups &amp; <em>little luxuries.</em>', sub: n => `${n.n} finds worth dressing up for.` },
+    community: { eyebrow: 'Tonight · Culture', head: 'Gatherings &amp; <em>goings-on.</em>', sub: n => `${n.n} ways to be among people tonight.` },
+    music:     { eyebrow: 'Tonight · Music', head: 'Sets, stages &amp; <em>sound.</em>', sub: n => `${n.n} rooms with music in them tonight.` },
+  },
+  week: {
+    all:       { eyebrow: 'The week ahead', head: 'Seven nights, <em>a full card.</em>', sub: n => `${n.n} invitations this week — ${n.free} free.` },
+    art:       { eyebrow: 'The week in art', head: 'On view <em>this week.</em>', sub: n => `${n.n} exhibitions and openings to catch.` },
+    perks:     { eyebrow: 'The week in perks', head: 'Pop-ups <em>all week.</em>', sub: n => `${n.n} fleeting things before they vanish.` },
+    community: { eyebrow: 'The week in culture', head: 'The city, <em>gathering.</em>', sub: n => `${n.n} happenings across seven nights.` },
+    music:     { eyebrow: 'The week in music', head: 'A week of <em>sound.</em>', sub: n => `${n.n} nights worth listening for.` },
+  },
+};
+
+function curatedIntroHTML(count, freeCount) {
+  const tf = currentTimeFilter;
+  if (tf !== 'today' && tf !== 'week') return '';
+  const cat = CURATED_COPY[tf][currentFilter] ? currentFilter : 'all';
+  const c = CURATED_COPY[tf][cat];
+  const region = (typeof REGIONS !== 'undefined' && REGIONS[currentRegion] && REGIONS[currentRegion].name) || 'the city';
+  return `
+    <div class="curated-intro" data-tf="${tf}" data-cat="${esc(cat)}">
+      <p class="curated-eyebrow">${esc(c.eyebrow)} · ${esc(region)}</p>
+      <h2 class="curated-head">${c.head}</h2>
+      <p class="curated-sub">${esc(c.sub({ n: count, free: freeCount }))}</p>
+    </div>`;
+}
+
+function dayLabelFor(dateStr) {
+  const today = getTodayLocal();
+  if (dateStr <= today) return 'Tonight';
+  const d = new Date(dateStr + 'T12:00:00');
+  const t = new Date(today + 'T12:00:00');
+  const diff = Math.round((d - t) / 86400000);
+  if (diff === 1) return 'Tomorrow';
+  return d.toLocaleDateString('en-US', { weekday: 'long' });
+}
+
 function renderEvents() {
   // Keep the footer's derived truth line in step with whatever the page
   // renders (runs on load, region change, filter change — cheap, idempotent)
@@ -1379,47 +1422,78 @@ function renderEvents() {
     ? createDealsCard(currentTimeFilter)
     : '';
 
+  // Curated framing (today/week) — rewrites itself with the active filter.
+  const freeCount = filteredEvents.filter(e => e.isFree === true).length;
+  const curatedIntro = curatedIntroHTML(filteredEvents.length, freeCount);
+
   if (filteredEvents.length === 0) {
-    eventsList.innerHTML = dealsCard + `
+    eventsList.innerHTML = curatedIntro + dealsCard + `
       <div class="empty-state">
         <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
-        <div class="empty-state-title">No events found</div>
-        <div class="empty-state-text">Try adjusting your filters or search</div>
+        <div class="empty-state-title">Nothing on this bill yet</div>
+        <div class="empty-state-text">Try another night or a different room.</div>
       </div>
     `;
     return;
   }
 
-  // Pagination
-  const totalPages = Math.ceil(filteredEvents.length / EVENTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * EVENTS_PER_PAGE;
-  const endIndex = startIndex + EVENTS_PER_PAGE;
-  const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
+  // THIS WEEK — a curated weekly spread: single-day events grouped under day
+  // headers (Tonight / Tomorrow / weekday); ongoing exhibitions collapse into
+  // one "On view all week" section. Full-width dividers span the card grid.
+  if (currentTimeFilter === 'week') {
+    const today = getTodayLocal();
+    const ordered = [...filteredEvents].sort((a, b) =>
+      (a.start_date || '').localeCompare(b.start_date || ''));
+    const groups = {}; // key -> { label, dateLabel, order, events: [] }
+    for (const e of ordered) {
+      const s = extractDateFromISO(e.start_date) || '';
+      const en = e.end_date ? extractDateFromISO(e.end_date) : s;
+      let key, label, dateLabel, order;
+      if (en > s && s <= today) {           // ongoing / multi-day exhibition
+        key = '~onview'; label = 'On view all week'; dateLabel = ''; order = '~';
+      } else {
+        key = s; label = dayLabelFor(s); order = s;
+        dateLabel = s ? new Date(s + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      }
+      (groups[key] = groups[key] || { label, dateLabel, order, events: [] }).events.push(e);
+    }
+    let idx = 0;
+    const html = Object.values(groups).sort((a, b) => a.order.localeCompare(b.order)).map(g => {
+      const divider = `<div class="day-divider">
+          <span class="day-name">${esc(g.label)}</span>
+          ${g.dateLabel ? `<span class="day-date">${esc(g.dateLabel)}</span>` : ''}
+          <span class="day-rule" aria-hidden="true"></span>
+          <span class="day-count">${g.events.length}</span>
+        </div>`;
+      return divider + g.events.map(e => createEventCard(e, idx++)).join('');
+    }).join('');
+    eventsList.innerHTML = curatedIntro + dealsCard + html;
+  } else {
+    // TODAY / ALL — paginated list (today already sorted soonest-first).
+    const totalPages = Math.ceil(filteredEvents.length / EVENTS_PER_PAGE);
+    const startIndex = (currentPage - 1) * EVENTS_PER_PAGE;
+    const paginatedEvents = filteredEvents.slice(startIndex, startIndex + EVENTS_PER_PAGE);
 
-  let paginationHTML = '';
-  if (totalPages > 1) {
-    paginationHTML = `
-      <div class="pagination">
-        <button class="pagination-btn" id="prev-page" ${currentPage === 1 ? 'disabled' : ''}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <path d="M15 18l-6-6 6-6"/>
-          </svg>
-          Previous
-        </button>
-        <span class="pagination-info">Page ${currentPage} of ${totalPages}</span>
-        <button class="pagination-btn" id="next-page" ${currentPage === totalPages ? 'disabled' : ''}>
-          Next
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
-        </button>
-      </div>
-    `;
+    let paginationHTML = '';
+    if (totalPages > 1) {
+      paginationHTML = `
+        <div class="pagination">
+          <button class="pagination-btn" id="prev-page" ${currentPage === 1 ? 'disabled' : ''}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M15 18l-6-6 6-6"/></svg>
+            Previous
+          </button>
+          <span class="pagination-info">Page ${currentPage} of ${totalPages}</span>
+          <button class="pagination-btn" id="next-page" ${currentPage === totalPages ? 'disabled' : ''}>
+            Next
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      `;
+    }
+    eventsList.innerHTML = curatedIntro + dealsCard + paginatedEvents.map((event, index) =>
+      createEventCard(event, startIndex + index)
+    ).join('') + paginationHTML;
   }
-
-  eventsList.innerHTML = dealsCard + paginatedEvents.map((event, index) =>
-    createEventCard(event, startIndex + index)
-  ).join('') + paginationHTML;
 
   // Add event listeners to cards
   document.querySelectorAll('.event-card').forEach(card => {

@@ -7220,3 +7220,55 @@ body::after {
   .hero-tag-2 { left: 2px; }
   .salon-ticker-track span { font-size: 20px; }
 }
+
+/* ══════════════════════ CURATED VIEWS (Today / This Week) ══════════════════════
+   Filtering doesn't just prune the list — it rewrites the framing and shifts the
+   accent, so each view feels curated and each filter changes the room you're in. */
+.curated-intro {
+  padding: clamp(24px, 3.5vw, 40px) 0 clamp(16px, 2vw, 24px);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 22px;
+  animation: curatedRise .7s cubic-bezier(.19, 1, .22, 1) both;
+}
+@keyframes curatedRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .curated-intro { animation: none; } }
+.curated-eyebrow {
+  font-family: var(--sans); font-size: 12px; letter-spacing: .3em; text-transform: uppercase;
+  color: var(--wine); margin: 0 0 14px; display: flex; align-items: center; gap: 11px;
+}
+.curated-eyebrow::before { content: ""; width: 24px; height: 1px; background: currentColor; opacity: .55; }
+.curated-head {
+  font-family: var(--serif); font-weight: 500; font-size: clamp(2.3rem, 4.7vw, 3.9rem);
+  line-height: .98; letter-spacing: -.015em; color: var(--ink); margin: 0;
+}
+.curated-head em { font-style: italic; color: var(--wine); }
+.curated-sub {
+  font-family: var(--serif); font-style: italic; font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+  color: #6a5849; margin: 14px 0 0;
+}
+/* the accent shifts with the active filter — same palette, different room */
+.curated-intro[data-cat="perks"] .curated-eyebrow,
+.curated-intro[data-cat="perks"] .curated-head em { color: var(--gold-2); }
+.curated-intro[data-cat="community"] .curated-eyebrow,
+.curated-intro[data-cat="community"] .curated-head em { color: var(--wine-2); }
+.curated-intro[data-cat="music"] .curated-eyebrow,
+.curated-intro[data-cat="music"] .curated-head em { color: var(--gold-2); }
+
+/* This Week — day-grouped weekly spread */
+.day-group { margin-bottom: 6px; }
+.day-divider { display: flex; align-items: baseline; gap: 14px; padding: 28px 0 15px; }
+.day-name { font-family: var(--serif); font-weight: 600; font-size: 1.55rem; color: var(--ink); letter-spacing: -.01em; }
+.day-date { font-family: var(--sans); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--dusk); }
+.day-rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+.day-count { font-family: var(--sans); font-size: 12px; color: var(--wine); font-weight: 600; }
+
+/* The static House Philosophy strip is redundant once a view is curated. */
+#discover-view:not(.view-home) .salon-strip { display: none; }
+
+/* Non-card elements must span the 2-column events grid, not sit in a cell. */
+#events-list > .curated-intro,
+#events-list > .day-divider,
+#events-list > .deals-card,
+#events-list > .deals-peek,
+#events-list > .empty-state,
+#events-list > .pagination { grid-column: 1 / -1; }
