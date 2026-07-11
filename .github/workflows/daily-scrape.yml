@@ -22,6 +22,7 @@ jobs:
 
       # Small helper to POST a group and fail on non-200. Reused per group.
       - name: Scrape main sources
+        continue-on-error: true
         run: |
           echo "🌐 Scraping main sources (TimeOut, museums, NYC For Free, etc.)..."
           HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=main" \
@@ -34,6 +35,7 @@ jobs:
           echo "✅ main completed"
 
       - name: Scrape galleries
+        continue-on-error: true
         run: |
           echo "🎨 Scraping galleries (bespoke + registry)..."
           HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=galleries" \
@@ -46,6 +48,7 @@ jobs:
           echo "✅ galleries completed"
 
       - name: Scrape museums (registry)
+        continue-on-error: true
         run: |
           echo "🏛️  Scraping museums group (Whitney, New Museum)..."
           HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=museums" \
@@ -58,6 +61,7 @@ jobs:
           echo "✅ museums completed"
 
       - name: Scrape film (registry)
+        continue-on-error: true
         run: |
           echo "🎬 Scraping film group..."
           HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=film" \
@@ -70,6 +74,7 @@ jobs:
           echo "✅ film completed"
 
       - name: Scrape literary (registry)
+        continue-on-error: true
         run: |
           echo "📚 Scraping literary group..."
           HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=literary" \
@@ -82,6 +87,7 @@ jobs:
           echo "✅ literary completed"
 
       - name: Scrape performances & parks (registry)
+        continue-on-error: true
         run: |
           echo "🎭 Scraping perfparks group (Bryant Park, NYC Parks, SummerStage)..."
           HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=perfparks" \
@@ -94,6 +100,7 @@ jobs:
           echo "✅ perfparks completed"
 
       - name: Scrape NJ (registry)
+        continue-on-error: true
         run: |
           echo "🌆 Scraping nj group (The Local Girl, Hoboken/JC/Newark)..."
           HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=nj" \
@@ -106,6 +113,7 @@ jobs:
           echo "✅ nj completed"
 
       - name: Scrape puppeteer (registry)
+        continue-on-error: true
         run: |
           echo "🤖 Scraping puppeteer group (Guggenheim + rendered venues)..."
           HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=puppeteer" \
@@ -118,6 +126,7 @@ jobs:
           echo "✅ puppeteer completed"
 
       - name: Scrape Visit NJ (Direct)
+        continue-on-error: true
         env:
           POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
         run: |
@@ -126,6 +135,7 @@ jobs:
           node scripts/scrape-visitnj-direct.js
 
       - name: Scrape AMNH (Direct)
+        continue-on-error: true
         env:
           POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
         run: |
@@ -133,6 +143,7 @@ jobs:
           node scripts/scrape-amnh-direct.js
 
       - name: Scrape The Local Girl (Direct)
+        continue-on-error: true
         env:
           POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
         run: |
