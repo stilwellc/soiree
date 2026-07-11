@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soirée — The Evening Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600&family=Fraunces:opsz,ital,wght@9..144,0,400;9..144,0,500;9..144,1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FAF8F3; --paper:#F4EFE6; --ink:#1C1410; --ink-soft:#453a30;
+  --wine:#7E2A33; --wine-2:#A64450; --gold:#D4AF37; --gold-2:#B08D2E;
+  --dusk:#C4956A; --sand:#E8D5B0; --rule:#d8cdb9; --rule-soft:#e6dcca;
+  --measure:66ch;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{
+  background:var(--cream); color:var(--ink);
+  font-family:'Jost',sans-serif; font-weight:400;
+  line-height:1.5; overflow-x:hidden;
+}
+::selection{background:var(--wine);color:var(--cream)}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+
+/* ---------- shared editorial primitives ---------- */
+.kicker{
+  font-family:'Jost',sans-serif;font-weight:500;
+  font-size:.66rem;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--wine);
+}
+.kicker.gold{color:var(--gold-2)}
+.kicker.ink{color:var(--ink-soft)}
+.serif{font-family:'Cormorant Garamond',serif}
+.rule{height:1px;background:var(--rule);border:0}
+.rule-thick{height:3px;background:var(--ink);border:0}
+.dbl-rule{border-top:3px double var(--ink);height:0}
+.wrap{max-width:1360px;margin:0 auto;padding:0 40px}
+
+/* ---------- top ribbon / dateline ---------- */
+.ribbon{
+  border-bottom:1px solid var(--rule);
+  font-family:'Jost',sans-serif;font-size:.62rem;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--ink-soft);
+  background:var(--cream);
+}
+.ribbon-inner{display:flex;justify-content:space-between;align-items:center;height:38px;gap:24px;white-space:nowrap}
+.ribbon .mid{color:var(--wine);font-weight:500}
+.ribbon .tick{display:inline-flex;align-items:center;gap:8px}
+.ribbon .dot{width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block}
+.ribbon .r-right{display:flex;gap:22px}
+@media(max-width:720px){.ribbon .r-right{display:none}.ribbon-inner{justify-content:center}.ribbon .tick{display:none}.ribbon .mid{font-size:.56rem}}
+
+/* ---------- masthead ---------- */
+.masthead{text-align:center;padding:34px 0 20px;position:relative}
+.masthead .est{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;
+  color:var(--ink-soft);letter-spacing:.02em;margin-bottom:4px;opacity:0;
+  animation:fadeUp .8s .1s forwards;
+}
+.mast-logo{height:78px;width:auto;margin:2px auto 6px;filter:none;opacity:0;animation:fadeUp .9s .2s forwards}
+.mast-sub{
+  display:flex;align-items:center;justify-content:center;gap:18px;
+  margin-top:6px;opacity:0;animation:fadeUp .9s .45s forwards;
+}
+.mast-sub .lbl{
+  font-family:'Jost',sans-serif;font-weight:500;font-size:.64rem;
+  letter-spacing:.42em;text-transform:uppercase;color:var(--ink);white-space:nowrap;
+}
+.mast-sub .ln{height:1px;width:min(220px,22vw);background:var(--ink)}
+.mast-motto{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;
+  color:var(--wine);margin-top:12px;opacity:0;animation:fadeUp .9s .6s forwards;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* animated masthead dateline bar */
+.mast-dateline{
+  display:flex;justify-content:space-between;align-items:stretch;
+  border-top:3px double var(--ink);border-bottom:1px solid var(--ink);
+  margin-top:22px;font-family:'Jost',sans-serif;
+  font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;
+}
+.mast-dateline > div{padding:8px 0;color:var(--ink-soft)}
+.mast-dateline .c{text-align:center;flex:1;border-left:1px solid var(--rule);border-right:1px solid var(--rule)}
+.mast-dateline .l{text-align:left}
+.mast-dateline .r{text-align:right}
+.mast-dateline b{color:var(--wine);font-weight:500}
+
+/* ---------- category nav ---------- */
+.catnav{position:sticky;top:0;z-index:40;background:var(--cream);border-bottom:2px solid var(--ink);}
+.catnav.stuck{box-shadow:0 8px 24px -18px rgba(28,20,16,.5)}
+.catnav-inner{display:flex;align-items:center;justify-content:center;gap:0;height:46px;flex-wrap:wrap}
+.catnav button{
+  background:none;border:0;cursor:pointer;
+  font-family:'Jost',sans-serif;font-weight:500;font-size:.64rem;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--ink-soft);
+  padding:0 18px;height:46px;position:relative;transition:color .25s;
+}
+.catnav button::after{
+  content:"";position:absolute;left:18px;right:18px;bottom:8px;height:2px;
+  background:var(--wine);transform:scaleX(0);transform-origin:center;transition:transform .28s cubic-bezier(.2,.7,.3,1);
+}
+.catnav button:hover{color:var(--ink)}
+.catnav button.active{color:var(--wine)}
+.catnav button.active::after{transform:scaleX(1)}
+.catnav .sep{width:1px;height:16px;background:var(--rule)}
+
+/* ---------- LEAD / FRONT PAGE ---------- */
+.front{padding:44px 0 20px}
+.front-grid{
+  display:grid;
+  grid-template-columns:1.15fr 2.6fr 1.15fr;
+  gap:0;
+}
+.front-grid > *{padding:0 30px}
+.front-grid > *:first-child{padding-left:0;border-right:1px solid var(--rule)}
+.front-grid > *:last-child{padding-right:0;border-left:1px solid var(--rule)}
+
+/* lead center */
+.lead .lead-kick{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:14px}
+.lead .lead-kick .ln{height:1px;flex:1;background:var(--rule);max-width:90px}
+.lead h1{
+  font-family:'Cormorant Garamond',serif;font-weight:600;
+  font-size:clamp(2.6rem,5vw,4.6rem);line-height:.98;text-align:center;
+  letter-spacing:-.01em;margin:0 auto 6px;max-width:14ch;
+}
+.lead .lead-deck{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+  font-size:clamp(1.15rem,1.7vw,1.5rem);color:var(--ink-soft);text-align:center;
+  max-width:34ch;margin:0 auto 22px;line-height:1.3;
+}
+.lead-figure{position:relative;overflow:hidden;background:var(--paper);aspect-ratio:16/10;margin-bottom:14px}
+.lead-figure img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s cubic-bezier(.2,.7,.3,1)}
+.lead-figure:hover img{transform:scale(1.04)}
+.lead-figure .fig-tag{
+  position:absolute;left:0;bottom:0;background:var(--ink);color:var(--cream);
+  font-family:'Jost',sans-serif;font-size:.58rem;letter-spacing:.24em;text-transform:uppercase;
+  padding:7px 14px;
+}
+.lead-caption{
+  font-family:'Jost',sans-serif;font-size:.66rem;color:var(--ink-soft);
+  letter-spacing:.03em;text-align:center;padding-bottom:18px;border-bottom:1px solid var(--rule);
+}
+.lead-caption b{color:var(--ink);font-weight:500}
+.lead-body{column-count:2;column-gap:34px;column-rule:1px solid var(--rule);margin-top:18px}
+.lead-body p{
+  font-family:'Cormorant Garamond',serif;font-size:1.16rem;line-height:1.5;
+  text-align:justify;hyphens:auto;margin-bottom:0;color:var(--ink-soft);
+}
+.lead-body p:first-child::first-letter{
+  font-family:'Fraunces',serif;font-weight:500;float:left;
+  font-size:4.4rem;line-height:.72;padding:6px 10px 0 0;color:var(--wine);
+}
+.lead-cta{
+  display:inline-flex;align-items:center;gap:10px;margin-top:20px;cursor:pointer;
+  font-family:'Jost',sans-serif;font-weight:500;font-size:.66rem;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--wine);border-bottom:1px solid var(--wine);padding-bottom:3px;
+  transition:gap .3s;
+}
+.lead-cta:hover{gap:16px}
+
+/* side rails - almanac / index */
+.rail h3{
+  font-family:'Jost',sans-serif;font-weight:600;font-size:.62rem;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--ink);text-align:center;
+  padding-bottom:10px;margin-bottom:14px;border-bottom:2px solid var(--ink);
+}
+.rail-item{padding:13px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .2s}
+.rail-item:last-child{border-bottom:0}
+.rail-item:hover{background:rgba(126,42,51,.04)}
+.rail-item .ri-kick{font-family:'Jost',sans-serif;font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--wine);margin-bottom:3px}
+.rail-item h4{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.28rem;line-height:1.08;margin-bottom:3px}
+.rail-item .ri-meta{font-family:'Jost',sans-serif;font-size:.66rem;color:var(--ink-soft)}
+.rail-num{font-family:'Fraunces',serif;font-style:italic;color:var(--gold-2);margin-right:6px}
+
+/* almanac stat block */
+.almanac{margin-top:26px;background:var(--ink);color:var(--cream);padding:20px 20px 22px}
+.almanac h3{color:var(--cream);border-color:rgba(255,255,255,.35)}
+.almanac .stat{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.12);font-family:'Jost';font-size:.66rem;letter-spacing:.06em}
+.almanac .stat:last-child{border:0}
+.almanac .stat .n{font-family:'Fraunces',serif;font-weight:500;font-size:1.2rem;color:var(--gold)}
+.almanac .stat span{text-transform:uppercase;letter-spacing:.14em;font-size:.6rem}
+
+/* ---------- SECTION HEADER ---------- */
+.section{padding:52px 0 10px}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;border-bottom:3px double var(--ink);padding-bottom:12px;margin-bottom:6px}
+.sec-head .sh-left{display:flex;align-items:baseline;gap:16px}
+.sec-head h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(1.8rem,3vw,2.8rem);line-height:1;letter-spacing:-.01em}
+.sec-head .sh-count{font-family:'Jost';font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft)}
+.sec-head .sh-note{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.1rem;color:var(--wine);text-align:right;max-width:30ch;line-height:1.25}
+
+/* filter subnav under section */
+.filterbar{display:flex;gap:0;flex-wrap:wrap;align-items:center;padding:14px 0 4px;margin-bottom:20px;border-bottom:1px solid var(--rule)}
+.filterbar .flabel{font-family:'Jost';font-weight:500;font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);margin-right:18px}
+.chip{
+  font-family:'Jost';font-weight:500;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-soft);background:none;border:1px solid var(--rule);border-radius:100px;
+  padding:6px 14px;margin:0 8px 8px 0;cursor:pointer;transition:all .2s;
+}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--cream)}
+
+/* ---------- EVENTS GRID ---------- */
+.egrid{
+  display:grid;grid-template-columns:repeat(12,1fr);gap:0;
+  border-top:1px solid var(--rule);
+}
+.ecard{
+  grid-column:span 3;padding:24px 24px 26px;cursor:pointer;position:relative;
+  border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  transition:background .25s;opacity:0;transform:translateY(18px);
+}
+.ecard.in{opacity:1;transform:none;transition:opacity .6s,transform .6s}
+.ecard:hover{background:rgba(126,42,51,.035)}
+.egrid .ecard:nth-child(4n){border-right:0}
+.ecard-fig{position:relative;overflow:hidden;background:var(--paper);aspect-ratio:4/3;margin-bottom:14px}
+.ecard-fig img{width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.2,.7,.3,1)}
+.ecard:hover .ecard-fig img{transform:scale(1.05)}
+.ecard-fig .cat{position:absolute;top:0;left:0;background:var(--cream);color:var(--ink);font-family:'Jost';font-size:.54rem;letter-spacing:.2em;text-transform:uppercase;padding:5px 10px;border-bottom:1px solid var(--ink);border-right:1px solid var(--ink)}
+.ecard .e-kick{display:flex;gap:8px;align-items:center;font-family:'Jost';font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--wine);margin-bottom:7px}
+.ecard .e-kick .free{color:var(--gold-2)}
+.ecard .e-kick .sep{width:3px;height:3px;border-radius:50%;background:var(--rule);}
+.ecard h3{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.42rem;line-height:1.06;margin-bottom:9px;letter-spacing:-.005em}
+.ecard .e-desc{font-family:'Cormorant Garamond',serif;font-size:1.02rem;line-height:1.35;color:var(--ink-soft);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:12px}
+.ecard .e-meta{font-family:'Jost';font-size:.64rem;color:var(--ink-soft);letter-spacing:.02em;padding-top:10px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:8px}
+.ecard .e-meta .where{font-weight:500;color:var(--ink);text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+
+/* fallback brand treatment for broken images */
+.figfall{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;
+  background:
+    repeating-linear-gradient(45deg,transparent,transparent 9px,rgba(28,20,16,.03) 9px,rgba(28,20,16,.03) 10px),
+    linear-gradient(160deg,var(--sand),var(--paper));}
+.figfall::before{content:attr(data-cat);position:absolute;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:2.2rem;color:var(--wine);opacity:.8}
+.figfall .fmark{position:absolute;bottom:10px;right:12px;font-family:'Jost';font-size:.5rem;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-soft)}
+
+.more-row{display:flex;justify-content:center;padding:30px 0 4px}
+.more-btn{
+  font-family:'Jost';font-weight:500;font-size:.66rem;letter-spacing:.24em;text-transform:uppercase;
+  background:none;border:1px solid var(--ink);color:var(--ink);padding:13px 32px;cursor:pointer;transition:all .25s;
+}
+.more-btn:hover{background:var(--ink);color:var(--cream)}
+
+/* ---------- DUSK FOOTER ---------- */
+.footer{margin-top:60px;position:relative;color:var(--cream);overflow:hidden;
+  background:linear-gradient(180deg,#2a1c22 0%,#5a2530 30%,#A64450 55%,#C4956A 78%,#E8D5B0 100%);}
+.skyline{position:absolute;left:0;right:0;bottom:0;height:120px;opacity:.9}
+.footer-inner{position:relative;z-index:2;text-align:center;padding:70px 40px 150px}
+.footer .f-mark{height:34px;margin:0 auto 22px;opacity:.95}
+.footer h2{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:clamp(2rem,4vw,3.4rem);line-height:1.05;margin-bottom:16px;text-shadow:0 2px 30px rgba(0,0,0,.25)}
+.footer .f-motto{font-family:'Jost';font-weight:500;font-size:.66rem;letter-spacing:.4em;text-transform:uppercase;opacity:.95}
+.footer .f-line{width:60px;height:1px;background:rgba(255,255,255,.6);margin:20px auto}
+.footer .f-fine{font-family:'Jost';font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-top:10px}
+
+/* ---------- DETAIL OVERLAY (article view) ---------- */
+.overlay{position:fixed;inset:0;z-index:100;background:rgba(20,14,10,.55);backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;transition:opacity .4s;display:flex;justify-content:flex-end}
+.overlay.open{opacity:1;pointer-events:auto}
+.article{
+  width:min(640px,94vw);height:100%;background:var(--cream);overflow-y:auto;
+  transform:translateX(40px);transition:transform .5s cubic-bezier(.2,.7,.3,1);
+  box-shadow:-20px 0 60px -30px rgba(0,0,0,.6);
+}
+.overlay.open .article{transform:none}
+.art-top{position:sticky;top:0;z-index:3;background:var(--cream);display:flex;justify-content:space-between;align-items:center;padding:16px 34px;border-bottom:1px solid var(--rule)}
+.art-top .art-ed{font-family:'Jost';font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;color:var(--wine)}
+.art-close{background:none;border:0;cursor:pointer;font-family:'Jost';font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:8px}
+.art-close .x{font-size:1.1rem;line-height:1}
+.art-body{padding:34px 44px 60px}
+.art-kick{display:flex;gap:10px;align-items:center;justify-content:center;font-family:'Jost';font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--wine);margin-bottom:14px}
+.art-kick .ln{height:1px;width:40px;background:var(--rule)}
+.art-title{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(2.2rem,5vw,3.2rem);line-height:1;text-align:center;letter-spacing:-.01em;margin-bottom:14px}
+.art-deck{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.2rem;color:var(--ink-soft);text-align:center;max-width:40ch;margin:0 auto 24px;line-height:1.32}
+.art-fig{position:relative;overflow:hidden;background:var(--paper);aspect-ratio:16/10;margin-bottom:8px}
+.art-fig img{width:100%;height:100%;object-fit:cover}
+.art-cap{font-family:'Jost';font-size:.62rem;color:var(--ink-soft);text-align:center;padding:8px 0 22px;border-bottom:3px double var(--ink);margin-bottom:22px}
+.art-cap b{color:var(--ink);font-weight:500}
+.art-facts{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--rule);margin-bottom:24px}
+.art-facts .f{padding:14px 8px;border-bottom:1px solid var(--rule)}
+.art-facts .f:nth-child(odd){border-right:1px solid var(--rule);padding-left:0}
+.art-facts .f:nth-child(even){padding-left:20px}
+.art-facts .f .fl{font-family:'Jost';font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--wine);margin-bottom:4px}
+.art-facts .f .fv{font-family:'Cormorant Garamond',serif;font-size:1.16rem;line-height:1.15;color:var(--ink)}
+.art-text p{font-family:'Cormorant Garamond',serif;font-size:1.2rem;line-height:1.55;color:var(--ink-soft);margin-bottom:16px}
+.art-text p:first-of-type::first-letter{font-family:'Fraunces',serif;font-weight:500;float:left;font-size:3.8rem;line-height:.72;padding:6px 8px 0 0;color:var(--wine)}
+.art-hl{margin:26px 0}
+.art-hl .hh{font-family:'Jost';font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink);border-bottom:1px solid var(--ink);padding-bottom:8px;margin-bottom:10px}
+.art-hl ul{list-style:none}
+.art-hl li{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--ink-soft);padding:6px 0 6px 22px;position:relative;border-bottom:1px solid var(--rule-soft)}
+.art-hl li::before{content:"—";position:absolute;left:0;color:var(--gold-2)}
+.art-actions{display:flex;gap:12px;margin-top:28px}
+.art-actions a{flex:1;text-align:center;font-family:'Jost';font-weight:500;font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;padding:15px;transition:all .25s}
+.art-actions .primary{background:var(--wine);color:var(--cream)}
+.art-actions .primary:hover{background:var(--ink)}
+.art-actions .ghost{border:1px solid var(--ink);color:var(--ink)}
+.art-actions .ghost:hover{background:var(--ink);color:var(--cream)}
+.art-source{font-family:'Jost';font-size:.6rem;letter-spacing:.06em;color:var(--ink-soft);text-align:center;margin-top:22px}
+
+/* loading */
+.loading{text-align:center;padding:120px 0;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.6rem;color:var(--ink-soft)}
+.loading .l-mark{font-family:'Jost';font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:var(--wine);margin-top:14px;font-style:normal}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:980px){
+  .wrap{padding:0 22px}
+  .front-grid{grid-template-columns:1fr}
+  .front-grid > *{padding:0!important;border:0!important}
+  .rail-left{order:2;margin-top:36px;padding-top:20px!important;border-top:1px solid var(--rule)!important}
+  .lead{order:1}
+  .rail-right{order:3;margin-top:0;padding-top:20px!important;border-top:1px solid var(--rule)!important}
+  .ecard{grid-column:span 6!important;border-right:1px solid var(--rule)!important}
+  .egrid .ecard:nth-child(2n){border-right:0!important}
+}
+@media(max-width:640px){
+  .wrap{padding:0 18px}
+  .mast-logo{height:52px}
+  .mast-sub .ln{width:14vw}
+  .mast-dateline{font-size:.5rem;letter-spacing:.12em}
+  .mast-dateline .c{padding-left:4px;padding-right:4px}
+  .lead-body{column-count:1}
+  .lead h1{font-size:2.7rem}
+  .ecard{grid-column:span 12!important;border-right:0!important}
+  .sec-head{flex-direction:column;align-items:flex-start;gap:8px}
+  .sec-head .sh-note{text-align:left}
+  .art-body{padding:26px 22px 50px}
+  .art-facts .f:nth-child(even){padding-left:12px}
+  .catnav-inner{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding:0 4px}
+  .catnav button{padding:0 14px;flex:0 0 auto}
+  .catnav .sep{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP RIBBON -->
+<div class="ribbon">
+  <div class="wrap ribbon-inner">
+    <div class="tick"><span class="dot"></span><span id="dateline">The Evening Edition</span></div>
+    <div class="mid" id="ribbon-mid">No. MMXXVI · Curated After Dark</div>
+    <div class="r-right">
+      <span>New York · New Jersey</span>
+      <span>Always Free Admission</span>
+      <span id="ribbon-count">— Dispatches</span>
+    </div>
+  </div>
+</div>
+
+<!-- MASTHEAD -->
+<header class="masthead wrap">
+  <div class="est">Being an elegant register of the city after dark</div>
+  <img class="mast-logo" src="https://soiree.today/assets/images/soiree-logo-transparent.png" alt="Soirée" onerror="this.outerHTML='&lt;div style=&quot;font-family:Cormorant Garamond,serif;font-size:4.2rem;font-weight:600;letter-spacing:-.01em&quot;&gt;Soirée&lt;/div&gt;'">
+  <div class="mast-sub">
+    <span class="ln"></span>
+    <span class="lbl">The Evening Edition</span>
+    <span class="ln"></span>
+  </div>
+  <div class="mast-motto">“Stay curious after dark.”</div>
+  <div class="mast-dateline">
+    <div class="l" id="dl-left">Vol. I</div>
+    <div class="c" id="dl-center">A CULTURAL ALMANAC OF FREE EVENINGS</div>
+    <div class="r" id="dl-right">Price · <b>Complimentary</b></div>
+  </div>
+</header>
+
+<!-- CATEGORY NAV -->
+<nav class="catnav" id="catnav">
+  <div class="wrap catnav-inner" id="catnav-inner"></div>
+</nav>
+
+<main id="app">
+  <div class="loading wrap">
+    Setting the evening edition…
+    <div class="l-mark">Soirée · Composing the front page</div>
+  </div>
+</main>
+
+<!-- DETAIL OVERLAY -->
+<div class="overlay" id="overlay">
+  <article class="article" id="article">
+    <div class="art-top">
+      <span class="art-ed">Soirée · The Evening Edition</span>
+      <button class="art-close" id="art-close"><span class="x">✕</span> Close</button>
+    </div>
+    <div class="art-body" id="art-body"></div>
+  </article>
+</div>
+
+<script>
+const API='https://soiree.today/api/events';
+const CATS=['all','art','music','community','culinary','fashion','perks','lifestyle'];
+const CAT_LABEL={all:'The Full Edition',art:'Arts & Exhibitions',music:'Music & Sound',community:'City & Community',culinary:'Culinary',fashion:'Style & Fashion',perks:'Perks & Passes',lifestyle:'Living Well'};
+const CAT_NOTE={
+  all:'Everything worth an evening — plated for you across the boroughs.',
+  art:'Galleries, museums and exhibitions holding their doors open.',
+  music:'Concerts, recitals and sound, from park bandshells to concert halls.',
+  community:'Talks, walks, workshops and neighbourhood gatherings.',
+  culinary:'Tastings, markets and the pleasures of the table.',
+  fashion:'The season in dress — showings, style and design.',
+  perks:'Members’ passes, complimentary admissions and quiet privileges.',
+  lifestyle:'Wellness, movement and the art of living well.'
+};
+const state={all:[],active:'all',shown:16};
+const PER=16;
+
+const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const roman=n=>{const m=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];let r='';for(const[v,s]of m)while(n>=v){r+=s;n-=v}return r};
+
+function fmtDate(e){
+  const raw=e.date||'';
+  // try to parse an ISO-ish date first
+  let d=null;
+  if(e.start_date){const t=new Date(e.start_date);if(!isNaN(t))d=t;}
+  if(d && !isNaN(d)){
+    return d.toLocaleDateString('en-US',{month:'long',day:'numeric'}).toUpperCase();
+  }
+  if(/^\d{4}-\d{2}-\d{2}T/.test(raw)){const t=new Date(raw);if(!isNaN(t))return t.toLocaleDateString('en-US',{month:'long',day:'numeric'}).toUpperCase();}
+  // range strings like "June 11, 2025–April 20, 2031" -> "ON VIEW"
+  if(/[–-].*\d{4}/.test(raw))return 'ON VIEW';
+  return (raw||'BY APPOINTMENT').toUpperCase().slice(0,22);
+}
+function priceLabel(e){
+  const p=(e.price||'').toLowerCase();
+  if(p==='free')return 'FREE';
+  if(p.includes('see'))return 'BY DETAIL';
+  return (e.price||'FREE').toUpperCase();
+}
+function cleanDesc(s){
+  if(!s)return '';
+  return s.replace(/\s+/g,' ').trim();
+}
+function sentences(s,n){
+  const parts=cleanDesc(s).split(/(?<=[.!?])\s+/);
+  return parts.slice(0,n).join(' ');
+}
+
+function figHTML(e,cls){
+  const cat=e.category||'soirée';
+  const fb=`this.onerror=null;this.parentNode.innerHTML='<div class=\\'figfall\\' data-cat=\\'${cat}\\'><span class=\\'fmark\\'>Soirée · The Evening Edition</span></div>'`;
+  const src=e.image? esc(e.image):'';
+  if(!src)return `<div class="figfall" data-cat="${esc(cat)}"><span class="fmark">Soirée · The Evening Edition</span></div>`;
+  return `<img src="${src}" alt="${esc(e.name)}" loading="lazy" onerror="${fb}">`;
+}
+
+/* ---------- BUILD CATEGORY NAV ---------- */
+function buildNav(){
+  const el=document.getElementById('catnav-inner');
+  el.innerHTML=CATS.map((c,i)=>{
+    const count=c==='all'?state.all.length:state.all.filter(e=>e.category===c).length;
+    if(c!=='all'&&count===0)return '';
+    const label=c==='all'?'Front Page':CAT_LABEL[c];
+    return `${i>0?'<span class="sep"></span>':''}<button data-cat="${c}" class="${c===state.active?'active':''}">${label}</button>`;
+  }).join('');
+  el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    state.active=b.dataset.cat;state.shown=PER;
+    document.querySelectorAll('.catnav button').forEach(x=>x.classList.toggle('active',x.dataset.cat===state.active));
+    render();
+    document.getElementById('section-anchor')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }));
+}
+
+/* ---------- FRONT PAGE (lead + rails) ---------- */
+function frontHTML(){
+  const withImg=state.all.filter(e=>e.image&&e.image.includes('http'));
+  // pick a lead with a rich description + likely-real image
+  const leadPool=state.all.filter(e=>(e.description||'').length>240);
+  const lead=leadPool.find(e=>e.image&&!e.image.includes('unsplash'))||leadPool[0]||state.all[0];
+  // right rail: index of picks across categories
+  const seen=new Set([lead.id]);
+  const picks=[];
+  for(const c of ['music','art','community','culinary','fashion']){
+    const hit=state.all.find(e=>e.category===c&&!seen.has(e.id)&&(e.description||'').length>60);
+    if(hit){picks.push(hit);seen.add(hit.id);}
+  }
+  while(picks.length<5){const h=state.all.find(e=>!seen.has(e.id));if(!h)break;picks.push(h);seen.add(h.id);}
+  // left rail: "tonight's bill" short list
+  const bill=state.all.filter(e=>!seen.has(e.id)).slice(0,6);
+  bill.forEach(e=>seen.add(e.id));
+
+  const stats={
+    total:state.all.length,
+    art:state.all.filter(e=>e.category==='art').length,
+    music:state.all.filter(e=>e.category==='music').length,
+    free:state.all.filter(e=>(e.price||'').toLowerCase()==='free').length,
+    venues:new Set(state.all.map(e=>e.location)).size
+  };
+
+  return `
+  <section class="front wrap" id="frontpage">
+    <div class="front-grid">
+      <!-- LEFT RAIL -->
+      <aside class="rail rail-left">
+        <h3>Tonight’s Bill</h3>
+        ${bill.map((e,i)=>`
+          <div class="rail-item" data-id="${e.id}">
+            <div class="ri-kick"><span class="rail-num">${roman(i+1)}.</span>${esc(CAT_LABEL[e.category]||e.category)}</div>
+            <h4>${esc(e.name)}</h4>
+            <div class="ri-meta">${esc(e.location||'')} · ${fmtDate(e)}</div>
+          </div>`).join('')}
+        <div class="almanac">
+          <h3>The Almanac</h3>
+          <div class="stat"><span>Dispatches Tonight</span><b class="n">${stats.total}</b></div>
+          <div class="stat"><span>Exhibitions</span><b class="n">${stats.art}</b></div>
+          <div class="stat"><span>Concerts &amp; Sound</span><b class="n">${stats.music}</b></div>
+          <div class="stat"><span>Venues in Play</span><b class="n">${stats.venues}</b></div>
+          <div class="stat"><span>Free of Charge</span><b class="n">${stats.free}</b></div>
+        </div>
+      </aside>
+
+      <!-- LEAD STORY -->
+      <div class="lead">
+        <div class="lead-kick"><span class="ln"></span><span class="kicker">The Lead · ${esc(CAT_LABEL[lead.category]||'Feature')}</span><span class="ln"></span></div>
+        <h1>${esc(lead.name)}</h1>
+        <p class="lead-deck">${esc(sentences(lead.description,1)||'An evening worth the crossing.')}</p>
+        <figure class="lead-figure" data-id="${lead.id}">
+          ${figHTML(lead)}
+          <figcaption class="fig-tag">${esc((lead.category||'').toUpperCase())} · Presented at ${esc(lead.location||'the city')}</figcaption>
+        </figure>
+        <div class="lead-caption"><b>Above.</b> ${esc(lead.location||'')} — ${esc(lead.address||'New York')}. ${fmtDate(lead)}. Photograph courtesy of ${esc(lead.source||'the presenter')}.</div>
+        <div class="lead-body">
+          <p>${esc(sentences(lead.description,4)||'Soirée keeps the evening register of the city — the exhibitions, recitals and gatherings that ask nothing but your curiosity.')}</p>
+          <p>${esc(sentences(lead.description.split(/(?<=[.!?])\s+/).slice(4).join(' '),4)||`Find it at ${lead.location}. Admission is ${(lead.price||'free').toLowerCase()==='free'?'complimentary':'detailed at the door'}.`)}</p>
+        </div>
+        <div class="lead-cta" data-id="${lead.id}">Read the full dispatch <span>→</span></div>
+      </div>
+
+      <!-- RIGHT RAIL -->
+      <aside class="rail rail-right">
+        <h3>The Index</h3>
+        ${picks.map((e,i)=>`
+          <div class="rail-item" data-id="${e.id}">
+            <div class="ri-kick">${esc(CAT_LABEL[e.category]||e.category)}</div>
+            <h4>${esc(e.name)}</h4>
+            <div class="ri-meta">${fmtDate(e)} · ${priceLabel(e)}</div>
+          </div>`).join('')}
+      </aside>
+    </div>
+  </section>`;
+}
+
+/* ---------- EVENTS SECTION ---------- */
+function sectionHTML(){
+  const list=state.active==='all'?state.all:state.all.filter(e=>e.category===state.active);
+  const slice=list.slice(0,state.shown);
+  const title=state.active==='all'?'The Full Register':CAT_LABEL[state.active];
+  const cards=slice.map((e,i)=>`
+    <article class="ecard" style="transition-delay:${(i%8)*40}ms" data-id="${e.id}">
+      <div class="ecard-fig">
+        ${figHTML(e)}
+        <span class="cat">${esc(state.active==='all'?(e.category||''):CAT_LABEL[e.category]||e.category)}</span>
+      </div>
+      <div class="e-kick">
+        <span>${fmtDate(e)}</span><span class="sep"></span>
+        <span class="${priceLabel(e)==='FREE'?'free':''}">${priceLabel(e)}</span>
+      </div>
+      <h3>${esc(e.name)}</h3>
+      <p class="e-desc">${esc(sentences(e.description,2)||'A dispatch from the evening register.')}</p>
+      <div class="e-meta"><span class="where">${esc(e.location||'—')}</span><span>${esc((e.time||'').slice(0,16)||'See details')}</span></div>
+    </article>`).join('');
+
+  const remaining=list.length-slice.length;
+  return `
+  <span id="section-anchor"></span>
+  <section class="section wrap" id="events-section">
+    <div class="sec-head">
+      <div class="sh-left">
+        <h2>${esc(title)}</h2>
+        <span class="sh-count">${list.length} Dispatches</span>
+      </div>
+      <div class="sh-note">${esc(CAT_NOTE[state.active]||'')}</div>
+    </div>
+    <div class="egrid">${cards}</div>
+    ${remaining>0?`<div class="more-row"><button class="more-btn" id="more-btn">Read on · ${remaining} more →</button></div>`:''}
+  </section>`;
+}
+
+function render(){
+  const app=document.getElementById('app');
+  app.innerHTML=(state.active==='all'?frontHTML():'')+sectionHTML()+footerHTML();
+  wire();
+  observeCards();
+}
+
+function footerHTML(){
+  return `
+  <footer class="footer">
+    <svg class="skyline" viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#1C1410" fill-opacity="0.92" d="M0,120 L0,70 L30,70 L30,55 L60,55 L60,72 L95,72 L95,40 L110,40 L110,20 L120,20 L120,40 L135,40 L135,72 L175,72 L175,50 L200,50 L200,68 L235,68 L235,30 L250,30 L250,10 L258,10 L258,30 L275,30 L275,68 L320,68 L320,58 L355,58 L355,45 L390,45 L390,66 L430,66 L430,52 L440,52 L440,35 L448,35 L448,52 L470,52 L470,66 L520,66 L520,48 L560,48 L560,25 L575,25 L575,5 L583,5 L583,25 L600,25 L600,60 L650,60 L650,44 L690,44 L690,64 L740,64 L740,38 L760,38 L760,58 L800,58 L800,48 L840,48 L840,30 L852,30 L852,12 L860,12 L860,30 L878,30 L878,62 L920,62 L920,50 L960,50 L960,66 L1005,66 L1005,42 L1045,42 L1045,58 L1085,58 L1085,34 L1100,34 L1100,16 L1108,16 L1108,34 L1128,34 L1128,60 L1170,60 L1170,46 L1210,46 L1210,64 L1255,64 L1255,40 L1295,40 L1295,56 L1335,56 L1335,50 L1375,50 L1375,66 L1410,66 L1410,58 L1440,58 L1440,120 Z"/>
+    </svg>
+    <div class="footer-inner">
+      <img class="f-mark" src="https://soiree.today/assets/images/nav-logo-transparent.png" alt="Soirée" onerror="this.style.display='none'">
+      <h2>The city keeps<br>her evenings for the curious.</h2>
+      <div class="f-line"></div>
+      <div class="f-motto">Stay Curious After Dark</div>
+      <div class="f-fine">Soirée · The Evening Edition · New York &amp; New Jersey · Always Free</div>
+    </div>
+  </footer>`;
+}
+
+/* ---------- DETAIL ARTICLE ---------- */
+function openArticle(id){
+  const e=state.all.find(x=>x.id==id);if(!e)return;
+  const body=document.getElementById('art-body');
+  const full=cleanDesc(e.description)||'A dispatch from the evening register of the city.';
+  const half=Math.ceil(full.split(/(?<=[.!?])\s+/).length/2);
+  const parts=full.split(/(?<=[.!?])\s+/);
+  const p1=parts.slice(0,half).join(' '),p2=parts.slice(half).join(' ');
+  const hls=(e.highlights||[]).filter(Boolean);
+  body.innerHTML=`
+    <div class="art-kick"><span class="ln"></span>${esc(CAT_LABEL[e.category]||e.category)} · Dispatch<span class="ln"></span></div>
+    <h1 class="art-title">${esc(e.name)}</h1>
+    <p class="art-deck">${esc(sentences(e.description,1)||`An evening at ${e.location}.`)}</p>
+    <figure class="art-fig">${figHTML(e)}</figure>
+    <div class="art-cap"><b>${esc(e.location||'')}</b> — Photograph courtesy of ${esc(e.source||'the presenter')}.</div>
+    <div class="art-facts">
+      <div class="f"><div class="fl">When</div><div class="fv">${esc(e.date&&!/T\d/.test(e.date)?e.date:fmtDate(e))}</div></div>
+      <div class="f"><div class="fl">Hours</div><div class="fv">${esc(e.time||'See details')}</div></div>
+      <div class="f"><div class="fl">Where</div><div class="fv">${esc(e.location||'—')}</div></div>
+      <div class="f"><div class="fl">Admission</div><div class="fv">${priceLabel(e)==='FREE'?'Complimentary':esc(e.price||'See details')}</div></div>
+    </div>
+    <div class="art-text">
+      <p>${esc(p1)}</p>
+      ${p2?`<p>${esc(p2)}</p>`:''}
+    </div>
+    ${hls.length?`<div class="art-hl"><div class="hh">In Brief</div><ul>${hls.map(h=>`<li>${esc(h)}</li>`).join('')}</ul></div>`:''}
+    <div class="art-facts" style="grid-template-columns:1fr;margin-top:8px">
+      <div class="f" style="border-right:0!important;padding-left:0"><div class="fl">Address</div><div class="fv" style="font-size:1.05rem">${esc(e.address||'New York, NY')}</div></div>
+    </div>
+    <div class="art-actions">
+      ${e.url?`<a class="primary" href="${esc(e.url)}" target="_blank" rel="noopener">Reserve &amp; Details ↗</a>`:''}
+      <a class="ghost" href="https://maps.google.com/?q=${encodeURIComponent((e.location||'')+' '+(e.address||''))}" target="_blank" rel="noopener">View on Map</a>
+    </div>
+    <div class="art-source">Filed from <b>${esc(e.source||'Soirée')}</b> · Soirée keeps this register free.</div>
+  `;
+  const ov=document.getElementById('overlay');
+  ov.classList.add('open');document.body.style.overflow='hidden';
+  document.getElementById('article').scrollTop=0;
+}
+function closeArticle(){document.getElementById('overlay').classList.remove('open');document.body.style.overflow='';}
+
+/* ---------- WIRING ---------- */
+function wire(){
+  document.querySelectorAll('[data-id]').forEach(el=>{
+    el.addEventListener('click',ev=>{
+      if(ev.target.closest('a'))return;
+      openArticle(el.dataset.id);
+    });
+  });
+  const mb=document.getElementById('more-btn');
+  if(mb)mb.addEventListener('click',()=>{state.shown+=PER;render();});
+}
+
+/* reveal-on-scroll for cards */
+let io;
+function observeCards(){
+  if(io)io.disconnect();
+  io=new IntersectionObserver((ents)=>{
+    ents.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});
+  },{rootMargin:'0px 0px -8% 0px'});
+  document.querySelectorAll('.ecard').forEach(c=>io.observe(c));
+}
+
+/* sticky nav shadow */
+window.addEventListener('scroll',()=>{
+  const nav=document.getElementById('catnav');
+  if(!nav)return;
+  nav.classList.toggle('stuck',window.scrollY>360);
+},{passive:true});
+
+document.getElementById('art-close').addEventListener('click',closeArticle);
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeArticle();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeArticle();});
+
+/* ---------- INIT ---------- */
+(async function init(){
+  // dateline (use current date)
+  const now=new Date();
+  const opts={weekday:'long',month:'long',day:'numeric',year:'numeric'};
+  document.getElementById('dateline').textContent=now.toLocaleDateString('en-US',opts);
+  document.getElementById('dl-left').textContent='Vol. I · No. '+roman(now.getDate());
+  document.getElementById('ribbon-mid').innerHTML='Anno '+roman(now.getFullYear())+' · Curated After Dark';
+  try{
+    const res=await fetch(API);
+    const data=await res.json();
+    let ev=(data.events||[]).filter(e=>e&&e.name);
+    // gentle ordering: real photos & rich desc float up within each category naturally, keep source order otherwise
+    state.all=ev;
+    document.getElementById('ribbon-count').textContent=ev.length+' Dispatches';
+    buildNav();
+    render();
+  }catch(err){
+    document.getElementById('app').innerHTML=`<div class="loading wrap">The edition could not be printed tonight.<div class="l-mark">${esc(String(err))}</div></div>`;
+    console.error(err);
+  }
+})();
+</script>
+</body>
+</html>

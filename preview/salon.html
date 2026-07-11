@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Soirée — The Salon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --cream:#FAF8F3; --warm:#FFFCF7; --ink:#1C1410;
+  --wine:#7E2A33; --wine-2:#A64450;
+  --gold:#D4AF37; --gold-2:#B08D2E;
+  --dusk:#C4956A; --sand:#E8D5B0; --sand-soft:#F1E4CC;
+  --line:rgba(28,20,16,.12);
+  --shadow: 0 2px 4px rgba(74,40,30,.05), 0 14px 40px -14px rgba(74,40,30,.18);
+  --shadow-lift: 0 8px 18px rgba(74,40,30,.10), 0 40px 80px -30px rgba(74,40,30,.30);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Jost',system-ui,sans-serif;
+  --hand:'Caveat',cursive;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--cream); color:var(--ink);
+  font-family:var(--sans); font-weight:400;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+/* paper grain */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:9999;
+  opacity:.045; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* warm golden-hour wash */
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:-1;
+  background:
+    radial-gradient(120% 80% at 82% -10%, rgba(212,175,55,.16), transparent 55%),
+    radial-gradient(100% 70% at 8% 108%, rgba(196,149,106,.14), transparent 60%),
+    linear-gradient(180deg,#FFFDF9,#FAF8F3 40%,#F6F0E4);
+}
+img{display:block; max-width:100%}
+a{color:inherit; text-decoration:none}
+::selection{background:var(--wine); color:var(--sand-soft)}
+
+.wrap{max-width:1360px; margin:0 auto; padding:0 40px}
+.eyebrow{font-family:var(--sans); font-weight:500; font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:var(--wine)}
+
+/* ---------- NAV ---------- */
+header.nav{
+  position:sticky; top:0; z-index:100;
+  backdrop-filter:blur(10px);
+  background:linear-gradient(180deg,rgba(250,248,243,.92),rgba(250,248,243,.7));
+  border-bottom:1px solid transparent; transition:border-color .3s, background .3s;
+}
+header.nav.scrolled{border-color:var(--line); box-shadow:0 8px 30px -20px rgba(74,40,30,.4)}
+.nav-inner{display:flex; align-items:center; justify-content:space-between; height:82px}
+.nav-logo{height:34px; width:auto; filter:none}
+.nav-mark{display:flex; align-items:center; gap:13px}
+.nav-mark .kicker{font-family:var(--sans); font-size:10.5px; letter-spacing:.32em; text-transform:uppercase; color:var(--dusk); padding-left:14px; border-left:1px solid var(--line)}
+.nav-links{display:flex; align-items:center; gap:34px}
+.nav-links a{font-size:13px; letter-spacing:.08em; color:var(--ink); opacity:.72; transition:opacity .2s; position:relative}
+.nav-links a:hover{opacity:1}
+.nav-links a::after{content:""; position:absolute; left:0; bottom:-6px; height:1.5px; width:0; background:var(--wine); transition:width .25s}
+.nav-links a:hover::after{width:100%}
+.nav-cta{font-family:var(--sans); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--warm); background:var(--wine); padding:11px 22px; border-radius:100px; transition:transform .2s, background .2s; box-shadow:0 6px 18px -8px var(--wine)}
+.nav-cta:hover{background:var(--ink); transform:translateY(-1px)}
+@media(max-width:760px){.nav-links a:not(.nav-cta){display:none} .nav-mark .kicker{display:none}}
+
+/* ---------- HERO ---------- */
+.hero{position:relative; padding:56px 0 30px}
+.hero-grid{display:grid; grid-template-columns:1.05fr .95fr; gap:56px; align-items:center}
+.hero-copy{max-width:600px}
+.hero-copy .eyebrow{opacity:0; animation:rise .9s .1s forwards}
+.hero h1{
+  font-family:var(--serif); font-weight:500; line-height:.94; letter-spacing:-.01em;
+  font-size:clamp(58px,8.4vw,132px); margin:.14em 0 .1em;
+}
+.hero h1 em{font-style:italic; color:var(--wine); position:relative}
+.hero h1 .word{display:inline-block; opacity:0; transform:translateY(28px) rotate(1.5deg); animation:rise 1s forwards}
+.hero h1 .l2{display:block; margin-top:-.04em}
+.hero p.lede{font-family:var(--serif); font-size:clamp(19px,2.1vw,25px); line-height:1.5; color:#4a3b30; max-width:480px; margin-bottom:34px; opacity:0; animation:rise 1s .55s forwards}
+.hero p.lede b{color:var(--wine); font-weight:600; font-style:italic}
+.hero-actions{display:flex; align-items:center; gap:26px; opacity:0; animation:rise 1s .7s forwards}
+.btn-primary{font-family:var(--sans); font-size:13px; letter-spacing:.16em; text-transform:uppercase; color:var(--warm); background:var(--ink); padding:16px 30px; border-radius:100px; display:inline-flex; align-items:center; gap:10px; transition:transform .25s, box-shadow .25s; box-shadow:var(--shadow)}
+.btn-primary:hover{transform:translateY(-2px); box-shadow:var(--shadow-lift)}
+.btn-primary .arw{transition:transform .25s}
+.btn-primary:hover .arw{transform:translate(4px,-2px)}
+.hero-actions .count{font-family:var(--serif); font-style:italic; font-size:19px; color:#6a5849}
+.hero-actions .count b{font-style:normal; font-weight:600; color:var(--wine); font-size:22px}
+
+/* hero art — the living illustration */
+.hero-art{position:relative; height:560px}
+.hero-plate{
+  position:absolute; inset:0; border-radius:20px;
+  background:var(--wine); overflow:hidden;
+  box-shadow:var(--shadow-lift);
+  transform:rotate(-2.2deg);
+}
+.hero-plate::after{content:""; position:absolute; inset:0; background:radial-gradient(120% 90% at 30% 10%,rgba(212,175,55,.22),transparent 60%); mix-blend-mode:screen}
+.hero-doodle{
+  position:absolute; width:118%; left:-9%; top:-6%; height:auto;
+  opacity:.98; animation:sway 9s ease-in-out infinite;
+  filter:drop-shadow(0 10px 30px rgba(0,0,0,.25));
+}
+.hero-tag{
+  position:absolute; z-index:3; background:var(--warm); border-radius:14px; padding:13px 18px 14px;
+  box-shadow:var(--shadow-lift); border:1px solid rgba(255,255,255,.6);
+}
+.hero-tag .k{font-size:10px; letter-spacing:.26em; text-transform:uppercase; color:var(--dusk); font-weight:500}
+.hero-tag .v{font-family:var(--serif); font-size:21px; font-weight:600; line-height:1.05; margin-top:3px}
+.hero-tag.t1{top:22px; right:-18px; transform:rotate(3deg); animation:floaty 6s ease-in-out infinite}
+.hero-tag.t2{bottom:44px; left:-26px; transform:rotate(-3deg); animation:floaty 7s ease-in-out .8s infinite}
+.hero-tag.t2 .v{color:var(--wine)}
+.hero-scribble{position:absolute; font-family:var(--hand); color:var(--wine-2); font-size:30px; transform:rotate(-8deg); right:20px; bottom:-6px; z-index:4}
+.hero-art{opacity:0; animation:rise 1.1s .4s forwards}
+@keyframes rise{to{opacity:1; transform:none}}
+@keyframes sway{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-12px) rotate(.6deg)}}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(var(--r,0))}50%{transform:translateY(-9px) rotate(var(--r,0))}}
+.hero-tag.t1{--r:3deg}.hero-tag.t2{--r:-3deg}
+
+/* marquee ticker */
+.ticker{margin-top:52px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); overflow:hidden; padding:16px 0; -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.ticker-track{display:flex; gap:0; white-space:nowrap; width:max-content; animation:scroll 42s linear infinite}
+.ticker:hover .ticker-track{animation-play-state:paused}
+.ticker-track span{font-family:var(--serif); font-style:italic; font-size:24px; color:#6a5849; padding:0 34px; display:inline-flex; align-items:center; gap:34px}
+.ticker-track span::after{content:"✦"; color:var(--gold-2); font-style:normal; font-size:14px}
+@keyframes scroll{to{transform:translateX(-50%)}}
+
+/* ---------- SECTION HEAD ---------- */
+.sec{padding:96px 0 10px}
+.sec-head{display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:44px; gap:30px; flex-wrap:wrap}
+.sec-head h2{font-family:var(--serif); font-weight:500; font-size:clamp(38px,5.4vw,64px); line-height:.98; letter-spacing:-.01em}
+.sec-head h2 em{font-style:italic; color:var(--wine)}
+.sec-head .side{font-family:var(--serif); font-style:italic; font-size:19px; color:#6a5849; max-width:320px; text-align:right}
+.num{font-family:var(--serif); font-style:italic; color:var(--gold-2); font-size:22px; margin-right:10px}
+
+/* ---------- CATEGORY RAIL ---------- */
+.cats{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:6px}
+.cat-pill{
+  font-family:var(--sans); font-size:13px; letter-spacing:.08em; padding:10px 20px; border-radius:100px;
+  border:1px solid var(--line); background:var(--warm); cursor:pointer; transition:all .22s;
+  display:flex; align-items:center; gap:9px; color:#4a3b30;
+}
+.cat-pill .dot{width:8px; height:8px; border-radius:50%; background:var(--dusk); transition:transform .22s}
+.cat-pill:hover{border-color:var(--wine); transform:translateY(-2px); box-shadow:var(--shadow)}
+.cat-pill.on{background:var(--ink); color:var(--sand-soft); border-color:var(--ink)}
+.cat-pill.on .dot{transform:scale(1.5)}
+.cat-pill .c{opacity:.5; font-size:12px}
+
+/* ---------- FEATURED (editorial) ---------- */
+.featured{display:grid; grid-template-columns:1.35fr 1fr; gap:30px; margin-bottom:14px}
+.feat-main{
+  position:relative; border-radius:22px; overflow:hidden; min-height:520px; cursor:pointer;
+  box-shadow:var(--shadow-lift); background:var(--wine);
+}
+.feat-main img, .feat-side img{width:100%; height:100%; object-fit:cover; position:absolute; inset:0; transition:transform 1.1s cubic-bezier(.2,.8,.2,1); filter:saturate(1.02) contrast(1.02)}
+.feat-main:hover img, .feat-side:hover img{transform:scale(1.06)}
+.feat-fallback{position:absolute; inset:0; background:linear-gradient(150deg,var(--wine),#5e1f27); display:flex; align-items:center; justify-content:center}
+.feat-fallback img{position:static; width:60%; height:auto; object-fit:contain; opacity:.85; filter:none; transform:none!important}
+.feat-grad{position:absolute; inset:0; background:linear-gradient(0deg,rgba(20,12,8,.82) 4%,rgba(20,12,8,.32) 40%,transparent 70%); z-index:1}
+.feat-body{position:absolute; z-index:2; left:0; right:0; bottom:0; padding:38px; color:var(--sand-soft)}
+.feat-badge{display:inline-flex; align-items:center; gap:8px; font-family:var(--sans); font-size:11px; letter-spacing:.2em; text-transform:uppercase; background:var(--gold); color:var(--ink); padding:6px 14px; border-radius:100px; margin-bottom:14px; font-weight:500}
+.feat-body h3{font-family:var(--serif); font-weight:600; font-size:clamp(30px,3.4vw,46px); line-height:1.02; margin-bottom:12px}
+.feat-meta{display:flex; gap:22px; flex-wrap:wrap; font-size:13.5px; letter-spacing:.03em; color:#f3e4cf; opacity:.94}
+.feat-meta span{display:flex; align-items:center; gap:7px}
+.feat-side{position:relative; border-radius:22px; overflow:hidden; cursor:pointer; box-shadow:var(--shadow); min-height:520px; background:var(--sand)}
+.feat-side .feat-grad{background:linear-gradient(0deg,rgba(20,12,8,.8),rgba(20,12,8,.15) 55%,transparent)}
+.feat-side .feat-body{padding:28px}
+.feat-side h3{font-size:clamp(24px,2.4vw,30px)}
+@media(max-width:900px){.featured{grid-template-columns:1fr} .feat-main,.feat-side{min-height:400px}}
+
+/* ---------- EVENT GRID ---------- */
+.grid{display:grid; grid-template-columns:repeat(3,1fr); gap:28px 26px; margin-top:8px}
+.card{
+  cursor:pointer; border-radius:18px; overflow:hidden; background:var(--warm);
+  box-shadow:var(--shadow); transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s;
+  display:flex; flex-direction:column; opacity:0; transform:translateY(20px);
+  border:1px solid rgba(255,255,255,.7);
+}
+.card.in{opacity:1; transform:none}
+.card:hover{transform:translateY(-8px) rotate(-.4deg); box-shadow:var(--shadow-lift)}
+.card-media{position:relative; aspect-ratio:4/3; overflow:hidden; background:var(--sand)}
+.card-media img{width:100%; height:100%; object-fit:cover; transition:transform .8s cubic-bezier(.2,.8,.2,1); filter:saturate(1.03)}
+.card:hover .card-media img{transform:scale(1.08)}
+.card-fallback{position:absolute; inset:0; display:none; align-items:center; justify-content:center; overflow:hidden}
+.card-fallback.show{display:flex}
+.card-fallback img{position:absolute; width:135%; opacity:.9; filter:none; transform:none}
+.card-fallback .fmark{position:relative; z-index:2; font-family:var(--serif); font-style:italic; font-size:26px; color:var(--warm); background:rgba(28,20,16,.35); padding:6px 16px; border-radius:100px; backdrop-filter:blur(2px)}
+.card-cat{position:absolute; top:13px; left:13px; z-index:2; font-family:var(--sans); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink); background:rgba(255,252,247,.92); padding:6px 12px; border-radius:100px; font-weight:500; box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.card-price{position:absolute; top:13px; right:13px; z-index:2; font-family:var(--serif); font-style:italic; font-weight:600; font-size:15px; color:var(--warm); background:var(--wine); padding:5px 13px; border-radius:100px}
+.card-body{padding:20px 20px 22px; display:flex; flex-direction:column; flex:1}
+.card-date{font-family:var(--sans); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dusk); font-weight:500; margin-bottom:9px}
+.card-body h3{font-family:var(--serif); font-weight:600; font-size:24px; line-height:1.04; margin-bottom:auto; letter-spacing:-.005em}
+.card-loc{margin-top:14px; padding-top:14px; border-top:1px solid var(--line); font-size:13px; color:#6a5849; display:flex; align-items:center; gap:8px}
+.card-loc svg{flex:none; opacity:.6}
+.card-loc .txt{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+
+.more-row{display:flex; justify-content:center; margin:56px 0 10px}
+.more-btn{font-family:var(--sans); font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink); background:transparent; border:1.5px solid var(--ink); padding:15px 34px; border-radius:100px; cursor:pointer; transition:all .25s}
+.more-btn:hover{background:var(--ink); color:var(--sand-soft); transform:translateY(-2px)}
+.empty{text-align:center; padding:70px 0; font-family:var(--serif); font-style:italic; font-size:24px; color:#6a5849; grid-column:1/-1}
+
+/* ---------- SALON STRIP (illustration break) ---------- */
+.strip{margin:110px 0 20px; border-radius:26px; overflow:hidden; background:var(--ink); position:relative; box-shadow:var(--shadow-lift)}
+.strip-inner{display:grid; grid-template-columns:1fr 1fr; align-items:center}
+.strip-copy{padding:70px 58px}
+.strip-copy .eyebrow{color:var(--gold)}
+.strip-copy h2{font-family:var(--serif); font-weight:500; color:var(--sand-soft); font-size:clamp(34px,4vw,54px); line-height:1; margin:16px 0 20px}
+.strip-copy h2 em{font-style:italic; color:var(--dusk)}
+.strip-copy p{font-family:var(--serif); font-size:20px; line-height:1.55; color:#d9c6ad; max-width:420px; margin-bottom:30px}
+.strip-copy .btn-primary{background:var(--gold); color:var(--ink)}
+.strip-copy .btn-primary:hover{background:var(--warm)}
+.strip-art{position:relative; align-self:stretch; min-height:420px; background:linear-gradient(160deg,#8a3540,var(--wine))}
+.strip-art img{position:absolute; width:80%; left:10%; top:50%; transform:translateY(-50%); filter:drop-shadow(0 20px 40px rgba(0,0,0,.4))}
+@media(max-width:900px){.strip-inner{grid-template-columns:1fr}.strip-art{min-height:300px}.strip-copy{padding:46px 34px}}
+
+/* ---------- FOOTER (dusk skyline) ---------- */
+footer.dusk{margin-top:110px; position:relative; padding:90px 0 44px; overflow:hidden;
+  background:linear-gradient(180deg,#F6E9D2 0%,#E9B98E 30%,#C17457 60%,#7E2A33 100%); color:var(--sand-soft)}
+.sun{position:absolute; width:220px; height:220px; border-radius:50%; left:50%; top:56px; transform:translateX(-50%);
+  background:radial-gradient(circle,#FFF3D6,#F6D08A 55%,rgba(246,208,138,0) 72%); filter:blur(2px)}
+.skyline{position:absolute; left:0; right:0; bottom:96px; height:150px; z-index:1;
+  background:repeating-linear-gradient(90deg,#3a1519 0 26px,transparent 26px 30px);
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='150' preserveAspectRatio='none'%3E%3Cpath fill='black' d='M0 150 V70 h40 V40 h30 V90 h50 V20 h26 V85 h44 V55 h30 V100 h40 V10 h22 V95 h60 V60 h34 V35 h28 V88 h50 V50 h30 V92 h46 V25 h24 V80 h54 V64 h30 V44 h26 V96 h48 V30 h22 V86 h60 V58 h34 V38 h28 V90 h50 V48 h30 V94 h46 V22 h24 V82 h54 V66 h30 V150 Z'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='150' preserveAspectRatio='none'%3E%3Cpath fill='black' d='M0 150 V70 h40 V40 h30 V90 h50 V20 h26 V85 h44 V55 h30 V100 h40 V10 h22 V95 h60 V60 h34 V35 h28 V88 h50 V50 h30 V92 h46 V25 h24 V80 h54 V64 h30 V44 h26 V96 h48 V30 h22 V86 h60 V58 h34 V38 h28 V90 h50 V48 h30 V94 h46 V22 h24 V82 h54 V66 h30 V150 Z'/%3E%3C/svg%3E");
+  mask-size:cover; -webkit-mask-size:cover; opacity:.85}
+.foot-inner{position:relative; z-index:3; text-align:center}
+.foot-inner img.wm{height:56px; width:auto; margin:0 auto 8px; filter:brightness(0) invert(1)}
+.foot-motto{font-family:var(--serif); font-style:italic; font-weight:500; font-size:clamp(46px,7vw,96px); line-height:1; color:#fff; text-shadow:0 4px 30px rgba(90,20,26,.4)}
+.foot-sub{font-family:var(--sans); letter-spacing:.24em; text-transform:uppercase; font-size:12px; margin-top:18px; opacity:.9}
+.foot-links{display:flex; gap:26px; justify-content:center; margin-top:min(250px,34vh); padding-top:26px; border-top:1px solid rgba(255,255,255,.25); font-size:13px; letter-spacing:.06em; position:relative; z-index:3; flex-wrap:wrap}
+.foot-links a{opacity:.85; transition:opacity .2s}
+.foot-links a:hover{opacity:1}
+.foot-cred{position:relative; z-index:3; text-align:center; margin-top:24px; font-size:12px; letter-spacing:.05em; opacity:.7}
+
+/* ---------- DETAIL OVERLAY (invitation) ---------- */
+.overlay{position:fixed; inset:0; z-index:200; display:none}
+.overlay.open{display:block}
+.ov-scrim{position:absolute; inset:0; background:rgba(28,20,16,.55); backdrop-filter:blur(6px); opacity:0; transition:opacity .4s}
+.overlay.open .ov-scrim{opacity:1}
+.ov-card{
+  position:absolute; top:0; right:0; height:100%; width:min(560px,100%);
+  background:var(--warm); box-shadow:-30px 0 80px -30px rgba(28,20,16,.5);
+  transform:translateX(102%); transition:transform .5s cubic-bezier(.4,0,.1,1);
+  overflow-y:auto; display:flex; flex-direction:column;
+}
+.overlay.open .ov-card{transform:none}
+.ov-hero{position:relative; height:340px; flex:none; overflow:hidden; background:var(--wine)}
+.ov-hero img{width:100%; height:100%; object-fit:cover; filter:saturate(1.03)}
+.ov-hero .feat-fallback img{width:65%; height:auto; object-fit:contain}
+.ov-hero .grad{position:absolute; inset:0; background:linear-gradient(0deg,rgba(20,12,8,.7),transparent 55%)}
+.ov-close{position:absolute; top:18px; right:18px; z-index:5; width:44px; height:44px; border-radius:50%; border:none; background:var(--warm); color:var(--ink); cursor:pointer; font-size:20px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); transition:transform .2s, background .2s}
+.ov-close:hover{transform:rotate(90deg); background:var(--wine); color:var(--warm)}
+.ov-hero .ov-cat{position:absolute; left:22px; bottom:20px; z-index:4; font-family:var(--sans); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink); background:var(--gold); padding:7px 15px; border-radius:100px; font-weight:500}
+.ov-body{padding:32px 40px 44px}
+.ov-body h2{font-family:var(--serif); font-weight:600; font-size:38px; line-height:1.02; letter-spacing:-.01em; margin-bottom:8px}
+.ov-src{font-family:var(--serif); font-style:italic; color:var(--wine); font-size:18px; margin-bottom:26px}
+.ov-facts{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); border-radius:14px; overflow:hidden; margin-bottom:28px}
+.fact{background:var(--warm); padding:16px 18px}
+.fact .k{font-family:var(--sans); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--dusk); font-weight:500; margin-bottom:5px; display:flex; align-items:center; gap:6px}
+.fact .v{font-family:var(--serif); font-size:19px; font-weight:600; line-height:1.15; color:var(--ink)}
+.fact.wide{grid-column:1/-1}
+.ov-desc{font-family:var(--serif); font-size:18.5px; line-height:1.62; color:#3f322a; margin-bottom:20px}
+.ov-tags{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:32px}
+.ov-tags span{font-family:var(--sans); font-size:11.5px; letter-spacing:.06em; color:var(--wine); border:1px solid rgba(126,42,51,.3); padding:6px 13px; border-radius:100px; background:rgba(126,42,51,.05)}
+.ov-actions{display:flex; gap:14px; margin-top:auto}
+.ov-actions a{flex:1; text-align:center; font-family:var(--sans); font-size:13px; letter-spacing:.14em; text-transform:uppercase; padding:16px; border-radius:100px; transition:all .25s}
+.ov-actions .go{background:var(--ink); color:var(--sand-soft); box-shadow:var(--shadow)}
+.ov-actions .go:hover{background:var(--wine); transform:translateY(-2px)}
+.ov-actions .save{border:1.5px solid var(--line); color:var(--ink)}
+.ov-actions .save:hover{border-color:var(--wine); color:var(--wine)}
+@media(max-width:560px){.ov-body{padding:26px 24px 40px} .ov-body h2{font-size:31px}}
+
+/* loading */
+.loading{display:grid; place-items:center; height:60vh; text-align:center}
+.loading .spin{width:46px; height:46px; border:2px solid var(--line); border-top-color:var(--wine); border-radius:50%; animation:sp 1s linear infinite; margin:0 auto 20px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loading p{font-family:var(--serif); font-style:italic; font-size:22px; color:#6a5849}
+
+@media(max-width:900px){
+  .wrap{padding:0 22px}
+  .hero-grid{grid-template-columns:1fr; gap:12px}
+  .hero-art{height:400px; margin-top:20px; max-width:440px}
+  .hero{padding:34px 0 10px}
+  .sec{padding:64px 0 10px}
+}
+</style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <div class="nav-mark">
+      <img class="nav-logo" src="https://soiree.today/assets/images/soiree-logo-transparent.png" alt="Soirée" />
+      <span class="kicker">The Salon · NYC + NJ</span>
+    </div>
+    <nav class="nav-links">
+      <a href="#featured">Featured</a>
+      <a href="#browse">Browse</a>
+      <a href="#salon">The Salon</a>
+      <a href="#browse" class="nav-cta">Tonight’s list</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow">A curated evening of culture · Free &amp; low-cost</p>
+      <h1>
+        <span class="word" style="animation-delay:.15s">The&nbsp;city</span>
+        <span class="l2"><span class="word" style="animation-delay:.28s">is&nbsp;</span><span class="word" style="animation-delay:.4s"><em>your&nbsp;salon.</em></span></span>
+      </h1>
+      <p class="lede">Every exhibition, concert, market and gathering across New York &amp; New Jersey — gathered like an <b>invitation</b>, graded in golden light, mostly free.</p>
+      <div class="hero-actions">
+        <a href="#browse" class="btn-primary">Browse tonight <span class="arw">↗</span></a>
+        <span class="count"><b id="heroCount">—</b> events on the guest list</span>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="hero-plate">
+        <img class="hero-doodle" src="https://soiree.today/assets/images/art-doodles.png" alt="Hand-drawn salon illustrations" />
+      </div>
+      <div class="hero-tag t1"><div class="k">Happening soon</div><div class="v" id="tagWeek">—</div></div>
+      <div class="hero-tag t2"><div class="k">Always</div><div class="v">Free to wander</div></div>
+      <div class="hero-scribble">stay curious ✎</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="ticker">
+      <div class="ticker-track" id="ticker"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED -->
+<section class="sec" id="featured">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2><span class="num">01</span>On the <em>bill</em> tonight</h2>
+      <p class="side">Three we’d dress up for — pulled fresh from the live guide.</p>
+    </div>
+    <div class="featured" id="featured"></div>
+  </div>
+</section>
+
+<!-- BROWSE -->
+<section class="sec" id="browse">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2><span class="num">02</span>Browse the <em>rooms</em></h2>
+      <p class="side">Wander by mood. Art, music, community &amp; more — updated as the city posts.</p>
+    </div>
+    <div class="cats" id="cats"></div>
+    <div class="grid" id="grid"></div>
+    <div class="more-row"><button class="more-btn" id="moreBtn">Show more of the evening</button></div>
+  </div>
+</section>
+
+<!-- SALON STRIP -->
+<section class="sec" id="salon">
+  <div class="wrap">
+    <div class="strip">
+      <div class="strip-inner">
+        <div class="strip-copy">
+          <p class="eyebrow">The house philosophy</p>
+          <h2>Dress up for <em>an ordinary Tuesday.</em></h2>
+          <p>Soirée is a love letter to going out — the small gatherings, the open galleries, the free concerts under the bridge. We hand-gather them so the evening finds you.</p>
+          <a href="#browse" class="btn-primary">See what’s on ↗</a>
+        </div>
+        <div class="strip-art">
+          <img src="https://soiree.today/assets/images/community-doodles.png" alt="Community salon illustration" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="dusk">
+  <div class="sun"></div>
+  <div class="skyline"></div>
+  <div class="wrap foot-inner">
+    <img class="wm" src="https://soiree.today/assets/images/soiree-logo-transparent.png" alt="Soirée" />
+    <div class="foot-motto">stay curious</div>
+    <div class="foot-sub">An elegant evening, every evening · New York &amp; New Jersey</div>
+    <div class="foot-links">
+      <a href="#featured">Featured</a><a href="#browse">Browse</a><a href="#salon">The Salon</a>
+      <a href="https://soiree.today" target="_blank" rel="noopener">soiree.today ↗</a>
+    </div>
+    <div class="foot-cred">Live data · <span id="footCount">—</span> gatherings · always free to wander</div>
+  </div>
+</footer>
+
+<!-- DETAIL OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="ov-scrim" id="scrim"></div>
+  <div class="ov-card" id="ovCard">
+    <div class="ov-hero" id="ovHero"></div>
+    <div class="ov-body" id="ovBody"></div>
+  </div>
+</div>
+
+<script>
+const API='https://soiree.today/api/events';
+const FALLBACKS={
+  art:'https://soiree.today/assets/images/art-doodles.png',
+  community:'https://soiree.today/assets/images/community-doodles.png',
+  perks:'https://soiree.today/assets/images/perks-doodles.png',
+  music:'https://soiree.today/assets/images/community-doodles.png',
+  fashion:'https://soiree.today/assets/images/art-doodles.png',
+  culinary:'https://soiree.today/assets/images/community-doodles.png',
+  lifestyle:'https://soiree.today/assets/images/perks-doodles.png',
+};
+const CAT_ORDER=['art','music','community','culinary','fashion','perks','lifestyle'];
+const CAT_LABEL={art:'Art & Exhibitions',music:'Music & Live',community:'Community',culinary:'Food & Drink',fashion:'Fashion',perks:'Perks & Deals',lifestyle:'Lifestyle'};
+
+let ALL=[], FILTERED=[], shown=0, activeCat='all';
+const PAGE=9;
+
+const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function niceDate(ev){
+  const d=new Date(ev.start_date);
+  if(isNaN(d)) return (ev.date||'').split('T')[0]||'See details';
+  const opts={month:'short',day:'numeric'};
+  let s=d.toLocaleDateString('en-US',opts);
+  const ed=new Date(ev.end_date);
+  if(!isNaN(ed) && (ed-d)>86400000*1.5){
+    s+=' – '+ed.toLocaleDateString('en-US',opts);
+  }
+  return s;
+}
+function niceTime(ev){ return (ev.time && ev.time!=='See details')?ev.time:'See details'; }
+function nicePrice(ev){ return ev.price==='free' ? 'Free' : (ev.price==='See details'?'See details':ev.price); }
+function shortLoc(ev){ return ev.location || (ev.address||'').split(',')[0] || 'New York'; }
+
+const pinSvg='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>';
+
+function imgWithFallback(ev, cls, mark){
+  const fb=FALLBACKS[ev.category]||FALLBACKS.art;
+  const hasImg=ev.image && !/source\.unsplash/.test(ev.image);
+  return `<img class="${cls}" src="${esc(ev.image||fb)}" alt="${esc(ev.name)}" loading="lazy"
+    onerror="this.onerror=null;this.parentElement.querySelector('.card-fallback')?.classList.add('show');this.style.display='none'">`;
+}
+
+function cardHTML(ev,i){
+  const fb=FALLBACKS[ev.category]||FALLBACKS.art;
+  return `<article class="card" data-id="${ev.id}" style="transition-delay:${(i%9)*45}ms">
+    <div class="card-media">
+      <div class="card-cat">${esc(CAT_LABEL[ev.category]||ev.category)}</div>
+      <div class="card-price">${esc(nicePrice(ev))}</div>
+      <img src="${esc(ev.image||fb)}" alt="${esc(ev.name)}" loading="lazy"
+        onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.classList.add('show')">
+      <div class="card-fallback"><img src="${esc(fb)}" alt=""><span class="fmark">soirée</span></div>
+    </div>
+    <div class="card-body">
+      <div class="card-date">${esc(niceDate(ev))}${niceTime(ev)!=='See details'?' · '+esc(niceTime(ev)):''}</div>
+      <h3>${esc(ev.name)}</h3>
+      <div class="card-loc">${pinSvg}<span class="txt">${esc(shortLoc(ev))}</span></div>
+    </div>
+  </article>`;
+}
+
+function renderGrid(reset){
+  const grid=document.getElementById('grid');
+  if(reset){ grid.innerHTML=''; shown=0; }
+  if(FILTERED.length===0){ grid.innerHTML='<div class="empty">No gatherings in this room just yet — try another mood.</div>'; document.getElementById('moreBtn').style.display='none'; return; }
+  const slice=FILTERED.slice(shown, shown+PAGE);
+  slice.forEach((ev,idx)=>grid.insertAdjacentHTML('beforeend',cardHTML(ev,idx)));
+  shown+=slice.length;
+  document.getElementById('moreBtn').style.display = shown<FILTERED.length ? '' : 'none';
+  requestAnimationFrame(()=>{ document.querySelectorAll('.card:not(.in)').forEach(c=>c.classList.add('in')); });
+}
+
+function applyCat(cat){
+  activeCat=cat;
+  FILTERED = cat==='all' ? ALL.slice() : ALL.filter(e=>e.category===cat);
+  renderGrid(true);
+}
+
+function renderCats(){
+  const counts={}; ALL.forEach(e=>counts[e.category]=(counts[e.category]||0)+1);
+  const el=document.getElementById('cats');
+  let html=`<button class="cat-pill on" data-cat="all"><span class="dot"></span>Everything <span class="c">${ALL.length}</span></button>`;
+  CAT_ORDER.filter(c=>counts[c]).forEach(c=>{
+    html+=`<button class="cat-pill" data-cat="${c}"><span class="dot"></span>${esc(CAT_LABEL[c])} <span class="c">${counts[c]}</span></button>`;
+  });
+  el.innerHTML=html;
+  el.querySelectorAll('.cat-pill').forEach(p=>p.addEventListener('click',()=>{
+    el.querySelectorAll('.cat-pill').forEach(x=>x.classList.remove('on'));
+    p.classList.add('on'); applyCat(p.dataset.cat);
+    document.getElementById('browse').scrollIntoView({behavior:'smooth',block:'start'});
+  }));
+}
+
+function featBlock(ev,main){
+  const fb=FALLBACKS[ev.category]||FALLBACKS.art;
+  const cls=main?'feat-main':'feat-side';
+  return `<div class="${cls}" data-id="${ev.id}">
+    <img src="${esc(ev.image||fb)}" alt="${esc(ev.name)}"
+      onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="feat-fallback" style="display:none"><img src="${esc(fb)}" alt=""></div>
+    <div class="feat-grad"></div>
+    <div class="feat-body">
+      <span class="feat-badge">✦ ${esc(CAT_LABEL[ev.category]||ev.category)}</span>
+      <h3>${esc(ev.name)}</h3>
+      <div class="feat-meta">
+        <span>${pinSvg}${esc(shortLoc(ev))}</span>
+        <span>◷ ${esc(niceDate(ev))}</span>
+        <span>◈ ${esc(nicePrice(ev))}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderFeatured(){
+  // prefer events with real (non-unsplash-source, non-empty) images and good names
+  const withImg=ALL.filter(e=>e.image && e.name && e.description && e.description.length>60);
+  const pick=[]; const usedCat=new Set(); const usedSrc=new Set();
+  for(const e of withImg){ if(pick.length>=3) break; if(usedSrc.has(e.source)) continue; usedSrc.add(e.source); pick.push(e); }
+  while(pick.length<3 && withImg[pick.length]) pick.push(withImg[pick.length]);
+  const el=document.getElementById('featured');
+  el.innerHTML = featBlock(pick[0],true) + `<div style="display:grid;gap:30px">${featBlock(pick[1])}${featBlock(pick[2])}</div>`;
+  el.querySelectorAll('[data-id]').forEach(n=>n.addEventListener('click',()=>openDetail(n.dataset.id)));
+}
+
+function renderTicker(){
+  const t=document.getElementById('ticker');
+  const picks=ALL.slice().sort(()=>Math.random()-.5).slice(0,14).map(e=>e.name.length>46?e.name.slice(0,44)+'…':e.name);
+  const html=picks.map(p=>`<span>${esc(p)}</span>`).join('');
+  t.innerHTML=html+html;
+}
+
+// ---- DETAIL ----
+function openDetail(id){
+  const ev=ALL.find(e=>String(e.id)===String(id)); if(!ev) return;
+  const fb=FALLBACKS[ev.category]||FALLBACKS.art;
+  document.getElementById('ovHero').innerHTML=`
+    <button class="ov-close" id="ovClose" aria-label="Close">✕</button>
+    <img src="${esc(ev.image||fb)}" alt="${esc(ev.name)}"
+      onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="feat-fallback" style="display:none"><img src="${esc(fb)}" alt=""></div>
+    <div class="grad"></div>
+    <span class="ov-cat">✦ ${esc(CAT_LABEL[ev.category]||ev.category)}</span>`;
+  const tags=(ev.highlights||[]).slice(0,4);
+  const timeVal=niceTime(ev)==='See details'?'See event page':niceTime(ev);
+  document.getElementById('ovBody').innerHTML=`
+    <h2>${esc(ev.name)}</h2>
+    <div class="ov-src">at ${esc(ev.location||ev.source||'a lovely spot')}</div>
+    <div class="ov-facts">
+      <div class="fact"><div class="k">◷ When</div><div class="v">${esc(niceDate(ev))}</div></div>
+      <div class="fact"><div class="k">⏱ Time</div><div class="v">${esc(timeVal)}</div></div>
+      <div class="fact"><div class="k">◈ Price</div><div class="v">${esc(nicePrice(ev))}</div></div>
+      <div class="fact"><div class="k">☷ Source</div><div class="v">${esc(ev.source||'—')}</div></div>
+      <div class="fact wide"><div class="k">${pinSvg} Where</div><div class="v" style="font-size:16px;font-weight:600">${esc(ev.address||ev.location||'New York, NY')}</div></div>
+    </div>
+    <p class="ov-desc">${esc((ev.description||'A gathering worth dressing up for.').slice(0,520))}${(ev.description||'').length>520?'…':''}</p>
+    ${tags.length?`<div class="ov-tags">${tags.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}
+    <div class="ov-actions">
+      <a class="go" href="${esc(ev.url||'https://soiree.today')}" target="_blank" rel="noopener">Get details ↗</a>
+      <a class="save" href="#" onclick="return false">Add to evening ♡</a>
+    </div>`;
+  const ov=document.getElementById('overlay');
+  ov.classList.add('open'); document.body.style.overflow='hidden';
+  document.getElementById('ovCard').scrollTop=0;
+  document.getElementById('ovClose').addEventListener('click',closeDetail);
+}
+function closeDetail(){ document.getElementById('overlay').classList.remove('open'); document.body.style.overflow=''; }
+document.getElementById('scrim').addEventListener('click',closeDetail);
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
+
+// nav scroll
+addEventListener('scroll',()=>{ document.getElementById('nav').classList.toggle('scrolled',scrollY>20); });
+
+document.getElementById('moreBtn').addEventListener('click',()=>renderGrid(false));
+
+// grid click delegation
+document.getElementById('grid').addEventListener('click',e=>{
+  const card=e.target.closest('.card'); if(card) openDetail(card.dataset.id);
+});
+
+// ---- LOAD ----
+async function load(){
+  try{
+    const res=await fetch(API);
+    const data=await res.json();
+    let events=(data.events||[]).filter(e=>e.name);
+    // sort: soonest upcoming first, keep those with images toward front of grid
+    const now=Date.now();
+    events.sort((a,b)=>{
+      const da=new Date(a.start_date), db=new Date(b.start_date);
+      const va=isNaN(da)?Infinity:Math.abs(da-now), vb=isNaN(db)?Infinity:Math.abs(db-now);
+      return va-vb;
+    });
+    ALL=events;
+    document.getElementById('heroCount').textContent=ALL.length;
+    document.getElementById('footCount').textContent=ALL.length;
+    // week count (start within +/- 8 days)
+    const wk=ALL.filter(e=>{const d=new Date(e.start_date); return !isNaN(d)&&Math.abs(d-now)<86400000*8;}).length;
+    document.getElementById('tagWeek').textContent=(wk||ALL.length)+' events';
+    renderTicker();
+    renderFeatured();
+    renderCats();
+    applyCat('all');
+  }catch(err){
+    console.error(err);
+    document.getElementById('grid').innerHTML='<div class="empty">The guest list is resting. Please refresh in a moment.</div>';
+  }
+}
+load();
+</script>
+</body>
+</html>
