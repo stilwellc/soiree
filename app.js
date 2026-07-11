@@ -2472,11 +2472,17 @@ function toggleFavorite(eventId) {
     renderFeaturedLayout();
   }
 
-  // Mobile stack: repaint so the heart's filled state is visible immediately.
-  // Never mid-swipe — completeSwipe() toggles before its fly-out transition,
-  // and a repaint here would destroy the animating card.
-  if (window.innerWidth < 768 && !isSwipeAnimating && document.getElementById('gallery-stack-cards')) {
-    renderStackCards();
+  // Mobile browse feed: sync every heart in-place so the filled state shows
+  // immediately without a re-render (which would reset the feed's scroll).
+  if (window.innerWidth < 768) {
+    document.querySelectorAll('#gallery-stack-cards .favorite-btn').forEach(btn => {
+      const id = parseInt(btn.dataset.id);
+      const on = favorites.includes(id);
+      btn.classList.toggle('favorited', on);
+      const svg = btn.querySelector('svg');
+      if (svg) svg.setAttribute('fill', on ? 'currentColor' : 'none');
+      btn.setAttribute('aria-label', `${on ? 'Remove from' : 'Add to'} favorites`);
+    });
   }
 }
 
@@ -3678,30 +3684,65 @@ function updateGalleryProgress() {
   progressBar.style.width = `${pct}%`;
 }
 
-// ── Mobile Card Stack ──
+// ── Mobile Browse Feed ──
+// Mobile-native redesign: the home gallery is a comfortable vertical feed of
+// event cards (big tap targets, thumb-scroll) rather than a swipe deck. The
+// legacy swipe-stack renderer (renderStackCards / attachSwipeHandlers / the
+// skip+fav action buttons) is retained below but is intentionally not invoked
+// in feed mode — desktop still uses renderFeaturedLayout().
 function renderStack() {
   const container = document.getElementById('gallery-stack-cards');
   const counter = document.getElementById('gallery-stack-counter');
   const emptyEl = document.getElementById('gallery-stack-empty');
   const actions = document.querySelector('.gallery-stack-actions');
+  const stack = document.getElementById('gallery-stack');
   if (!container) return;
+
+  // The feed doesn't use the Tinder-style skip/favorite buttons.
+  if (actions) actions.style.display = 'none';
+  if (stack) stack.classList.add('gallery-stack--feed');
 
   if (galleryEvents.length === 0) {
     container.innerHTML = '';
-    // Collapse the deck's reserved 4/5 aspect so the empty state sits
-    // right under the tabs instead of below ~430px of nothing
     container.classList.add('stack-cards-collapsed');
     if (counter) counter.textContent = '';
     if (emptyEl) emptyEl.classList.remove('hidden');
-    if (actions) actions.style.display = 'none';
     return;
   }
 
   container.classList.remove('stack-cards-collapsed');
   if (emptyEl) emptyEl.classList.add('hidden');
-  if (actions) actions.style.display = '';
-  updateStackCounter();
-  renderStackCards();
+
+  if (counter) {
+    const n = galleryEvents.length;
+    counter.textContent = `${n} ${n === 1 ? 'gathering' : 'gatherings'} in this room`;
+  }
+  updateGalleryProgress();
+
+  container.innerHTML = galleryEvents
+    .map((event, index) => createEventCard(event, index))
+    .join('');
+
+  // Reveal cards immediately (the feed lives below the fold-less hero and the
+  // IntersectionObserver used elsewhere isn't wired to this container).
+  container.querySelectorAll('.event-card').forEach(card => {
+    card.classList.add('card-revealed');
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.favorite-btn')) openModal(parseInt(card.dataset.id));
+    });
+    card.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.favorite-btn')) {
+        e.preventDefault();
+        openModal(parseInt(card.dataset.id));
+      }
+    });
+  });
+  container.querySelectorAll('.favorite-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFavorite(parseInt(btn.dataset.id));
+    });
+  });
 }
 
 function updateStackCounter() {

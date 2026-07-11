@@ -4808,6 +4808,39 @@ button:focus-visible,
   }
 }
 
+/* ── Mobile browse: comfortable vertical feed (redesign) ──
+   Overrides the legacy swipe-deck framing. The deck reserved a fixed 4/5
+   aspect box with hidden overflow; the feed needs to grow with its cards. */
+.gallery-stack--feed { padding: 0 20px; margin-bottom: 8px; }
+.gallery-stack--feed .gallery-stack-counter {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: #6a5849;
+  letter-spacing: 0;
+  text-align: left;
+  margin: 0 2px 14px;
+}
+.gallery-stack--feed .gallery-stack-cards {
+  position: static;
+  aspect-ratio: auto;
+  max-height: none;
+  overflow: visible;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gallery-stack--feed .gallery-stack-cards .event-card {
+  margin-bottom: 0;
+  min-height: 108px;
+}
+.gallery-stack--feed .gallery-stack-cards .event-card-image {
+  width: 118px;
+  min-height: 108px;
+}
+.gallery-stack--feed .gallery-stack-actions { display: none !important; }
+
 .gallery-stack-counter {
   font-family: 'Jost', sans-serif;
   font-size: var(--text-sm);
@@ -7216,9 +7249,109 @@ body::after {
   .salon-ticker { margin-top: 30px; }
 }
 @media (max-width: 600px) {
-  .hero-tag-1 { right: 2px; }
-  .hero-tag-2 { left: 2px; }
   .salon-ticker-track span { font-size: 20px; }
+}
+
+/* ═══ MOBILE-NATIVE HERO (redesign) ═══
+   The desktop hero floats "invitation" tags + a Caveat scribble around a
+   tilted burgundy doodle plate. On a phone those absolutely-positioned pieces
+   crowd and overlap the copy. Here we recompose: copy stacks cleanly, then the
+   doodle sits as a self-contained banner "invitation" card with its own inset
+   caption row — no overlapping floats. */
+@media (max-width: 767px) {
+  /* Feed replaces the swipe deck, so the swipe-position progress bar is moot. */
+  .gallery-progress-track { display: none; }
+  /* Category tabs to a comfortable ≥44px tap height. */
+  .gallery-tab { min-height: 44px; padding: 11px 14px; }
+  /* Keep nav labels on one line on narrow phones (iPhone mini widths). */
+  .nav-label { white-space: nowrap; }
+  .nav-items { gap: 2px; }
+  .nav-item { padding: 10px 8px; }
+
+  .view-home .hero.hero-landing { padding: 8px 0 6px; }
+  .view-home .hero-salon-grid {
+    gap: 18px;
+    padding: 18px 20px 4px;
+  }
+  .hero-eyebrow { font-size: 11px; letter-spacing: .26em; margin-bottom: 12px; }
+  .view-home .hero-title { font-size: clamp(46px, 15vw, 66px); line-height: .94; }
+  .view-home .hero-title-logo { height: clamp(42px, 13.5vw, 60px); }
+  .hero-salon-lede {
+    font-size: 18px;
+    line-height: 1.48;
+    margin: 6px 0 22px;
+    max-width: 40ch;
+  }
+  .hero-salon-actions { gap: 16px; width: 100%; }
+  .hero-browse-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 52px;
+    padding: 16px 24px;
+    font-size: 13.5px;
+  }
+  .hero-guest-count { font-size: 16px; flex: 0 0 auto; }
+  .hero-guest-count b { font-size: 19px; }
+
+  /* The plate becomes a clean, self-contained banner card; the two floating
+     "invitation" tags drop out of absolute positioning and reflow as a tidy
+     caption row beneath it. No overlap with the copy or each other. */
+  .hero-art {
+    height: auto;
+    max-width: none;
+    margin: 4px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: salonRise 1.1s .3s forwards;
+  }
+  .hero-plate {
+    position: relative;
+    inset: auto;
+    height: 200px;
+    transform: rotate(-1deg);
+    border-radius: 20px;
+    flex: none;
+  }
+  .hero-doodle { width: 116%; left: -8%; top: -8%; }
+
+  /* Caption ribbons: the two tags become static, readable full-width rows —
+     "Happening soon · N events" and "Always · Free to wander". Each reads as
+     one horizontal line (label left, value right). */
+  .hero-tag {
+    position: relative;
+    top: auto; right: auto; bottom: auto; left: auto;
+    transform: none !important;
+    animation: none !important;
+    padding: 12px 16px;
+    border-radius: 13px;
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .hero-tag-k { font-size: 10px; }
+  .hero-tag-v { font-size: 18px; margin-top: 0; text-align: right; }
+  .hero-tag-1 { order: 2; }
+  .hero-tag-2 { order: 3; }
+  .hero-scribble {
+    position: relative;
+    order: 4;
+    top: auto; right: auto; bottom: auto; left: auto;
+    transform: rotate(-4deg);
+    font-size: 26px;
+    align-self: flex-end;
+    margin-top: -2px;
+    color: var(--wine-2);
+  }
+}
+@media (max-width: 480px) {
+  .view-home .hero-salon-grid { padding: 14px 18px 2px; }
+  .view-home .hero-title { font-size: clamp(44px, 16vw, 60px); }
+  .hero-salon-lede { font-size: 17px; }
+  .hero-plate { height: 184px; }
+  .hero-tag-v { font-size: 17px; }
 }
 
 /* ══════════════════════ CURATED VIEWS (Today / This Week) ══════════════════════
