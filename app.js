@@ -4292,38 +4292,35 @@ function initSubscribeForm() {
   }
 }
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    init();
-    initRotatingTitle();
-    initSubscribeForm();
-    initSubscribeStrip();
-    initSubscribeStripEvents();
-    initScrollReveal();
-    initFooterReveal();
-    initFooterNav();
-    initInstagramGrid();
-    initGalleryTabs();
-    initStackActions();
-    updateValueStrip();
-
-    const freeCheckbox = document.getElementById('free-mode-toggle');
-    if (freeCheckbox) freeCheckbox.addEventListener('change', toggleFreeMode);
-
-    // Tech dashboard (network graph + activity chart) lives inside the About
-    // view. It is initialized lazily when About opens (see handleNavClick's
-    // view === 'about' branch) so non-About loads don't fire a duplicate
-    // /api/events + /api/stats fetch. Each init self-guards against re-running.
-  });
-} else {
+// Single bootstrap so the loading and already-parsed (defer) paths can never
+// drift — previously the `else` branch was missing initGalleryTabs (and others),
+// so once app.js loaded with `defer` the category tabs stopped responding.
+function bootstrap() {
   init();
   initRotatingTitle();
   initSubscribeForm();
   initSubscribeStrip();
   initSubscribeStripEvents();
+  initScrollReveal();
   initFooterReveal();
   initFooterNav();
+  initInstagramGrid();
+  initGalleryTabs();
+  initStackActions();
+  updateValueStrip();
+
+  const freeCheckbox = document.getElementById('free-mode-toggle');
+  if (freeCheckbox) freeCheckbox.addEventListener('change', toggleFreeMode);
+
+  // Tech dashboard (network graph + activity chart) lives inside the About
+  // view; initialized lazily when About opens so non-About loads don't fire a
+  // duplicate /api/events + /api/stats fetch. Each init self-guards.
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootstrap);
+} else {
+  bootstrap();
 }
 // v1.0.2
 
