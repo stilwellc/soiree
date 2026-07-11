@@ -1400,7 +1400,14 @@ function sceneStripHTML(evs, freeCount) {
   if (hoods.length) summary += `, clustered around ${hoods.slice(0, 2).map(esc).join(' &amp; ')}`;
   summary += `. ${freeCount} of the ${evs.length} are free.`;
 
-  const doodle = topCatKey === 'art' ? 'art-doodles.png' : topCatKey === 'perks' ? 'perks-doodles.png' : 'community-doodles.png';
+  // Panel color-matches the doodle's own background so the art blends (no bars).
+  const doodleMap = {
+    art: { img: 'art-doodles.png', bg: '#813030' },
+    perks: { img: 'perks-doodles.png', bg: '#ffe0c6' },
+    community: { img: 'community-doodles.png', bg: '#959c60' },
+  };
+  const dk = doodleMap[topCatKey] ? topCatKey : 'community';
+  const { img: doodle, bg: doodleBg } = doodleMap[dk];
   return `
     <section class="scene-strip" aria-label="The scene">
       <div class="scene-copy">
@@ -1413,7 +1420,7 @@ function sceneStripHTML(evs, freeCount) {
           <span><b>${Object.keys(catCount).length}</b> kinds of night</span>
         </div>
       </div>
-      <div class="scene-art" aria-hidden="true"><img src="assets/images/${doodle}" alt=""></div>
+      <div class="scene-art" style="background:${doodleBg}" aria-hidden="true"><img src="assets/images/${doodle}" alt=""></div>
     </section>`;
 }
 
