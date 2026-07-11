@@ -1360,6 +1360,63 @@ function curatedIntroHTML(count, freeCount) {
     </div>`;
 }
 
+// A curated, personal, DYNAMIC read on what's actually happening — analyses the
+// events in view (top category, neighborhoods, standouts, free count) and writes
+// a little editorial summary, styled like the house-philosophy strip.
+const SCENE_CAT_LABEL = {
+  art: 'art &amp; exhibitions', perks: 'pop-ups &amp; perks', community: 'gatherings &amp; culture',
+  music: 'live music', fashion: 'fashion', culinary: 'food &amp; drink', lifestyle: 'lifestyle',
+};
+function sceneStripHTML(evs, freeCount) {
+  const tf = currentTimeFilter;
+  if ((tf !== 'today' && tf !== 'week') || !evs.length) return '';
+  const region = (typeof REGIONS !== 'undefined' && REGIONS[currentRegion] && REGIONS[currentRegion].name) || 'the city';
+
+  // top category
+  const catCount = {};
+  evs.forEach(e => { catCount[e.category] = (catCount[e.category] || 0) + 1; });
+  const topCatKey = Object.entries(catCount).sort((a, b) => b[1] - a[1])[0][0];
+  const topCat = SCENE_CAT_LABEL[topCatKey] || 'culture';
+
+  // neighborhoods / areas
+  const hoodCount = {};
+  evs.forEach(e => { const h = (e.neighborhood || e.location || '').trim(); if (h && h.length < 26 && !/^(new york|new york city|nyc|manhattan|online|various)$/i.test(h)) hoodCount[h] = (hoodCount[h] || 0) + 1; });
+  const hoods = Object.entries(hoodCount).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]);
+
+  // standouts — real descriptions first
+  const standouts = evs.filter(e => e.description && e.description.length > 40).slice(0, 2).map(e => e.name);
+  const s0 = standouts[0], s1 = standouts[1];
+
+  const cat = CURATED_COPY[tf][currentFilter] ? currentFilter : 'all';
+  const eyebrow = tf === 'today' ? `Tonight in ${region}` : `This week in ${region}`;
+  const head = CURATED_COPY[tf][cat].head;
+
+  // dynamic summary sentence
+  let summary;
+  const lead = tf === 'today' ? 'Tonight leans into' : 'This week runs heavy on';
+  summary = `${lead} <strong>${topCat}</strong>`;
+  if (s0 && s1) summary += ` — from <em>${esc(s0)}</em> to <em>${esc(s1)}</em>`;
+  else if (s0) summary += ` — <em>${esc(s0)}</em> among them`;
+  if (hoods.length) summary += `, clustered around ${hoods.slice(0, 2).map(esc).join(' &amp; ')}`;
+  summary += `. ${freeCount} of the ${evs.length} are free.`;
+
+  const doodle = topCatKey === 'art' ? 'art-doodles.png' : topCatKey === 'perks' ? 'perks-doodles.png' : 'community-doodles.png';
+  return `
+    <section class="scene-strip" aria-label="The scene">
+      <div class="scene-copy">
+        <p class="scene-eyebrow">${esc(eyebrow)}</p>
+        <h2 class="scene-head">${head}</h2>
+        <p class="scene-summary">${summary}</p>
+        <div class="scene-stats">
+          <span><b>${evs.length}</b> ${tf === 'today' ? 'tonight' : 'this week'}</span>
+          <span><b>${freeCount}</b> free</span>
+          <span><b>${Object.keys(catCount).length}</b> kinds of night</span>
+        </div>
+      </div>
+      <div class="scene-art" aria-hidden="true"><img src="assets/images/${doodle}" alt=""></div>
+    </section>`;
+}
+
 function dayLabelFor(dateStr) {
   const today = getTodayLocal();
   if (dateStr <= today) return 'Tonight';
@@ -1422,9 +1479,11 @@ function renderEvents() {
     ? createDealsCard(currentTimeFilter)
     : '';
 
-  // Curated framing (today/week) — rewrites itself with the active filter.
+  // Curated framing (today/week) — a dynamic scene summary that reads the events
+  // in view; falls back to the plain intro when there's nothing to summarize.
   const freeCount = filteredEvents.filter(e => e.isFree === true).length;
-  const curatedIntro = curatedIntroHTML(filteredEvents.length, freeCount);
+  const curatedIntro = sceneStripHTML(filteredEvents, freeCount)
+    || curatedIntroHTML(filteredEvents.length, freeCount);
 
   if (filteredEvents.length === 0) {
     eventsList.innerHTML = curatedIntro + dealsCard + `
