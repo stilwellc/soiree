@@ -296,8 +296,9 @@ let featuredIndex = 0;
 let isSwipeAnimating = false;
 const SWIPE_THRESHOLD = 80;
 
-// Art sub-filter: 'openings' or 'all' (list views only)
-let artSubFilter = 'openings';
+// Art sub-filter: 'all' or 'openings' (list views only). Defaults to 'all' so
+// picking the Art category shows every art show in view; Openings is opt-in.
+let artSubFilter = 'all';
 
 // Region Definitions
 const REGIONS = {
