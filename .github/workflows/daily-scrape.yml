@@ -1,167 +1,45 @@
 name: Daily Event Scraper
 
+# ALL scraping runs HERE, on the Actions runner — standing rule (July 2026).
+# The old design curled soiree.today/api/scrape per group, which meant the
+# actual fetch/parse work executed inside Vercel functions: that steady CPU
+# burn (plus a duplicate Vercel cron hitting the same endpoint) is what blew
+# the account's fair-use limits and took every site down. The runner now
+# invokes the exact same scraper code (scripts/run-scrape.js wraps the
+# api/scrape.js handler) and writes straight to Postgres — no Vercel compute,
+# no dependency on the site being up, no 60s function cap.
+#
+# Scraping is purely additive/upsert (INSERT ... ON CONFLICT (url) DO UPDATE),
+# so a partial failure can never wipe live data. One flaky group doesn't fail
+# the day; zero successes does.
+
 on:
   schedule:
-    # Run at 6 AM EST every day (11 AM UTC)
-    - cron: '0 11 * * *'
+    # 6 AM ET daily (10 UTC in summer) — the single daily scrape; the old
+    # duplicate Vercel cron is removed from vercel.json
+    - cron: '0 10 * * *'
   workflow_dispatch: # Allow manual trigger
-
-# Scraping is purely additive/upsert (INSERT ... ON CONFLICT (url) DO UPDATE),
-# so there is NO destructive database clear step — a partial failure can never
-# wipe live data. Each group is one curl POST under the Vercel 60s cap.
-env:
-  BASE_URL: https://soiree.today
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Small helper to POST a group and fail on non-200. Reused per group.
-      - name: Scrape main sources
-        continue-on-error: true
-        run: |
-          echo "🌐 Scraping main sources (TimeOut, museums, NYC For Free, etc.)..."
-          HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=main" \
-            -H "Authorization: Bearer ${{ secrets.SCRAPE_SECRET }}" \
-            -H "Content-Type: application/json" \
-            -w "%{http_code}" -o scrape-main.json -s)
-          echo "HTTP Status: $HTTP_CODE"
-          cat scrape-main.json; echo ""
-          if [ "$HTTP_CODE" != "200" ]; then echo "❌ main failed ($HTTP_CODE)"; exit 1; fi
-          echo "✅ main completed"
-
-      - name: Scrape galleries
-        continue-on-error: true
-        run: |
-          echo "🎨 Scraping galleries (bespoke + registry)..."
-          HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=galleries" \
-            -H "Authorization: Bearer ${{ secrets.SCRAPE_SECRET }}" \
-            -H "Content-Type: application/json" \
-            -w "%{http_code}" -o scrape-galleries.json -s)
-          echo "HTTP Status: $HTTP_CODE"
-          cat scrape-galleries.json; echo ""
-          if [ "$HTTP_CODE" != "200" ]; then echo "❌ galleries failed ($HTTP_CODE)"; exit 1; fi
-          echo "✅ galleries completed"
-
-      - name: Scrape museums (registry)
-        continue-on-error: true
-        run: |
-          echo "🏛️  Scraping museums group (Whitney, New Museum)..."
-          HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=museums" \
-            -H "Authorization: Bearer ${{ secrets.SCRAPE_SECRET }}" \
-            -H "Content-Type: application/json" \
-            -w "%{http_code}" -o scrape-museums.json -s)
-          echo "HTTP Status: $HTTP_CODE"
-          cat scrape-museums.json; echo ""
-          if [ "$HTTP_CODE" != "200" ]; then echo "❌ museums failed ($HTTP_CODE)"; exit 1; fi
-          echo "✅ museums completed"
-
-      - name: Scrape film (registry)
-        continue-on-error: true
-        run: |
-          echo "🎬 Scraping film group..."
-          HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=film" \
-            -H "Authorization: Bearer ${{ secrets.SCRAPE_SECRET }}" \
-            -H "Content-Type: application/json" \
-            -w "%{http_code}" -o scrape-film.json -s)
-          echo "HTTP Status: $HTTP_CODE"
-          cat scrape-film.json; echo ""
-          if [ "$HTTP_CODE" != "200" ]; then echo "❌ film failed ($HTTP_CODE)"; exit 1; fi
-          echo "✅ film completed"
-
-      - name: Scrape literary (registry)
-        continue-on-error: true
-        run: |
-          echo "📚 Scraping literary group..."
-          HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=literary" \
-            -H "Authorization: Bearer ${{ secrets.SCRAPE_SECRET }}" \
-            -H "Content-Type: application/json" \
-            -w "%{http_code}" -o scrape-literary.json -s)
-          echo "HTTP Status: $HTTP_CODE"
-          cat scrape-literary.json; echo ""
-          if [ "$HTTP_CODE" != "200" ]; then echo "❌ literary failed ($HTTP_CODE)"; exit 1; fi
-          echo "✅ literary completed"
-
-      - name: Scrape performances & parks (registry)
-        continue-on-error: true
-        run: |
-          echo "🎭 Scraping perfparks group (Bryant Park, NYC Parks, SummerStage)..."
-          HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=perfparks" \
-            -H "Authorization: Bearer ${{ secrets.SCRAPE_SECRET }}" \
-            -H "Content-Type: application/json" \
-            -w "%{http_code}" -o scrape-perfparks.json -s)
-          echo "HTTP Status: $HTTP_CODE"
-          cat scrape-perfparks.json; echo ""
-          if [ "$HTTP_CODE" != "200" ]; then echo "❌ perfparks failed ($HTTP_CODE)"; exit 1; fi
-          echo "✅ perfparks completed"
-
-      - name: Scrape NJ (registry)
-        continue-on-error: true
-        run: |
-          echo "🌆 Scraping nj group (The Local Girl, Hoboken/JC/Newark)..."
-          HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=nj" \
-            -H "Authorization: Bearer ${{ secrets.SCRAPE_SECRET }}" \
-            -H "Content-Type: application/json" \
-            -w "%{http_code}" -o scrape-nj.json -s)
-          echo "HTTP Status: $HTTP_CODE"
-          cat scrape-nj.json; echo ""
-          if [ "$HTTP_CODE" != "200" ]; then echo "❌ nj failed ($HTTP_CODE)"; exit 1; fi
-          echo "✅ nj completed"
-
-      - name: Scrape puppeteer (registry)
-        continue-on-error: true
-        run: |
-          echo "🤖 Scraping puppeteer group (Guggenheim + rendered venues)..."
-          HTTP_CODE=$(curl -X POST "${BASE_URL}/api/scrape?group=puppeteer" \
-            -H "Authorization: Bearer ${{ secrets.SCRAPE_SECRET }}" \
-            -H "Content-Type: application/json" \
-            -w "%{http_code}" -o scrape-puppeteer.json -s)
-          echo "HTTP Status: $HTTP_CODE"
-          cat scrape-puppeteer.json; echo ""
-          if [ "$HTTP_CODE" != "200" ]; then echo "❌ puppeteer failed ($HTTP_CODE)"; exit 1; fi
-          echo "✅ puppeteer completed"
-
-      - name: Scrape Visit NJ (Direct)
-        continue-on-error: true
-        env:
-          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
-        run: |
-          echo "🌐 Scraping Visit NJ (Direct Puppeteer Script)..."
-          npm install puppeteer pg dotenv
-          node scripts/scrape-visitnj-direct.js
-
-      - name: Scrape AMNH (Direct)
-        continue-on-error: true
-        env:
-          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
-        run: |
-          echo "🏛️  Scraping AMNH (Direct Puppeteer Script)..."
-          node scripts/scrape-amnh-direct.js
-
-      - name: Scrape The Local Girl (Direct)
-        continue-on-error: true
-        env:
-          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
-        run: |
-          echo "🌐 Scraping The Local Girl (Puppeteer)..."
-          node scripts/scrape-localgirl-direct.js
-
-      - name: Upload results
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          name: scrape-results
-          path: |
-            scrape-main.json
-            scrape-galleries.json
-            scrape-museums.json
-            scrape-film.json
-            scrape-literary.json
-            scrape-perfparks.json
-            scrape-nj.json
-            scrape-puppeteer.json
-          retention-days: 7
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Scrape all groups
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+          SCRAPE_SECRET: ${{ secrets.SCRAPE_SECRET }}
+        run: node scripts/run-scrape.js

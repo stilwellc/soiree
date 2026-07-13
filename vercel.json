@@ -9,48 +9,68 @@
   },
   "crons": [
     {
-      "path": "/api/scrape",
-      "schedule": "0 6 * * *"
-    },
-    {
       "path": "/api/instagram-post",
       "schedule": "0 17 * * 2"
     }
   ],
   "rewrites": [
-    { "source": "/(all|today|week|favorites|about|social|pins)", "destination": "/index.html" },
-    { "source": "/e/(.*)", "destination": "/api/event-page?slug=$1" },
-    { "source": "/sitemap.xml", "destination": "/api/sitemap" }
+    {
+      "source": "/(all|today|week|favorites|about|social|pins)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/e/(.*)",
+      "destination": "/api/event-page?slug=$1"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    }
   ],
   "headers": [
     {
       "source": "/assets/images/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/assets/fonts/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/app.js",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
       ]
     },
     {
       "source": "/styles.css",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
       ]
     },
     {
       "source": "/index.html",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
       ]
     }
   ]
