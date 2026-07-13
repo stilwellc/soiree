@@ -1,0 +1,56 @@
+name: Deploy to Cloudflare Pages
+
+# Ships a code change to Cloudflare Pages (project "soiree") on every push to
+# main — the counterpart to daily-scrape.yml, which also deploys but only after
+# the nightly data refresh. A push here rebuilds dist/ + re-renders the OG
+# cards from current DB data and deploys. (The site has no server; the SPA +
+# Pages Functions + static OG cards are all baked into the deploy.)
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'prototypes/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-soiree
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # OG cards derive from live event data (batch doctrine: satori renders on
+      # the runner, never in a serving function). Re-render on every deploy so
+      # dist/og-events/ is always complete and current.
+      - name: Build OG share images
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+        run: node scripts/build-og-events.js
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN secret is not set"
+            exit 1
+          fi
+          bash scripts/build-pages.sh
+          cp -R og-events dist/og-events 2>/dev/null || true
+          npx wrangler pages deploy dist --project-name soiree --branch main --commit-dirty=true
