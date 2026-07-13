@@ -1,0 +1,55 @@
+name: Weekly Instagram Post
+
+# IG posting runs HERE, on the Actions runner — standing rule (July 2026):
+# ALL batch work (scraping, OG rendering, IG posting) runs on GitHub Actions,
+# never in serving functions. This replaces the Vercel cron in vercel.json
+# ('0 17 * * 2' → /api/instagram-post), which stays in place until cutover —
+# parallel implementation, same schedule, same handler code (the script wraps
+# api/instagram-post.js with a mocked req/res, like run-scrape.js does).
+
+on:
+  schedule:
+    # Tuesdays 17:00 UTC — the exact vercel.json cron this replaces
+    - cron: '0 17 * * 2'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Post mode'
+        type: choice
+        options:
+          - weekly
+          - weekend
+        default: weekly
+      dry_run:
+        description: 'Dry run (build cards + caption, do not publish)'
+        type: boolean
+        default: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Post to Instagram
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+        run: >
+          node scripts/run-instagram-post.js
+          --mode=${{ inputs.mode || 'weekly' }}
+          ${{ inputs.dry_run == true && '--dry-run' || '' }}

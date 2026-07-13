@@ -1,0 +1,13 @@
+# SPA routes -> index.html (port of the vercel.json rewrite
+# "/(all|today|week|favorites|about|social|pins)"). Target is "/" —
+# Pages 308-normalizes /index.html to /, which would turn these
+# 200-rewrites into visible redirects.
+# /e/* and /sitemap.xml need no lines here: Pages Functions
+# (functions/e/[slug].js, functions/sitemap.xml.js) take precedence.
+/all / 200
+/today / 200
+/week / 200
+/favorites / 200
+/about / 200
+/social / 200
+/pins / 200

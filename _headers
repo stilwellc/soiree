@@ -1,0 +1,21 @@
+# Port of the vercel.json "headers" rules (same 5 sources, same values).
+# Extra "/" rule: Cloudflare Pages serves index.html at / (and 308s
+# /index.html -> /), so the document needs the rule on / to actually apply.
+
+/assets/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/app.js
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/styles.css
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/
+  Cache-Control: public, max-age=3600, must-revalidate

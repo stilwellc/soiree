@@ -43,3 +43,23 @@ jobs:
           POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
           SCRAPE_SECRET: ${{ secrets.SCRAPE_SECRET }}
         run: node scripts/run-scrape.js
+
+      # ── Cloudflare Pages staging (July 2026) ─────────────────────────
+      # OG cards render HERE (batch doctrine: satori+resvg is too CPU-heavy
+      # for Pages Functions) and ship as static files under /og-events/.
+      - name: Build OG share images
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+        run: node scripts/build-og-events.js
+
+      # One pass refreshes both data (DB, above) and OG images (static).
+      # Guarded so the daily scrape never fails while CF is being staged.
+      - name: Deploy site to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "no CF token; skipping deploy"; exit 0; fi
+          bash scripts/build-pages.sh
+          cp -R og-events dist/og-events 2>/dev/null || true
+          npx wrangler pages deploy dist --project-name soiree --branch main --commit-dirty=true
